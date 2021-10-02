@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>MissionDB -- Medical Mission Database</title>
+    <link rel="shortcut icon" type="image/png" href="images/missiondb.png"/>
+    <link rel="stylesheet" href="style/base.css">
+    <!--[if IE]>
+      <script src="style/ie.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <section id="missiondbody">
+      <header>
+        <h1>Mission Database</h1>
+      </header>
+      <div id="patientListDiv">
+        <div id="patientListSection" ></div>
+        <button type="button" class="divbutton" onclick="newPatient()">Add Patient</button>
+        <button type="button" class="divbutton" onclick="showPatientOpen()" id="editreviewpatient">Review/Edit Patient</button>
+      </div>
+      <div id="patientOpenDiv">
+        <div id="patientOpenSection" ></div>
+        <button type="button" class="divbutton" onclick="showPatientEdit()">Edit Patient Data</button>
+        <button type="button" class="divbutton" onclick="showCommentList()">Case Comments</button>
+        <button type="button" class="divbutton" onclick="showPatientList()">Return</button>
+        <button type="button" class="divbutton" onclick="deletePatient()" id="deletepatient">Delete Patient</button>
+      </div>
+      <div id="patientEditDiv">
+        <div id="patientEditSection" ></div>
+        <button type="button" class="divbutton" onclick="savePatient()" id="saveeditpatient">Save</button>
+        <button type="button" class="divbutton" onclick="showPatientOpen()">Cancel</button>
+      </div>
+      <div id="commentListDiv">
+        <div id="commentListSection" ></div>
+      </div>
+     <div id="commentNewDiv">
+        <div id="commentNewSection">
+          <img id="commentNewImage" class="fullimage">
+          <label for="commentNewField" id="commentNewLabel"></label>
+          <div id="commentNewField" class="editable"></div>
+        </div>
+      </div>
+      <div id="commentImageDiv">
+        <input type="file" accept="image/*" id="imageInput" onchange="handleImage()" capture="environment">
+        <input type="file" accept="image/*" id="imageQ" onchange="quickImage2()" capture="environment">
+        <button type="button" class="divbutton" onclick="getImage()">&#128247; or &#119809;
+ u&#818; Gallery</button>
+        <button type="button" class="divbutton" onclick="showCommentList()">Cancel</button>
+      </div>
+      <div id="commentImage2Div">
+        <div id="commentImage2Section" ></div>
+        <img id="imageCheck" class="fullimage">
+        
+        <label for="annotation">Image comments (optional)</label>
+        <div id="annotation" class="editable"></div>
+        <button type="button" class="divbutton" onclick="saveImage()">Save</button>
+        <button type="button" class="divbutton" onclick="showCommentList()">Cancel</button>
+      </div>
+      <div id="editToolbarDiv">
+        <div id="editToolbar">
+            <!---
+            <button type="button" onclick="tbarFunc('bold')"><span><B>B</B></span></button>
+            <button type="button" onclick="tbarFunc('italic')"><span><I>I</I></span></button>
+            <button type="button" onclick="tbarFunc('underline')"><span><u>u</u></span></button>
+            <button type="button" onclick="tbarFunc('strikethrough')"><span><del>S</del></span></button>
+            <button type="button" onclick="tbarFunc('insertunorderedlist')"><span>List</span></button>
+            <button type="button" onclick="tbarFunc('indent')" title="Indent"><span><B>&#10503;</B></span></button>
+            <button type="button" onclick="tbarFunc('outdent')" title="Outdent"><span><B>&#10502;</B></span></button>
+            <button type="button" onclick="tbarFunc('justifyleft')" title="Justify left"><span><B>&#8676;</B></span></button>
+            <button type="button" onclick="tbarFunc('justifycenter')" title="Justify center"><span><B>&#8697;</B></span></button>
+            <button type="button" onclick="tbarFunc('justifyright')" title="Justify right"><span><B>&#8677;</B></span></button>
+            <button type="button" onclick="tbarFunc('justifyfull')" title="Justify both"><span><B>&#8633;</B></span></button>
+            &nbsp;
+            --->
+            <button type="button" onclick="editBar.saveedit()"><span><B>Save</B></span></button>
+            <button type="button" onclick="commentCancel()"><span><B>Cancel</B></span></button>
+            <button type="button" onclick="editBar.getImage()" id="tbarpic" title="Get image"><span><B>&#128247;</B></span></button>            
+            <button type="button" onclick="editBar.removeImage()" id="tbarxpic" title="Remove image"><span><B>&#128473;&#128247;</B></span></button>
+            <button type="button" onclick="editBar.deleteedit()" id="tbardel" title="Delete comment"><span><B>Delete</B></span></button>
+            <input type="file" accept="image/*" id="imageBar" onchange="editBar.handleImage()" capture="environment">
+        </div>
+        <div id="commentbuttons" >
+            <button class="returnfromcomment libutton" type="button" onclick="showPatientOpen()">Return</button>
+            <button class="editthecomment libutton" type="button">Edit</button>
+            <button class="createthecomment libutton" type="button" onclick="showCommentNew()">New Comment</button>
+            <button class="createtheimage libutton" type="button" onclick="quickImage()" title="Quick picture">&#128247;</button>
+            </div>
+    </div>
+    </section>
+    <footer>
+      <p><a href="http://github.com/alfille/missiondb">Mission Database</a>
+      <button type="button" id="userbutton" onclick="setUser()">User:</button>
+      <button type="button" id="remotebutton" onclick="setRemote()">Remote:</button>
+      <div id="syncstatus">Sync Status</div></p>
+    </footer>
+    <!-- pouchdb -->
+    <script src="//cdn.jsdelivr.net/npm/pouchdb@7.2.1/dist/pouchdb.min.js"></script>
+    <!-- medium-editor -->
+    <script src="js/base.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
