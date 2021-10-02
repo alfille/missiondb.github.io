@@ -1,0 +1,214 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+header {
+  position: fixed;
+  z-index: -1;
+}
+table {
+  border-collapse: collapse;
+  width: 100% ;
+}
+th, td {
+  border: 1px solid black;
+  padding: 4px;
+}
+th {
+  cursor: pointer;
+}
+th:hover {
+  background:  yellow;
+}
+tr.head {
+  background: #CCFFFF ;
+}
+tr:hover {
+  background: lightyellow ;
+}
+tr, li {
+  background: #CCCCFF ;
+  min-height: 1em;
+}
+tr:nth-child(odd), li:nth-child(odd) {
+  background: #E6F2FF ;
+}
+tr.choice, li.choice {
+  background: gold !important;
+}
+tr:nth-child(odd):hover, li:nth-child(even):hover {
+  background: lightyellow ;
+}
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+}
+
+.divbutton {
+  margin: 1px;
+  padding: 4px;
+  border: 4px;
+  background: #3366FF;
+  font-size: 16px;
+  vertical-align: baseline;
+  font-family: inherit;
+  color: white;
+  border-style: groove ;
+  -webkit-appearance: none;
+  /*-moz-appearance: none;*/
+  -ms-appearance: none;
+  -o-appearance: none;
+  appearance: none;
+}
+
+.divbutton:disabled {
+  color: grey;
+  background: #9eb6ff ;
+}
+ 
+#deleteedit {
+  background: red;
+  float: right;
+}
+.commenttext {
+  min-height: 1em;
+}
+  
+body {
+  font: 14px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  line-height: 1.4em;
+  background: #8C9BFB;
+  color: #4d4d4d;
+  width: 100%;
+  margin: 0 auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-font-smoothing: antialiased;
+  -ms-font-smoothing: antialiased;
+  -o-font-smoothing: antialiased;
+  font-smoothing: antialiased;
+}
+
+#missiondbody {
+  background: #fff;
+  background: rgba(255, 255, 255, 0.9);
+  margin: 50px 0 0 0;
+  border: 1px solid #ccc;
+  position: relative;
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+  box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.2),
+        0 25px 50px 0 rgba(0, 0, 0, 0.15);
+}
+
+#missiondbody h1 {
+  position: absolute;
+  top: -60px;
+  width: 100%;
+  font-size: 32px;
+  font-weight: bold;
+  text-align: center;
+  color: #b3b3b3;
+  color: rgba(255, 255, 255, 0.3);
+  text-shadow: -1px -1px rgba(0, 0, 0, 0.2);
+  -webkit-text-rendering: optimizeLegibility;
+  -moz-text-rendering: optimizeLegibility;
+  -ms-text-rendering: optimizeLegibility;
+  -o-text-rendering: optimizeLegibility;
+  text-rendering: optimizeLegibility;
+}
+
+#patientListDiv, #patientOpenDiv, #patientEditDiv, #commentListDiv, #commentNewDiv, #editToolbarDiv, #commentbuttons {
+  display: none ;
+}
+
+#commentListDiv li:nth-child(odd) {
+  font-style: italic;
+  display: flex;
+  width: 100%;
+}
+#patientEditDiv {
+  display: none ;
+}
+
+footer {
+  color: darkblue;
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 10px;
+  text-align: center;
+  font-size: 12px;
+}
+
+#syncstatus {
+  background: paleblue;
+  border: 4px;
+}
+
+#userbutton, #remotebutton {
+  background: #99ddff;
+}
+
+.fullimage {
+  max-width: 100%;
+  height: auto ;
+}
+@media only and (orientation: landscape) {
+  .fullimage {
+    max-height: 80%;
+	width: auto ;
+  }
+}
+#imageInput, #imageBar, #imageQ {
+  display:none;
+}
+.editable {
+  border: 1px solid darkgray;
+  width: 100%;
+}
+.editor {
+    border:solid 1px #ccc;
+    padding: 20px;
+    min-height:200px;
+}
+#editToolbar {
+    border:solid 1px #ddd;
+    background:#f4f4f4;
+    padding: 5px;
+    border-radius:3px;
+}
+#editToolbar span {
+    cursor:pointer;
+    background: inherit;
+}
+#editToolbar span:hover {
+    color: red;
+}
+.libutton {
+  background: yellow;
+  color: black;
+  border: 1px solid red;
+  margin: 1px 3px 1px 1px ;
+}
+.libutton:disabled {
+  background: #ffffcc;
+  color: grey;
+}
+#textdiv {
+  background: gold;
+  min-height: 1em;
+}
+#tbardel {
+  background: red;
+  float: right;
+}
+#tbardel span:hover {
+  color: white;
+}
+#tbardel:disabled {
+  background: #ffffcc;
+  color: grey;
+}
