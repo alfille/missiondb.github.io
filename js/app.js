@@ -353,7 +353,7 @@ function setCookie( cname, value ) {
     let date = new Date();
     date.setTime(date.getTime() + (400 * 24 * 60 * 60 * 1000)); // > 1year
     const expires = " expires=" + date.toUTCString();
-    document.cookie = cname + "=" + value + "; " + expires + "; path=/";
+    document.cookie = cname + "=" + encodeURIComponent(value) + "; " + expires + "; path=/";
 }
 
 function deleteCookie( cname ) {
