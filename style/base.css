@@ -2,9 +2,14 @@ html, body {
   margin: 0;
   padding: 0;
 }
-header {
-  position: fixed;
-  z-index: -1;
+#headerbox {
+  display: flex;
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: blue;
+  color:green;
 }
 table {
   border-collapse: collapse;
@@ -94,7 +99,7 @@ body {
 #missiondbody {
   background: #fff;
   background: rgba(255, 255, 255, 0.9);
-  margin: 50px 0 0 0;
+  margin: 0 0 0 0;
   border: 1px solid #ccc;
   position: relative;
   border-top-left-radius: 2px;
@@ -103,15 +108,17 @@ body {
         0 25px 50px 0 rgba(0, 0, 0, 0.15);
 }
 
-#missiondbody h1 {
-  position: absolute;
-  top: -60px;
-  width: 100%;
+#headerbox h1 {
+  display: block;
+  height: 70px;
   font-size: 32px;
   font-weight: bold;
   text-align: center;
   color: #b3b3b3;
   color: rgba(255, 255, 255, 0.3);
+  margin-block-start: 10px;
+  margin-block-end: -.9em;
+  
   text-shadow: -1px -1px rgba(0, 0, 0, 0.2);
   -webkit-text-rendering: optimizeLegibility;
   -moz-text-rendering: optimizeLegibility;
@@ -120,7 +127,7 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-#patientListDiv, #patientOpenDiv, #patientEditDiv, #commentListDiv, #commentNewDiv, #editToolbarDiv, #commentbuttons {
+.patientListDiv, .patientOpenDiv, .patientEditDiv, .commentListDiv, .commentNewDiv, .editToolbarDiv, #commentbuttons {
   display: none ;
 }
 
@@ -129,10 +136,6 @@ body {
   display: flex;
   width: 100%;
 }
-#patientEditDiv {
-  display: none ;
-}
-
 footer {
   color: darkblue;
   position: absolute;

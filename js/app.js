@@ -277,9 +277,13 @@ function displayStateChange() {
     ] ;
     for (let ds of dslist) {
         if ( displayState == ds[0] ) {
-            document.getElementById(ds[1]).style.display = "block" ;
+            Array.from(document.getElementsByClassName(ds[1])).forEach( (v)=> {
+                v.style.display = "block" ;
+            });
         } else {
-            document.getElementById(ds[1]).style.display = "none" ;
+            Array.from(document.getElementsByClassName(ds[1])).forEach( (v) => {
+                v.style.display = "none" ;
+            });
         }
     }
 
@@ -1014,8 +1018,8 @@ function handleImage() {
 //    }
 
     // change display
-    document.getElementById("commentImageDiv").style.display = "none" ;
-    document.getElementById("commentImage2Div").style.display = "block" ;
+    document.getElementsByClassName("commentImageDiv")[0].style.display = "none" ;
+    document.getElementsByClassName("commentImage2Div")[0].style.display = "block" ;
 
     //urlObject = URL.createObjectURL(new Blob([arrayBuffer]));
 //    urlObject = URL.createObjectURL(image);

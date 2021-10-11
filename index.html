@@ -11,45 +11,49 @@
     <![endif]-->
   </head>
   <body>
+    <header>
+        <div id="headerbox">
+            <h1>Mission<br>Database</h1>
+            <div id="buttonheader"></div>
+        </div>
+    </header>
     <section id="missiondbody">
-      <header>
-        <h1>Mission Database</h1>
-      </header>
-      <div id="patientListDiv">
+      <div>
+      <div class="patientListDiv">
         <div id="patientListSection" ></div>
         <button type="button" class="divbutton" onclick="newPatient()">Add Patient</button>
         <button type="button" class="divbutton" onclick="showPatientOpen()" id="editreviewpatient">Review/Edit Patient</button>
       </div>
-      <div id="patientOpenDiv">
+      <div class="patientOpenDiv">
         <div id="patientOpenSection" ></div>
         <button type="button" class="divbutton" onclick="showPatientEdit()">Edit Patient Data</button>
         <button type="button" class="divbutton" onclick="showCommentList()">Case Comments</button>
         <button type="button" class="divbutton" onclick="showPatientList()">Return</button>
         <button type="button" class="divbutton" onclick="deletePatient()" id="deletepatient">Delete Patient</button>
       </div>
-      <div id="patientEditDiv">
+      <div class="patientEditDiv">
         <div id="patientEditSection" ></div>
         <button type="button" class="divbutton" onclick="savePatient()" id="saveeditpatient">Save</button>
         <button type="button" class="divbutton" onclick="showPatientOpen()">Cancel</button>
       </div>
-      <div id="commentListDiv">
+      <div class="commentListDiv">
         <div id="commentListSection" ></div>
       </div>
-     <div id="commentNewDiv">
+     <div class="commentNewDiv">
         <div id="commentNewSection">
           <img id="commentNewImage" class="fullimage">
           <label for="commentNewField" id="commentNewLabel"></label>
           <div id="commentNewField" class="editable"></div>
         </div>
       </div>
-      <div id="commentImageDiv">
+      <div class="commentImageDiv">
         <input type="file" accept="image/*" id="imageInput" onchange="handleImage()" capture="environment">
         <input type="file" accept="image/*" id="imageQ" onchange="quickImage2()" capture="environment">
         <button type="button" class="divbutton" onclick="getImage()">&#128247; or &#119809;
  u&#818; Gallery</button>
         <button type="button" class="divbutton" onclick="showCommentList()">Cancel</button>
       </div>
-      <div id="commentImage2Div">
+      <div class="commentImage2Div">
         <div id="commentImage2Section" ></div>
         <img id="imageCheck" class="fullimage">
         
@@ -87,6 +91,7 @@
             <button class="createthecomment libutton" type="button" onclick="showCommentNew()">New Comment</button>
             <button class="createtheimage libutton" type="button" onclick="quickImage()" title="Quick picture">&#128247;</button>
             </div>
+    </div>
     </div>
     </section>
     <footer>
