@@ -14,27 +14,39 @@
     <header>
         <div id="headerbox">
             <h1>Mission<br>Database</h1>
-            <div id="buttonheader"></div>
+            <div id="buttonheader">
+                <div class="patientListDiv">
+                    <button type="button" class="divbutton" onclick="newPatient()">Add Patient</button>
+                    <button type="button" class="divbutton" onclick="showPatientOpen()" id="editreviewpatient">Review/Edit Patient</button>
+                </div>
+                <div class="patientOpenDiv">
+                    <button type="button" class="divbutton" onclick="showPatientEdit()">Edit Patient Data</button>
+                    <button type="button" class="divbutton" onclick="showCommentList()">Case Comments</button>
+                    <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
+                    <button type="button" class="divbutton delete" onclick="deletePatient()" id="deletepatient">Delete Patient</button>
+                </div>
+                <div class="patientEditDiv">
+                    <button type="button" class="divbutton" onclick="savePatient()" id="saveeditpatient">Save</button>
+                    <button type="button" class="divbutton return" onclick="showPatientOpen()">Cancel</button>
+                </div>
+                <div class="commentListDiv">
+                    <button class="createthecomment libutton divbutton" type="button" onclick="showCommentNew()">New Comment</button>
+                    <button class="createtheimage libutton divbutton" type="button" onclick="quickImage()" title="Quick picture">&#128247;</button>
+                    <button class="returnfromcomment libutton divbutton return" type="button" onclick="showPatientOpen()">Return</button>
+                </div>
+            </div>
         </div>
     </header>
     <section id="missiondbody">
       <div>
       <div class="patientListDiv">
         <div id="patientListSection" ></div>
-        <button type="button" class="divbutton" onclick="newPatient()">Add Patient</button>
-        <button type="button" class="divbutton" onclick="showPatientOpen()" id="editreviewpatient">Review/Edit Patient</button>
       </div>
       <div class="patientOpenDiv">
         <div id="patientOpenSection" ></div>
-        <button type="button" class="divbutton" onclick="showPatientEdit()">Edit Patient Data</button>
-        <button type="button" class="divbutton" onclick="showCommentList()">Case Comments</button>
-        <button type="button" class="divbutton" onclick="showPatientList()">Return</button>
-        <button type="button" class="divbutton" onclick="deletePatient()" id="deletepatient">Delete Patient</button>
       </div>
       <div class="patientEditDiv">
         <div id="patientEditSection" ></div>
-        <button type="button" class="divbutton" onclick="savePatient()" id="saveeditpatient">Save</button>
-        <button type="button" class="divbutton" onclick="showPatientOpen()">Cancel</button>
       </div>
       <div class="commentListDiv">
         <div id="commentListSection" ></div>
@@ -82,14 +94,11 @@
             <button type="button" onclick="commentCancel()"><span><B>Cancel</B></span></button>
             <button type="button" onclick="editBar.getImage()" id="tbarpic" title="Get image"><span><B>&#128247;</B></span></button>            
             <button type="button" onclick="editBar.removeImage()" id="tbarxpic" title="Remove image"><span><B>&#128473;&#128247;</B></span></button>
-            <button type="button" onclick="editBar.deleteedit()" id="tbardel" title="Delete comment"><span><B>Delete</B></span></button>
+            <button type="button" onclick="editBar.deleteedit()" id="tbardel" title="Delete comment" class="delete"><span><B>Delete</B></span></button>
             <input type="file" accept="image/*" id="imageBar" onchange="editBar.handleImage()" capture="environment">
         </div>
         <div id="commentbuttons" >
-            <button class="returnfromcomment libutton" type="button" onclick="showPatientOpen()">Return</button>
             <button class="editthecomment libutton" type="button">Edit</button>
-            <button class="createthecomment libutton" type="button" onclick="showCommentNew()">New Comment</button>
-            <button class="createtheimage libutton" type="button" onclick="quickImage()" title="Quick picture">&#128247;</button>
             </div>
     </div>
     </div>

@@ -63,7 +63,7 @@ class Tbar {
         }
         if ( commentId ) {
             selectComment(existingdiv.getAttribute("data-id")) ;
-            let li = document.getElementById("CommentList").getElementsByClassName("libutton");
+            let li = document.getElementsByClassName("libutton");
             for ( let l of li ) {
                 l.disabled = true ;
             }
@@ -131,7 +131,7 @@ class Tbar {
             this.textdiv = null ;
         }
         if ( this.comment ) {
-            let li = document.getElementById("CommentList").getElementsByClassName("libutton");
+            let li = document.getElementsByClassName("libutton");
             for ( let l of li ) {
                 l.disabled = false ;
             }
@@ -821,10 +821,7 @@ class CommentList {
 
     lifirst() {
         let li = document.createElement("li") ;
-        li.appendChild( document.getElementById("commentbuttons").getElementsByClassName("createthecomment")[0].cloneNode(true) ) ;
-        li.appendChild( document.getElementById("commentbuttons").getElementsByClassName("createtheimage")[0].cloneNode(true) ) ;
         li.appendChild( document.createTextNode("Notes and Comments")) ;
-        li.appendChild( document.getElementById("commentbuttons").getElementsByClassName("returnfromcomment")[0].cloneNode(true) ) ;
         return li ;
     }
 
@@ -879,6 +876,7 @@ class CommentList {
         }) ;
         label.getElementsByClassName("editthecomment")[0].onclick =
             (e) => {
+            selectComment( comment.id ) ;
             editBar.startcommentedit( li ) ;
         } ;
 

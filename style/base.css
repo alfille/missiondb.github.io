@@ -5,11 +5,11 @@ html, body {
 #headerbox {
   display: flex;
   position: relative;
+  justify-content: space-between;
   top: 0;
   left: 0;
   width: 100%;
-  background: blue;
-  color:green;
+  background: #lightblue;
 }
 table {
   border-collapse: collapse;
@@ -54,10 +54,11 @@ ul {
 
 .divbutton {
   margin: 1px;
-  padding: 4px;
-  border: 4px;
+  padding: 3px;
+  border: 3px;
+  display: inline-block;
   background: #3366FF;
-  font-size: 16px;
+  font-size: 14px;
   vertical-align: baseline;
   font-family: inherit;
   color: white;
@@ -183,20 +184,23 @@ footer {
     padding: 5px;
     border-radius:3px;
 }
+#editToolbar button {
+  background: lightblue;
+}
 #editToolbar span {
     cursor:pointer;
     background: inherit;
 }
 #editToolbar span:hover {
-    color: red;
+    color: yellow;
 }
-.libutton {
+.editthecomment {
   background: yellow;
   color: black;
   border: 1px solid red;
   margin: 1px 3px 1px 1px ;
 }
-.libutton:disabled {
+.editthecomment:disabled {
   background: #ffffcc;
   color: grey;
 }
@@ -204,14 +208,21 @@ footer {
   background: gold;
   min-height: 1em;
 }
-#tbardel {
-  background: red;
+#tbardel:disabled {
+  background: #ffffcc;
+  color: grey;
+}
+.return {
+  background: green;
+}
+.delete {
+  background: red !important;
   float: right;
 }
-#tbardel span:hover {
-  color: white;
+.divbutton:hover {
+  color: yellow;
 }
-#tbardel:disabled {
+.divbutton:disabled {
   background: #ffffcc;
   color: grey;
 }
