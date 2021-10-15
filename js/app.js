@@ -56,6 +56,12 @@ class Tbar {
         return false ;
     }
 
+    buttonsdisabled( bool ) {
+        for ( let b of document.getElementsByClassName( "libutton" ) ) {
+            b.disabled = bool ;
+        }
+    }
+
     startcommentedit( existingdiv ) {
         this.comment = true ;
         if ( this.active() ) {
@@ -63,10 +69,7 @@ class Tbar {
         }
         if ( commentId ) {
             selectComment(existingdiv.getAttribute("data-id")) ;
-            let li = document.getElementsByClassName("libutton");
-            for ( let l of li ) {
-                l.disabled = true ;
-            }
+            this.buttonsdisabled( true ) ;
             this.deletefunc = deleteComment ;
         } else {
             unselectComment() ;
@@ -130,11 +133,8 @@ class Tbar {
             this.parent.innerHTML = ""
             this.textdiv = null ;
         }
+        this.buttonsdisabled( false ) ;
         if ( this.comment ) {
-            let li = document.getElementsByClassName("libutton");
-            for ( let l of li ) {
-                l.disabled = false ;
-            }
             if ( this.img ) {
                 this.parent.appendChild( this.img ) ;
             }
@@ -842,6 +842,7 @@ class CommentList {
 
         let cdiv = document.createElement("div");
         cdiv.innerHTML = commentTitle(comment) ;
+        cdiv.className = "inly" ;
         li.appendChild(cdiv) ;
 
         return li ;

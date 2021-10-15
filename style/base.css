@@ -195,10 +195,14 @@ footer {
     color: yellow;
 }
 .editthecomment {
+  display: inline-block;
   background: yellow;
   color: black;
   border: 1px solid red;
   margin: 1px 3px 1px 1px ;
+}
+.inly {
+  display : inline-block;
 }
 .editthecomment:disabled {
   background: #ffffcc;
