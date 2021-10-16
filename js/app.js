@@ -28,6 +28,7 @@ class Tbar {
     }
 
     active() {
+        // in edit mode already?
         return this.textdiv ;
     }
 
@@ -87,15 +88,16 @@ class Tbar {
         }
             
         this.toolbar.querySelector("#tbarxpic").disabled = (this.img == null) ;
-        this.toolbar.querySelector("#tbardel").style.visibility = (this.deletefunc!=null) ? "visible" : "none" ;
+        this.toolbar.querySelector("#tbardel").style.visibility = (this.deletefunc!=null) ? "visible" : "hidden" ;
 
         this.imageslot = document.createElement("img") ;
-        this.imageslot.className = "fullimage" ;
+        this.imageslot.className = "fullimage glurg" ;
         this.file0 = null ;
         if ( this.img ) {
             this.imageslot.src = this.img.src ;
+            this.imageslot.style.display = "block" ;
         } else {
-            this.imageslot.style.visibility = "none" ;
+            this.imageslot.style.display = "none" ;
         }
 
         this.parent.innerHTML = "" ;
@@ -105,6 +107,7 @@ class Tbar {
         this.textdiv.contentEditable = true ;
         this.textdiv.id = "textdiv" ;
 
+        // elements of the edit fields
         this.parent.appendChild( this.imageslot ) ;
         this.parent.appendChild(this.toolbar) ;
         this.parent.appendChild(this.textdiv) ;
@@ -162,12 +165,12 @@ class Tbar {
         const files = document.getElementById('imageBar')
         this.file0 = files.files[0];
         this.imageslot.src = URL.createObjectURL(this.file0) ;
-        this.imageslot.style.visibility = "visible" ;
+        this.imageslot.style.display = "block" ;
         document.getElementById("tbarxpic").disabled = false ;
     }
 
     removeImage() {
-        this.imageslot.style.visibility = "none" ;
+        this.imageslot.style.display = "none" ;
         this.file0 = "remove" ;
         document.getElementById("tbarxpic").disabled = true ;
     }

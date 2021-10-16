@@ -36,6 +36,9 @@ tr, li {
   min-height: 1em;
 }
 tr:nth-child(odd), li:nth-child(odd) {
+  margin: 4px 0 0 0;
+  border-style: double none none none ;
+  padding: 4px 0 0 0;
   background: #E6F2FF ;
 }
 tr.choice, li.choice {
@@ -163,7 +166,7 @@ footer {
 @media only and (orientation: landscape) {
   .fullimage {
     max-height: 80%;
-	width: auto ;
+  width: auto ;
   }
 }
 #imageInput, #imageBar, #imageQ {
@@ -211,6 +214,7 @@ footer {
 #textdiv {
   background: gold;
   min-height: 1em;
+  border: 2px solid black;
 }
 #tbardel:disabled {
   background: #ffffcc;
