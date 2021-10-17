@@ -269,28 +269,13 @@ function unselectPatient() {
 }
 
 function displayStateChange() {
-    const dslist = [
-        [ "PatientList", "patientListDiv" ] ,
-        [ "PatientEdit", "patientEditDiv" ] ,
-        [ "PatientOpen", "patientOpenDiv" ] ,
-        [ "CommentList", "commentListDiv" ] ,
-        [ "CommentNew", "commentNewDiv" ] ,
-        [ "CommentImage","commentImageDiv"] ,
-        [ "CommentImage2","commentImage2Div"] ,
-    ] ;
-    for (let ds of dslist) {
-        if ( displayState == ds[0] ) {
-            Array.from(document.getElementsByClassName(ds[1])).forEach( (v)=> {
-                v.style.display = "block" ;
-            });
-        } else {
-            Array.from(document.getElementsByClassName(ds[1])).forEach( (v) => {
-                v.style.display = "none" ;
-            });
-        }
-    }
+    Array.from(document.getElementsByClassName("pageOverlay")).forEach( (v)=> {
+        console.log(v.classList) ;
+        v.style.display = v.classList.contains(displayState) ? "block" : "none" ;
+    });
 
     setCookie("displayState",displayState) ;
+
     objectPatientOpen = null ;
     objectPatientEdit = null ;
     objectCommentList = null ;
@@ -335,7 +320,7 @@ function displayStateChange() {
             if ( patientId ) {
                 // New comment only
                 unselectComment() ;
-                commentNew() ;
+                CommentNew() ;
             } else {
                 showPatientList() ;
             }
@@ -894,7 +879,7 @@ function makeCommentId() {
     return [ patientId, "Comment" , d ].join(";") ;
 }
 
-function commentNew() {
+function CommentNew() {
     console.log(document.getElementById("commentNewLabel")) ;
     document.getElementById("commentNewLabel").innerHTML = commentTitle(null)  ;
     console.log("new comment") ;
@@ -1020,8 +1005,8 @@ function handleImage() {
 //    }
 
     // change display
-    document.getElementsByClassName("commentImageDiv")[0].style.display = "none" ;
-    document.getElementsByClassName("commentImage2Div")[0].style.display = "block" ;
+    document.getElementsByClassName("CommentImage")[0].style.display = "none" ;
+    document.getElementsByClassName("CommentImage2")[0].style.display = "block" ;
 
     //urlObject = URL.createObjectURL(new Blob([arrayBuffer]));
 //    urlObject = URL.createObjectURL(image);

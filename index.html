@@ -15,21 +15,21 @@
         <div id="headerbox">
             <h1>Mission<br>Database</h1>
             <div id="buttonheader">
-                <div class="patientListDiv">
+                <div class="PatientList pageOverlay">
                     <button type="button" class="divbutton" onclick="newPatient()">Add Patient</button>
                     <button type="button" class="divbutton" onclick="showPatientOpen()" id="editreviewpatient">Review/Edit Patient</button>
                 </div>
-                <div class="patientOpenDiv">
+                <div class="PatientOpen pageOverlay">
                     <button type="button" class="divbutton" onclick="showPatientEdit()">Edit Patient Data</button>
                     <button type="button" class="divbutton" onclick="showCommentList()">Case Comments</button>
                     <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
                     <button type="button" class="divbutton delete" onclick="deletePatient()" id="deletepatient">Delete Patient</button>
                 </div>
-                <div class="patientEditDiv">
+                <div class="PatientEdit pageOverlay">
                     <button type="button" class="divbutton" onclick="savePatient()" id="saveeditpatient">Save</button>
                     <button type="button" class="divbutton return" onclick="showPatientOpen()">Cancel</button>
                 </div>
-                <div class="commentListDiv">
+                <div class="CommentList pageOverlay">
                     <button class="createthecomment libutton divbutton" type="button" onclick="showCommentNew()">New Comment</button>
                     <button class="createtheimage libutton divbutton" type="button" onclick="quickImage()" title="Quick picture">&#128247;</button>
                     <button class="returnfromcomment libutton divbutton return" type="button" onclick="showPatientOpen()">Return</button>
@@ -39,33 +39,33 @@
     </header>
     <section id="missiondbody">
       <div>
-      <div class="patientListDiv">
+      <div class="PatientList pageOverlay">
         <div id="patientListSection" ></div>
       </div>
-      <div class="patientOpenDiv">
+      <div class="PatientOpen pageOverlay">
         <div id="patientOpenSection" ></div>
       </div>
-      <div class="patientEditDiv">
+      <div class="PatientEdit pageOverlay">
         <div id="patientEditSection" ></div>
       </div>
-      <div class="commentListDiv">
+      <div class="CommentList pageOverlay">
         <div id="commentListSection" ></div>
       </div>
-     <div class="commentNewDiv">
+     <div class="CommentNew pageOverlay">
         <div id="commentNewSection">
           <img id="commentNewImage" class="fullimage">
           <label for="commentNewField" id="commentNewLabel"></label>
           <div id="commentNewField" class="editable"></div>
         </div>
       </div>
-      <div class="commentImageDiv">
+      <div class="CommentImage pageOverlay">
         <input type="file" accept="image/*" id="imageInput" onchange="handleImage()" capture="environment">
         <input type="file" accept="image/*" id="imageQ" onchange="quickImage2()" capture="environment">
         <button type="button" class="divbutton" onclick="getImage()">&#128247; or &#119809;
  u&#818; Gallery</button>
         <button type="button" class="divbutton" onclick="showCommentList()">Cancel</button>
       </div>
-      <div class="commentImage2Div">
+      <div class="CommentImage2 pageOverlay">
         <div id="commentImage2Section" ></div>
         <img id="imageCheck" class="fullimage">
         

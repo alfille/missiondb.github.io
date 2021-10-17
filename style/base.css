@@ -131,11 +131,11 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-.patientListDiv, .patientOpenDiv, .patientEditDiv, .commentListDiv, .commentNewDiv, .editToolbarDiv, #commentbuttons {
+.pageOverlay, .editToolbarDiv, #commentbuttons {
   display: none ;
 }
 
-#commentListDiv li:nth-child(odd) {
+#CommentList li:nth-child(odd) {
   font-style: italic;
   display: flex;
   width: 100%;
