@@ -23,7 +23,7 @@ class Tbar {
     constructor() {
         this.textdiv = null ;
         this.text = null ;
-        this.toolbar = document.querySelector(".editToolbar").cloneNode(true) ;
+        this.toolbar = document.getElementById("templates").querySelector(".editToolbar").cloneNode(true) ;
     }
 
     active() {

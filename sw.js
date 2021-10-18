@@ -1,11 +1,12 @@
 var CACHE_NAME = 'my-site-cache-v1';
 var urlsToCache = [
-  '/style/base.css',
-  '/style/bg.png',
-  '/js/app.js',
-  '/js/base.js',
-  '/index.html',
-  '/js/pouchdb-7.2.1.min.js',
+	'/',
+	'/style/base.css',
+	'/style/bg.png',
+	'/js/app.js',
+	'/js/base.js',
+	'/index.html',
+	'/js/pouchdb-7.2.1.min.js',
 ];
 
 self.addEventListener('install', function(event) {
@@ -24,15 +25,15 @@ self.addEventListener('install', function(event) {
 );
 
 self.addEventListener('fetch', function(event) {
-  event.respondWith(
-    caches.match(event.request)
-      .then(function(response) {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      }
-    )
-  );
+	console.log(["Fetch",event]) ;	
+	event.respondWith(
+		caches.match(event.request).then(function(response) {
+			// Cache hit - return response
+			if (response) {
+			  return response;
+			}
+			return fetch(event.request);
+		}).catch( (err) => console.log(err) ; )
+		)
+	);
 });
