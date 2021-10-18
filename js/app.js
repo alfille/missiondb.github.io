@@ -23,8 +23,7 @@ class Tbar {
     constructor() {
         this.textdiv = null ;
         this.text = null ;
-        this.toolbar = document.getElementById("editToolbar") ;
-        this.toolbar.parentNode.removeChild(this.toolbar) ;
+        this.toolbar = document.querySelector(".editToolbar").cloneNode(true) ;
     }
 
     active() {
@@ -39,7 +38,7 @@ class Tbar {
             this.savefunc = savefunc ;
             this.deletefunc = deletefunc ;
             this.parent = existingdiv ;
-            this.toolbar.querySelector("#tbardel").style.visibility = (deletefunc!=null) ? "visible" : "none" ;
+            this.toolbar.querySelector(".tbardel").style.visibility = (deletefunc!=null) ? "visible" : "none" ;
             this.text = this.parent.innerText || "" ;
 
             this.parent.innerHTML = "" ;
@@ -50,8 +49,6 @@ class Tbar {
             this.textdiv.contentEditable = true ;
             this.textdiv.id = "textdiv" ;
             this.parent.appendChild(this.textdiv) ;
-
-            this.toolbar = null ;
             return true ;
         }
         return false ;
@@ -87,8 +84,8 @@ class Tbar {
             this.text = "" ;
         }
             
-        this.toolbar.querySelector("#tbarxpic").disabled = (this.img == null) ;
-        this.toolbar.querySelector("#tbardel").style.visibility = (this.deletefunc!=null) ? "visible" : "hidden" ;
+        this.toolbar.querySelector(".tbarxpic").disabled = (this.img == null) ;
+        this.toolbar.querySelector(".tbardel").style.visibility = (this.deletefunc!=null) ? "visible" : "hidden" ;
 
         this.imageslot = document.createElement("img") ;
         this.imageslot.className = "fullimage glurg" ;
@@ -111,15 +108,12 @@ class Tbar {
         this.parent.appendChild( this.imageslot ) ;
         this.parent.appendChild(this.toolbar) ;
         this.parent.appendChild(this.textdiv) ;
-
-        this.toolbar = null ;
         return true ;
     }
 
     saveedit() {
         if ( this.active() ) {
             this.text = this.textdiv.innerText ;
-            console.log(this.text);
             this.img = this.imageslot ;
             this.canceledit() ;
             if ( this.comment ) {
@@ -132,7 +126,6 @@ class Tbar {
 
     canceledit() {
         if ( this.active() ) {
-            this.toolbar = document.getElementById("editToolbar") ;
             this.parent.innerHTML = ""
             this.textdiv = null ;
         }
@@ -149,30 +142,28 @@ class Tbar {
     }
 
     deleteedit() {
-        let t = document.getElementById("editToolbar") ;
         if (this.deletefunc()) {
-            this.toolbar = t ;
             this.textdiv = null
             this.text = null ;
         }
     }
 
     getImage() {
-        document.getElementById("imageBar").click() ;
+        this.toolbar.querySelector(".imageBar").click() ;
     }
 
     handleImage() {
-        const files = document.getElementById('imageBar')
+        const files = this.parent.querySelector('.imageBar')
         this.file0 = files.files[0];
         this.imageslot.src = URL.createObjectURL(this.file0) ;
         this.imageslot.style.display = "block" ;
-        document.getElementById("tbarxpic").disabled = false ;
+        this.toolbar.querySelector(".tbarxpic").disabled = false ;
     }
 
     removeImage() {
         this.imageslot.style.display = "none" ;
         this.file0 = "remove" ;
-        document.getElementById("tbarxpic").disabled = true ;
+        this.toolbar.querySelector(".tbarxpic").disabled = true ;
     }
 }
 
@@ -270,7 +261,6 @@ function unselectPatient() {
 
 function displayStateChange() {
     Array.from(document.getElementsByClassName("pageOverlay")).forEach( (v)=> {
-        console.log(v.classList) ;
         v.style.display = v.classList.contains(displayState) ? "block" : "none" ;
     });
 
@@ -284,7 +274,6 @@ function displayStateChange() {
     switch( displayState ) {
         case "PatientList":            
             db.allDocs({include_docs: true, descending: true}).then( function(docs) {
-                //console.log(docs) ;
                 objectPatientList.fill(docs.rows) ;
                 if ( patientId ) {
                     selectPatient( patientId ) ;
@@ -298,19 +287,19 @@ function displayStateChange() {
             
         case "PatientOpen":
             if ( patientId ) {
-                objectPatientOpen = new OpenPList( "PatientOpen", patientOpenSection ) ;
+                objectPatientOpen = new OpenPList( "PatientOpen", PatientOpenContent ) ;
             } else {
                 showPatientList() ;
             }
             break ;
             
         case "PatientEdit":            
-            objectPatientEdit = new EditPList( "PatientEdit", patientEditSection ) ;
+            objectPatientEdit = new EditPList( "PatientEdit", PatientEditContent ) ;
             break ;
             
         case "CommentList":            
             if ( patientId ) {
-                objectCommentList = new CommentList( commentListSection ) ;
+                objectCommentList = new CommentList( CommentListContent ) ;
             } else {
                 showPatientList() ;
             }
@@ -515,7 +504,7 @@ class dataTable extends sortTable {
   
 }
 
-var objectPatientList = new dataTable( "PatientTable", patientListSection, ["LastName", "FirstName", "DOB","Dx","Procedure" ] ) ;
+var objectPatientList = new dataTable( "PatientTable", PatientListContent, ["LastName", "FirstName", "DOB","Dx","Procedure" ] ) ;
 
 class FieldList {
     constructor( idname, parent, fieldlist ) {
@@ -880,10 +869,10 @@ function makeCommentId() {
 }
 
 function CommentNew() {
-    console.log(document.getElementById("commentNewLabel")) ;
-    document.getElementById("commentNewLabel").innerHTML = commentTitle(null)  ;
+    console.log(document.getElementById("CommentNewLabel")) ;
+    document.getElementById("CommentNewLabel").innerHTML = commentTitle(null)  ;
     console.log("new comment") ;
-    let d = document.getElementById("commentNewField") ;
+    let d = document.getElementById("CommentNewText") ;
     d.innerHTML = "" ;
     editBar.startcommentedit( d ) ;
 }
@@ -896,19 +885,13 @@ function commentCancel() {
 }
 
 function saveComment( plaintext, file0 ) {
-    console.log("saveComment") ;
-    console.log(plaintext) ;
-    console.log(typeof plaintext) ;
-    console.log(file0) ;
     if ( commentId ) {
         // existing comment
         db.get(commentId).then( function(doc) {
             doc.text = plaintext ;
             if ( file0 === "remove") {
                 if ( "_attachments" in doc ) {
-                    console.log(doc);
                     delete doc["_attachments"] ;
-                    console.log(doc);
                 }
             } else if (file0 ) {
                 doc._attachments = {
@@ -995,25 +978,14 @@ function getImage() {
 //let urlObject;
 function handleImage() {
     const files = document.getElementById('imageInput')
-    console.log(files.length);
     const image = files.files[0];
-
-
-//    if (urlObject) {
-//        URL.revokeObjectURL(urlObject) // only required if you do that multiple times
-//        urlObject = null ;
-//    }
 
     // change display
     document.getElementsByClassName("CommentImage")[0].style.display = "none" ;
     document.getElementsByClassName("CommentImage2")[0].style.display = "block" ;
 
-    //urlObject = URL.createObjectURL(new Blob([arrayBuffer]));
-//    urlObject = URL.createObjectURL(image);
-
-//    document.getElementById('imageCheck').src = urlObject;
-    document.getElementById('imageCheck').src = URL.createObjectURL(image) ;
      // see https://www.geeksforgeeks.org/html-dom-createobjecturl-method/
+    document.getElementById('imageCheck').src = URL.createObjectURL(image) ;
 }    
 
 function saveImage() {

@@ -1,118 +1,114 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>MissionDB -- Medical Mission Database</title>
-    <link rel="shortcut icon" type="image/png" href="images/missiondb.png"/>
-    <link rel="stylesheet" href="style/base.css">
-    <!--[if IE]>
-      <script src="style/ie.js"></script>
-    <![endif]-->
-  </head>
-  <body>
-    <header>
-        <div id="headerbox">
-            <h1>Mission<br>Database</h1>
-            <div id="buttonheader">
-                <div class="PatientList pageOverlay">
-                    <button type="button" class="divbutton" onclick="newPatient()">Add Patient</button>
-                    <button type="button" class="divbutton" onclick="showPatientOpen()" id="editreviewpatient">Review/Edit Patient</button>
-                </div>
-                <div class="PatientOpen pageOverlay">
-                    <button type="button" class="divbutton" onclick="showPatientEdit()">Edit Patient Data</button>
-                    <button type="button" class="divbutton" onclick="showCommentList()">Case Comments</button>
-                    <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
-                    <button type="button" class="divbutton delete" onclick="deletePatient()" id="deletepatient">Delete Patient</button>
-                </div>
-                <div class="PatientEdit pageOverlay">
-                    <button type="button" class="divbutton" onclick="savePatient()" id="saveeditpatient">Save</button>
-                    <button type="button" class="divbutton return" onclick="showPatientOpen()">Cancel</button>
-                </div>
-                <div class="CommentList pageOverlay">
-                    <button class="createthecomment libutton divbutton" type="button" onclick="showCommentNew()">New Comment</button>
-                    <button class="createtheimage libutton divbutton" type="button" onclick="quickImage()" title="Quick picture">&#128247;</button>
-                    <button class="returnfromcomment libutton divbutton return" type="button" onclick="showPatientOpen()">Return</button>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>MissionDB -- Medical Mission Database</title>
+        <link rel="shortcut icon" type="image/png" href="images/missiondb.png"/>
+        <link rel="stylesheet" href="style/base.css">
+    </head>
+    <body>
+        <header>
+            <div id="headerbox">
+                <h1>Mission<br>Database</h1>
+                <div id="buttonheader">
+                    <div class="PatientList pageOverlay">
+                        <button type="button" class="divbutton" onclick="newPatient()">Add Patient</button>
+                        <button type="button" class="divbutton" onclick="showPatientOpen()" id="editreviewpatient">Review/Edit Patient</button>
+                    </div>
+                    <div class="PatientOpen pageOverlay">
+                        <button type="button" class="divbutton" onclick="showPatientEdit()">Edit Patient Data</button>
+                        <button type="button" class="divbutton" onclick="showCommentList()">Case Comments</button>
+                        <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
+                        <button type="button" class="divbutton delete" onclick="deletePatient()" id="deletepatient">Delete Patient</button>
+                    </div>
+                    <div class="PatientEdit pageOverlay">
+                        <button type="button" class="divbutton" onclick="savePatient()" id="saveeditpatient">Save</button>
+                        <button type="button" class="divbutton return" onclick="showPatientOpen()">Cancel</button>
+                    </div>
+                    <div class="CommentList pageOverlay">
+                        <button class="createthecomment libutton divbutton" type="button" onclick="showCommentNew()">New Comment</button>
+                        <button class="createtheimage libutton divbutton" type="button" onclick="quickImage()" title="Quick picture">&#128247;</button>
+                        <button class="returnfromcomment libutton divbutton return" type="button" onclick="showPatientOpen()">Return</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </header>
-    <section id="missiondbody">
-      <div>
-      <div class="PatientList pageOverlay">
-        <div id="patientListSection" ></div>
-      </div>
-      <div class="PatientOpen pageOverlay">
-        <div id="patientOpenSection" ></div>
-      </div>
-      <div class="PatientEdit pageOverlay">
-        <div id="patientEditSection" ></div>
-      </div>
-      <div class="CommentList pageOverlay">
-        <div id="commentListSection" ></div>
-      </div>
-     <div class="CommentNew pageOverlay">
-        <div id="commentNewSection">
-          <img id="commentNewImage" class="fullimage">
-          <label for="commentNewField" id="commentNewLabel"></label>
-          <div id="commentNewField" class="editable"></div>
-        </div>
-      </div>
-      <div class="CommentImage pageOverlay">
-        <input type="file" accept="image/*" id="imageInput" onchange="handleImage()" capture="environment">
-        <input type="file" accept="image/*" id="imageQ" onchange="quickImage2()" capture="environment">
-        <button type="button" class="divbutton" onclick="getImage()">&#128247; or &#119809;
- u&#818; Gallery</button>
-        <button type="button" class="divbutton" onclick="showCommentList()">Cancel</button>
-      </div>
-      <div class="CommentImage2 pageOverlay">
-        <div id="commentImage2Section" ></div>
-        <img id="imageCheck" class="fullimage">
-        
-        <label for="annotation">Image comments (optional)</label>
-        <div id="annotation" class="editable"></div>
-        <button type="button" class="divbutton" onclick="saveImage()">Save</button>
-        <button type="button" class="divbutton" onclick="showCommentList()">Cancel</button>
-      </div>
-      <div id="editToolbarDiv">
-        <div id="editToolbar">
-            <!---
-            <button type="button" onclick="tbarFunc('bold')"><span><B>B</B></span></button>
-            <button type="button" onclick="tbarFunc('italic')"><span><I>I</I></span></button>
-            <button type="button" onclick="tbarFunc('underline')"><span><u>u</u></span></button>
-            <button type="button" onclick="tbarFunc('strikethrough')"><span><del>S</del></span></button>
-            <button type="button" onclick="tbarFunc('insertunorderedlist')"><span>List</span></button>
-            <button type="button" onclick="tbarFunc('indent')" title="Indent"><span><B>&#10503;</B></span></button>
-            <button type="button" onclick="tbarFunc('outdent')" title="Outdent"><span><B>&#10502;</B></span></button>
-            <button type="button" onclick="tbarFunc('justifyleft')" title="Justify left"><span><B>&#8676;</B></span></button>
-            <button type="button" onclick="tbarFunc('justifycenter')" title="Justify center"><span><B>&#8697;</B></span></button>
-            <button type="button" onclick="tbarFunc('justifyright')" title="Justify right"><span><B>&#8677;</B></span></button>
-            <button type="button" onclick="tbarFunc('justifyfull')" title="Justify both"><span><B>&#8633;</B></span></button>
-            &nbsp;
-            --->
-            <button type="button" onclick="editBar.saveedit()"><span><B>Save</B></span></button>
-            <button type="button" onclick="commentCancel()"><span><B>Cancel</B></span></button>
-            <button type="button" onclick="editBar.getImage()" id="tbarpic" title="Get image"><span><B>&#128247;</B></span></button>            
-            <button type="button" onclick="editBar.removeImage()" id="tbarxpic" title="Remove image"><span><B>&#128473;&#128247;</B></span></button>
-            <button type="button" onclick="editBar.deleteedit()" id="tbardel" title="Delete comment" class="delete"><span><B>Delete</B></span></button>
-            <input type="file" accept="image/*" id="imageBar" onchange="editBar.handleImage()" capture="environment">
-        </div>
-        <div id="commentbuttons" >
-            <button class="editthecomment libutton" type="button">Edit</button>
+        </header>
+        <section id="missiondbody">
+            <div class="PatientList pageOverlay">
+                <div id="PatientListContent" ></div>
             </div>
-    </div>
-    </div>
-    </section>
-    <footer>
-      <p><a href="http://github.com/alfille/missiondb">Mission Database</a>
-      <button type="button" id="userbutton" onclick="setUser()">User:</button>
-      <button type="button" id="remotebutton" onclick="setRemote()">Remote:</button>
-      <div id="syncstatus">Sync Status</div></p>
-    </footer>
-    <!-- pouchdb -->
-    <script src="js/pouchdb-7.2.1.min.js"></script>
-    <!-- medium-editor -->
-    <script src="js/base.js"></script>
-    <script src="js/app.js"></script>
-  </body>
+            <div class="PatientOpen pageOverlay">
+                <div id="PatientOpenContent" ></div>
+            </div>
+            <div class="PatientEdit pageOverlay">
+                <div id="PatientEditContent" ></div>
+            </div>
+            <div class="CommentList pageOverlay">
+                <div id="CommentListContent" ></div>
+            </div>
+            <div class="CommentNew pageOverlay">
+                <div id="CommentNewContent">
+                    <img id="CommentNewImage" class="fullimage">
+                    <label for="CommentNewText" id="CommentNewLabel"></label>
+                    <div id="CommentNewText" class="editable"></div>
+                </div>
+            </div>
+            <div class="CommentImage pageOverlay">
+                <input type="file" accept="image/*" id="imageInput" onchange="handleImage()" capture="environment">
+                <input type="file" accept="image/*" id="imageQ" onchange="quickImage2()" capture="environment">
+                <button type="button" class="divbutton" onclick="getImage()">&#128247; or &#119809;
+                u&#818; Gallery</button>
+                <button type="button" class="divbutton" onclick="showCommentList()">Cancel</button>
+            </div>
+            <div class="CommentImage2 pageOverlay">
+                <div id="CommentImage2Content" ></div>
+                <img id="imageCheck" class="fullimage">
+
+                <label for="annotation">Image comments (optional)</label>
+                <div id="annotation" class="editable"></div>
+                <button type="button" class="divbutton" onclick="saveImage()">Save</button>
+                <button type="button" class="divbutton" onclick="showCommentList()">Cancel</button>
+            </div>
+            <div class="pageOverlay">
+                <div class="editToolbar">
+                    <!---
+                    <button type="button" onclick="tbarFunc('bold')"><span><B>B</B></span></button>
+                    <button type="button" onclick="tbarFunc('italic')"><span><I>I</I></span></button>
+                    <button type="button" onclick="tbarFunc('underline')"><span><u>u</u></span></button>
+                    <button type="button" onclick="tbarFunc('strikethrough')"><span><del>S</del></span></button>
+                    <button type="button" onclick="tbarFunc('insertunorderedlist')"><span>List</span></button>
+                    <button type="button" onclick="tbarFunc('indent')" title="Indent"><span><B>&#10503;</B></span></button>
+                    <button type="button" onclick="tbarFunc('outdent')" title="Outdent"><span><B>&#10502;</B></span></button>
+                    <button type="button" onclick="tbarFunc('justifyleft')" title="Justify left"><span><B>&#8676;</B></span></button>
+                    <button type="button" onclick="tbarFunc('justifycenter')" title="Justify center"><span><B>&#8697;</B></span></button>
+                    <button type="button" onclick="tbarFunc('justifyright')" title="Justify right"><span><B>&#8677;</B></span></button>
+                    <button type="button" onclick="tbarFunc('justifyfull')" title="Justify both"><span><B>&#8633;</B></span></button>
+                    &nbsp;
+                    --->
+                    <button type="button" onclick="editBar.saveedit()"><span><B>Save</B></span></button>
+                    <button type="button" onclick="commentCancel()"><span><B>Cancel</B></span></button>
+                    <button type="button" onclick="editBar.getImage()" title="Get image"><span><B>&#128247;</B></span></button>            
+                    <button type="button" onclick="editBar.removeImage()" class="tbarxpic" title="Remove image"><span><B>&#128473;&#128247;</B></span></button>
+                    <button type="button" onclick="editBar.deleteedit()" class="tbardel delete" title="Delete comment"><span><B>Delete</B></span></button>
+                    <input type="file" accept="image/*" class="imageBar" onchange="editBar.handleImage()" capture="environment">
+                </div>
+                <div id="commentbuttons" >
+                    <button class="editthecomment libutton" type="button">Edit</button>
+                </div>
+            </div>
+        </section>
+        <footer>
+            <p><a href="http://github.com/alfille/missiondb">Mission Database</a>
+                <button type="button" id="userbutton" onclick="setUser()">User:</button>
+                <button type="button" id="remotebutton" onclick="setRemote()">Remote:</button>
+                <div id="syncstatus">Sync Status</div>
+            </p>
+        </footer>
+        <!-- pouchdb -->
+        <script src="js/pouchdb-7.2.1.min.js"></script>
+        <!-- medium-editor -->
+        <script src="js/base.js"></script>
+        <script src="js/app.js"></script>
+    </body>
 </html>

@@ -131,7 +131,7 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-.pageOverlay, .editToolbarDiv, #commentbuttons {
+.pageOverlay, #commentbuttons {
   display: none ;
 }
 
@@ -169,7 +169,7 @@ footer {
   width: auto ;
   }
 }
-#imageInput, #imageBar, #imageQ {
+#imageInput, .imageBar, #imageQ {
   display:none;
 }
 .editable {
@@ -181,20 +181,20 @@ footer {
     padding: 20px;
     min-height:200px;
 }
-#editToolbar {
+.editToolbar {
     border:solid 1px #ddd;
     background:#f4f4f4;
     padding: 5px;
     border-radius:3px;
 }
-#editToolbar button {
+.editToolbar button {
   background: lightblue;
 }
-#editToolbar span {
+.editToolbar span {
     cursor:pointer;
     background: inherit;
 }
-#editToolbar span:hover {
+.editToolbar span:hover {
     color: yellow;
 }
 .editthecomment {
@@ -216,7 +216,7 @@ footer {
   min-height: 1em;
   border: 2px solid black;
 }
-#tbardel:disabled {
+.tbardel:disabled {
   background: #ffffcc;
   color: grey;
 }
