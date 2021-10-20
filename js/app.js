@@ -578,6 +578,7 @@ class EditPList extends FieldList {
             db.get( patientId ).then(
             ( function(doc) {
                 this.doc = doc ;
+                printCard(doc) ;
             }).bind(this)
             ).then(( function() {
                 for ( let i=0; i<this.fieldlist.length; ++i ) {
@@ -815,7 +816,7 @@ class CommentList {
     liLabel( comment ) {
         let li = document.createElement("li") ;
 
-        li.appendChild( document.getElementById("commentbuttons").getElementsByClassName("editthecomment")[0].cloneNode(true) );
+        li.appendChild( document.getElementById("templates").getElementsByClassName("editthecomment")[0].cloneNode(true) );
 
         let cdiv = document.createElement("div");
         cdiv.innerHTML = commentTitle(comment) ;
@@ -1040,6 +1041,19 @@ function setRemoteButton() {
     } else {    
         document.getElementById("remotebutton").innerText = "Remote CouchDB: http://host:5984" ;
     }
+}
+
+function printpart (element) {
+  var printwin = window.open("");
+  printwin.document.write(element.innerHTML);
+  printwin.stop();
+  printwin.print();
+  printwin.close();
+}
+
+function printCard( doc ) {
+    var element = document.getElementById("templates").querySelector(".printCard").cloneNode(true);
+    printpart( element ) ;
 }
 
 function setRemote() {
