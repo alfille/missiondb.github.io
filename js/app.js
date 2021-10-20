@@ -1044,11 +1044,37 @@ function setRemoteButton() {
 }
 
 function printpart (element) {
-  var printwin = window.open("");
-  printwin.document.write(element.innerHTML);
+	console.log(element);
+	console.log(element.innerHTML);
+	var printwin = window.open("");
+	printwin.document.write( `
+<html><head><style>
+@media print {  
+  @page {
+	size: 6in 4in; /* landscape */
+	margin: .25in;
+  }
+}
+.printCard {
+	border: 2px solid black ;
+	display: flex;
+	flex-flow: column nowrap;
+	width: 100%;
+	height: 100%;
+	align-items: flex-start;
+}
+.rowCard {
+	display: flex;
+	flex-flow: row nowrap;
+	justify-content: space-between;
+}
+</style></head><body>
+${element.innerHTML}
+</body></html>
+	`) ;
   printwin.stop();
-  printwin.print();
-  printwin.close();
+  //printwin.print();
+  //printwin.close();
 }
 
 function printCard( doc ) {
