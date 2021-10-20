@@ -71,33 +71,56 @@
                 <button type="button" class="divbutton" onclick="showCommentList()">Cancel</button>
             </div>
         </section>
-		<div id="templates" class="pageOverlay">
-			<div class="editToolbar">
-				<!---
-				<button type="button" onclick="tbarFunc('bold')"><span><B>B</B></span></button>
-				<button type="button" onclick="tbarFunc('italic')"><span><I>I</I></span></button>
-				<button type="button" onclick="tbarFunc('underline')"><span><u>u</u></span></button>
-				<button type="button" onclick="tbarFunc('strikethrough')"><span><del>S</del></span></button>
-				<button type="button" onclick="tbarFunc('insertunorderedlist')"><span>List</span></button>
-				<button type="button" onclick="tbarFunc('indent')" title="Indent"><span><B>&#10503;</B></span></button>
-				<button type="button" onclick="tbarFunc('outdent')" title="Outdent"><span><B>&#10502;</B></span></button>
-				<button type="button" onclick="tbarFunc('justifyleft')" title="Justify left"><span><B>&#8676;</B></span></button>
-				<button type="button" onclick="tbarFunc('justifycenter')" title="Justify center"><span><B>&#8697;</B></span></button>
-				<button type="button" onclick="tbarFunc('justifyright')" title="Justify right"><span><B>&#8677;</B></span></button>
-				<button type="button" onclick="tbarFunc('justifyfull')" title="Justify both"><span><B>&#8633;</B></span></button>
-				&nbsp;
-				--->
-				<button type="button" onclick="editBar.saveedit()"><span><B>Save</B></span></button>
-				<button type="button" onclick="commentCancel()"><span><B>Cancel</B></span></button>
-				<button type="button" onclick="editBar.getImage()" title="Get image"><span><B>&#128247;</B></span></button>            
-				<button type="button" onclick="editBar.removeImage()" class="tbarxpic" title="Remove image"><span><B>&#128473;&#128247;</B></span></button>
-				<button type="button" onclick="editBar.deleteedit()" class="tbardel delete" title="Delete comment"><span><B>Delete</B></span></button>
-				<input type="file" accept="image/*" class="imageBar" onchange="editBar.handleImage()" capture="environment">
-			</div>
-			<div id="commentbuttons" >
-				<button class="editthecomment libutton" type="button">Edit</button>
-			</div>
-		</div>
+        <div id="templates" class="pageOverlay">
+            <div class="editToolbar">
+                <!---
+                <button type="button" onclick="tbarFunc('bold')"><span><B>B</B></span></button>
+                <button type="button" onclick="tbarFunc('italic')"><span><I>I</I></span></button>
+                <button type="button" onclick="tbarFunc('underline')"><span><u>u</u></span></button>
+                <button type="button" onclick="tbarFunc('strikethrough')"><span><del>S</del></span></button>
+                <button type="button" onclick="tbarFunc('insertunorderedlist')"><span>List</span></button>
+                <button type="button" onclick="tbarFunc('indent')" title="Indent"><span><B>&#10503;</B></span></button>
+                <button type="button" onclick="tbarFunc('outdent')" title="Outdent"><span><B>&#10502;</B></span></button>
+                <button type="button" onclick="tbarFunc('justifyleft')" title="Justify left"><span><B>&#8676;</B></span></button>
+                <button type="button" onclick="tbarFunc('justifycenter')" title="Justify center"><span><B>&#8697;</B></span></button>
+                <button type="button" onclick="tbarFunc('justifyright')" title="Justify right"><span><B>&#8677;</B></span></button>
+                <button type="button" onclick="tbarFunc('justifyfull')" title="Justify both"><span><B>&#8633;</B></span></button>
+                &nbsp;
+                --->
+                <button type="button" onclick="editBar.saveedit()"><span><B>Save</B></span></button>
+                <button type="button" onclick="commentCancel()"><span><B>Cancel</B></span></button>
+                <button type="button" onclick="editBar.getImage()" title="Get image"><span><B>&#128247;</B></span></button>            
+                <button type="button" onclick="editBar.removeImage()" class="tbarxpic" title="Remove image"><span><B>&#128473;&#128247;</B></span></button>
+                <button type="button" onclick="editBar.deleteedit()" class="tbardel delete" title="Delete comment"><span><B>Delete</B></span></button>
+                <input type="file" accept="image/*" class="imageBar" onchange="editBar.handleImage()" capture="environment">
+            </div>
+            <div id="commentbuttons" >
+                <button class="editthecomment libutton" type="button">Edit</button>
+            </div>
+            <div class="printCard">
+                <div class=rowCard></div>
+                    <div><img class="qrCard"></div><div><img class="photoCard"></div>
+                </div>
+                <div class=rowCard></div>
+                    <div><table>
+                        <tr><td>Patient name</td><td></td></tr>
+                        <tr><td>Complaints</td><td></td></tr>
+                        <tr><td>Procedure</td><td></td></tr>
+                        <tr><td>Length</td><td></td></tr>
+                        <tr><td>Surgeon</td><td></td></tr>
+                        <tr><td>Surgical class</td><td></td></tr>
+                    </table></div>
+                    <div><table>
+                        <tr><td>Age</td><td></td></tr>
+                        <tr><td>Sex</td><td></td></tr>
+                        <tr><td>Weight</td><td></td></tr>
+                        <tr><td>Allergies</td><td></td></tr>
+                        <tr><td>Meds</td><td></td></tr>
+                        <tr><td>Equipment</td><td></td></tr>
+                    </table></div>
+                </div>
+            </div>
+        </div>
         <footer>
             <p><a href="http://github.com/alfille/missiondb">Mission Database</a>
                 <button type="button" id="userbutton" onclick="setUser()">User:</button>

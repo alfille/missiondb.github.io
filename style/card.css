@@ -1,0 +1,26 @@
+@media print {  
+  @page {
+    size: 6in 4in; /* landscape */
+    /* you can also specify margins here: */
+    margin: .25in;
+  }
+}
+.printCard {
+    border: 2px solid black ;
+    display: flex;
+    flex-flow: column nowrap;
+    width: 100%;
+    height: 100%;
+    align-items: flex-start;
+}
+.rowCard {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+}
+
+table {
+    table-layout: auto;
+    border: 0;
+    
+
