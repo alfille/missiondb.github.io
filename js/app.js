@@ -1067,9 +1067,29 @@ function printpart (element) {
 	display: flex;
 	flex-flow: row nowrap;
 	justify-content: space-between;
+	width: 100%;
+	padding: 5px;
+}
+.rowCard div {
+	width: 100% ;
+} ;
+table {
+	width: 50%;
+    table-layout: auto;
+    border: 1px;
+}
+td {
+	word-wrap: break-word;
+}
+td:nth-child(1) {
+	width: 30% ;
+	font-weight: bold;
+}
+td:nth-child(2) {
+	width: 70% ;
 }
 </style></head><body>
-${element.innerHTML}
+${element.outerHTML}
 </body></html>
 	`) ;
   printwin.stop();
