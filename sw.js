@@ -22,9 +22,9 @@ self.addEventListener('install', function(event) {
             })).then(function() {
                 console.log('All resources have been fetched and cached.');
             });
-        }));
-    }
-);
+        });
+	);
+});
 
 self.addEventListener('fetch', function(event) {
     console.log(["Fetch",event]) ;  
@@ -35,6 +35,7 @@ self.addEventListener('fetch', function(event) {
               return response;
           }
           return fetch(event.request);
-      }).catch( (err) => console.log(err) ; )
+      }).catch( function (err) { console.log(err) ; 
+	  }) ;
     );
 });

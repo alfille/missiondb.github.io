@@ -1099,6 +1099,8 @@ ${element.outerHTML}
 
 function printCard( doc ) {
     var element = document.getElementById("templates").querySelector(".printCard").cloneNode(true);
+    var qrtest = new QR(document.getElementById("testqr"),window.location.href+patientId,128,128,4) ;
+    var qr = new QR(element.querySelector(".qrCard"),patientId,256,256,4) ;
     printpart( element ) ;
 }
 
