@@ -1051,11 +1051,13 @@ function printCard( doc ) {
         v.style.display = "block" ;
     });
     var card = document.getElementById("printCard") ;
+    var link = window.location.href + "?patientId=" + encodeURIComponent(patientId) ;
     var qr = new QR(
         card.querySelector(".qrCard"),
-        window.location.href + "?patientId=" + encodeURIComponent(patientId),
+        link,
         128,128,
         4) ;
+    /*
     window.print() ;
     Array.from(document.getElementsByClassName("print")).forEach( (v)=> {
         v.style.display = "none" ;
@@ -1063,6 +1065,7 @@ function printCard( doc ) {
     Array.from(document.getElementsByClassName("screen")).forEach( (v)=> {
         v.style.display = "block" ;
     });
+    */
 }
 
 function setRemote() {
