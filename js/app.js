@@ -1043,65 +1043,26 @@ function setRemoteButton() {
     }
 }
 
-function printpart (element) {
-	console.log(element);
-	console.log(element.innerHTML);
-	var printwin = window.open("");
-	printwin.document.write( `
-<html><head><style>
-@media print {  
-  @page {
-	size: 6in 4in; /* landscape */
-	margin: .25in;
-  }
-}
-.printCard {
-	border: 2px solid black ;
-	display: flex;
-	flex-flow: column nowrap;
-	width: 100%;
-	height: 100%;
-	align-items: flex-start;
-}
-.rowCard {
-	display: flex;
-	flex-flow: row nowrap;
-	justify-content: space-between;
-	width: 100%;
-	padding: 5px;
-}
-.rowCard div {
-	width: 100% ;
-} ;
-table {
-	width: 50%;
-    table-layout: auto;
-    border: 1px;
-}
-td {
-	word-wrap: break-word;
-}
-td:nth-child(1) {
-	width: 30% ;
-	font-weight: bold;
-}
-td:nth-child(2) {
-	width: 70% ;
-}
-</style></head><body>
-${element.outerHTML}
-</body></html>
-	`) ;
-  printwin.stop();
-  //printwin.print();
-  //printwin.close();
-}
-
 function printCard( doc ) {
-    var element = document.getElementById("templates").querySelector(".printCard").cloneNode(true);
-    var qrtest = new QR(document.getElementById("testqr"),window.location.href+patientId,128,128,4) ;
-    var qr = new QR(element.querySelector(".qrCard"),patientId,256,256,4) ;
-    printpart( element ) ;
+    Array.from(document.getElementsByClassName("screen")).forEach( (v)=> {
+        v.style.display = "none" ;
+    });
+    Array.from(document.getElementsByClassName("print")).forEach( (v)=> {
+        v.style.display = "block" ;
+    });
+    var card = document.getElementById("printCard") ;
+    var qr = new QR(
+        card.querySelector(".qrCard"),
+        window.location.href + "?patientId=" + encodeURIComponent(patientId),
+        128,128,
+        4) ;
+    window.print() ;
+    Array.from(document.getElementsByClassName("print")).forEach( (v)=> {
+        v.style.display = "none" ;
+    });
+    Array.from(document.getElementsByClassName("screen")).forEach( (v)=> {
+        v.style.display = "block" ;
+    });
 }
 
 function setRemote() {
@@ -1118,8 +1079,6 @@ function setRemote() {
 
 remoteCouch = getCookie( "remoteCouch" ) ;
 setRemoteButton() ;
-          
-
 
 // Pouchdb routines
 (function() {

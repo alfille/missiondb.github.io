@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-    <head>
+    <head class="screen">
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <title>MissionDB -- Medical Mission Database</title>
@@ -8,10 +8,9 @@
         <link rel="stylesheet" href="style/base.css">
     </head>
     <body>
-        <header>
+        <header class="screen">
             <div id="headerbox">
                 <h1>Mission<br>Database</h1>
-                <canvas id="testqr" height=256 width=256></canvas>
                 <div id="buttonheader">
                     <div class="PatientList pageOverlay">
                         <button type="button" class="divbutton" onclick="newPatient()">Add Patient</button>
@@ -35,7 +34,7 @@
                 </div>
             </div>
         </header>
-        <section id="missiondbody">
+        <section id="missiondbody" class="screen">
             <div class="PatientList pageOverlay">
                 <div id="PatientListContent" ></div>
             </div>
@@ -96,37 +95,37 @@
                 <input type="file" accept="image/*" class="imageBar" onchange="editBar.handleImage()" capture="environment">
             </div>
             <button class="editthecomment libutton" type="button">Edit</button>
-            <div class="printCard">
-                <div class=rowCard>
-                    <div><canvas class="qrCard" height=256 width=256></div><div><img class="photoCard"></div>
-                </div>
-                <div class=rowCard>
-                    <div><table>
-                        <tr><td>Patient name</td><td>blah blah blblblah</td></tr>
-                        <tr><td>Complaints</td><td></td></tr>
-                        <tr><td>Procedure</td><td></td></tr>
-                        <tr><td>Length</td><td></td></tr>
-                        <tr><td>Surgeon</td><td></td></tr>
-                        <tr><td>Surgical class</td><td></td></tr>
-                    </table></div>
-                    <div><table>
-                        <tr><td>Age</td><td></td></tr>
-                        <tr><td>Sex</td><td></td></tr>
-                        <tr><td>Weight</td><td></td></tr>
-                        <tr><td>Allergies</td><td></td></tr>
-                        <tr><td>Meds</td><td></td></tr>
-                        <tr><td>Equipment</td><td></td></tr>
-                    </table></div>
-                </div>
-            </div>
         </div>
-        <footer>
+        <footer class="screen">
             <p><a href="http://github.com/alfille/missiondb">Mission Database</a>
                 <button type="button" id="userbutton" onclick="setUser()">User:</button>
                 <button type="button" id="remotebutton" onclick="setRemote()">Remote:</button>
                 <div id="syncstatus">Sync Status</div>
             </p>
         </footer>
+       <div id="printCard" class="print">
+            <div class=rowCard>
+                <div><canvas class="qrCard" height=128 width=128></div><div><img class="photoCard"></div>
+            </div>
+            <div class=rowCard>
+                <div><table>
+                    <tr><td>Patient name</td><td>blah blah blblblah</td></tr>
+                    <tr><td>Complaints</td><td></td></tr>
+                    <tr><td>Procedure</td><td></td></tr>
+                    <tr><td>Length</td><td></td></tr>
+                    <tr><td>Surgeon</td><td></td></tr>
+                    <tr><td>Surgical class</td><td></td></tr>
+                </table></div>
+                <div><table>
+                    <tr><td>Age</td><td></td></tr>
+                    <tr><td>Sex</td><td></td></tr>
+                    <tr><td>Weight</td><td></td></tr>
+                    <tr><td>Allergies</td><td></td></tr>
+                    <tr><td>Meds</td><td></td></tr>
+                    <tr><td>Equipment</td><td></td></tr>
+                </table></div>
+            </div>
+        </div>
         <!-- pouchdb -->
         <script src="js/pouchdb-7.2.1.min.js"></script>
         <!-- qr -->
