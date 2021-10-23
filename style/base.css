@@ -240,9 +240,8 @@ footer {
   margin: .25in;
   }
 }
-.printcard {
-    display: none ;
-    poosition: absolute ;
+#printCard {
+    position: absolute ;
     left: 0 ;
     top: 0 ;
     border: 2px solid black ;
@@ -262,16 +261,22 @@ footer {
 .rowCard div {
     width: 100% ;
 }
-.printcard  table {
+#printCard  table {
     table-layout: auto;
     border: 1px;
   }
-.printcard  td {
+#printCard  td {
     word-wrap: break-word;
     width: 70% ;
   }
-.printcard  td:nth-child(1) {
+#printCard  td:nth-child(1) {
     width: 30% ;
     font-weight: bold;
   }
+}
+.print {
+    display: none ;
+}
+.screen {
+    display: block ;
 }
