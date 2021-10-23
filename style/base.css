@@ -242,6 +242,7 @@ footer {
 }
 #printCard {
     position: absolute ;
+    background: lightgrey ;
     left: 0 ;
     top: 0 ;
     border: 2px solid black ;
@@ -261,20 +262,24 @@ footer {
 .rowCard div {
     width: 100% ;
 }
-#printCard  table {
+#printCard table {
     table-layout: auto;
     border: 1px;
   }
-#printCard  td {
+#printCard tr {
+    background: white;
+    color: black;
+}
+#printCard td {
     word-wrap: break-word;
     width: 70% ;
   }
-#printCard  td:nth-child(1) {
+#printCard td:nth-child(1) {
     width: 30% ;
     font-weight: bold;
   }
 }
-.print {
+.print_class {
     display: none ;
 }
 .screen {

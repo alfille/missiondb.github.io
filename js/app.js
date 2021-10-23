@@ -578,7 +578,6 @@ class EditPList extends FieldList {
             db.get( patientId ).then(
             ( function(doc) {
                 this.doc = doc ;
-                printCard(doc) ;
             }).bind(this)
             ).then(( function() {
                 for ( let i=0; i<this.fieldlist.length; ++i ) {
@@ -1043,13 +1042,18 @@ function setRemoteButton() {
     }
 }
 
-function printCard( doc ) {
+function showScreen( bool ) {
     Array.from(document.getElementsByClassName("screen")).forEach( (v)=> {
-        v.style.display = "none" ;
+        v.style.display = bool ? "block" : "none" ;
     });
-    Array.from(document.getElementsByClassName("print")).forEach( (v)=> {
-        v.style.display = "block" ;
+    Array.from(document.getElementsByClassName("print_class")).forEach( (v)=> {
+        v.style.display = bool ? "none" : "block" ;
     });
+}    
+
+function printCard( doc ) {
+    console.log("test");
+    showScreen( false ) ;
     var card = document.getElementById("printCard") ;
     var link = window.location.href + "?patientId=" + encodeURIComponent(patientId) ;
     var qr = new QR(
@@ -1057,15 +1061,9 @@ function printCard( doc ) {
         link,
         128,128,
         4) ;
-    /*
     window.print() ;
-    Array.from(document.getElementsByClassName("print")).forEach( (v)=> {
-        v.style.display = "none" ;
-    });
-    Array.from(document.getElementsByClassName("screen")).forEach( (v)=> {
-        v.style.display = "block" ;
-    });
-    */
+    showScreen( true ) ;
+    displayStateChange() ;
 }
 
 function setRemote() {
@@ -1132,6 +1130,7 @@ setRemoteButton() ;
     }
     displayState = getCookie( "displayState" ) ;
     displayStateChange() ;
+    showScreen(true) ;
     patientId = getCookie( "patientId" ) ;
     if ( patientId ) {
         selectPatient( patientId ) ;

@@ -17,6 +17,7 @@
                         <button type="button" class="divbutton" onclick="showPatientOpen()" id="editreviewpatient">Review/Edit Patient</button>
                     </div>
                     <div class="PatientOpen pageOverlay">
+                        <button type="button" class="divbutton" onclick="printCard()">Print Card</button>
                         <button type="button" class="divbutton" onclick="showPatientEdit()">Edit Patient Data</button>
                         <button type="button" class="divbutton" onclick="showCommentList()">Case Comments</button>
                         <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
@@ -103,7 +104,7 @@
                 <div id="syncstatus">Sync Status</div>
             </p>
         </footer>
-        <div class="print">
+        <div class="print_class">
             <div id="printCard">
                 <div class=rowCard>
                     <div><canvas class="qrCard" height=128 width=128></div><div><img class="photoCard"></div>
