@@ -200,6 +200,11 @@ function showPatientEdit() {
     displayStateChange() ;
 }
 
+function showInvalidPatient() {
+    displayState = "InvalidPatient" ;
+    displayStateChange() ;
+}
+    
 function showPatientOpen() {
     displayState = "PatientOpen" ;
     if ( patientId ) {
@@ -246,6 +251,8 @@ function selectPatient( pid ) {
     document.getElementById("editreviewpatient").disabled = false ;
 }
 
+
+
 function unselectPatient() {
     patientId = undefined ;
     deleteCookie( "patientId" ) ;
@@ -287,19 +294,42 @@ function displayStateChange() {
             
         case "PatientOpen":
             if ( patientId ) {
-                objectPatientOpen = new OpenPList( "PatientOpen", PatientOpenContent ) ;
+                db.get( patientId ).then( function(doc) {
+                    objectPatientOpen = new PatientOpen( doc ) ;
+                }).catch( function(err) {
+                    console.log(err) ;
+                    showInvalidPatient() ;
+                }) ;
             } else {
                 showPatientList() ;
             }
             break ;
             
         case "PatientEdit":            
-            objectPatientEdit = new EditPList( "PatientEdit", PatientEditContent ) ;
+            if ( patientId ) {
+                db.get( patientId ).then( function(doc) {
+                    objectPatientEdit = new PatientEdit( doc ) ;
+                }).catch( function(err) {
+                    console.log(err) ;
+                    showInvalidPatient() ;
+                }) ;
+            } else {
+                objectPatientEdit = new PatientEdit( null ) ;
+            }
             break ;
             
+        case "InvalidPatient":
+            unselectPatient() ;
+            break ;
+
         case "CommentList":            
             if ( patientId ) {
-                objectCommentList = new CommentList( CommentListContent ) ;
+                db.get( patientId ).then( function(doc) {
+                    objectCommentList = new CommentList( CommentListContent ) ;
+                }).catch( function(err) {
+                    console.log(err) ;
+                    showInvalidPatient() ;
+                }) ;
             } else {
                 showPatientList() ;
             }
@@ -541,31 +571,22 @@ class FieldList {
     }
 }
   
-class OpenPList extends FieldList {
-    constructor( idname, parent ) {
-        super( idname, parent, PatientInfoList ) ;
+class PatientOpen extends FieldList {
+    constructor( doc ) {
+        super( "PatientOpen", PatientOpenContent, PatientInfoList ) ;
         this.ul.addEventListener( 'dblclick', (e) => {
             showPatientEdit() ;
         }) ;
 
-        db.get( patientId ).then(( function(doc) {
-            for ( let i=0; i < this.fieldlist.length; ++i ) {
-                this.li[2*i+1].appendChild(document.createTextNode(this.nonnullstring(doc[this.fieldlist[i][0]]))) ;
-            }
-        }).bind(this)
-        ).catch(( function(err) {
-            console.log(err) ;
-            for ( let i=0; i < this.fieldlist.length; ++i ) {
-                this.li[2*i+1].appendChild(document.createTextNode(this.nonnullstring(''))) ;
-            }
-            }).bind(this)
-        );
+        for ( let i=0; i < this.fieldlist.length; ++i ) {
+            this.li[2*i+1].appendChild(document.createTextNode(this.nonnullstring(doc[this.fieldlist[i][0]]))) ;
+        }
     }
 }
 
-class EditPList extends FieldList {
-    constructor( idname, parent ) {
-        super( idname, parent, PatientInfoList ) ;
+class PatientEdit extends FieldList {
+    constructor( doc ) {
+        super( "PatientEdit", PatientEditContent, PatientInfoList ) ;
         document.getElementById("saveeditpatient").disabled = true ;
         for ( let i=0; i<this.fieldlist.length; ++i ) {
             let inp = document.createElement("input") ;
@@ -573,27 +594,19 @@ class EditPList extends FieldList {
             this.li[2*i+1].appendChild(inp) ;
         }
 
-        this.doc = { "_id": "" } ;
-        if ( patientId ) {
-            db.get( patientId ).then(
-            ( function(doc) {
-                this.doc = doc ;
-            }).bind(this)
-            ).then(( function() {
-                for ( let i=0; i<this.fieldlist.length; ++i ) {
-                    let contain = this.li[2*i+1].querySelector('input') ;
-                    let field = this.fieldlist[i][0] ;
-                    if ( field in this.doc ) {
-                        contain.value = this.doc[field] ;
-                    } else {
-                        contain.value = "" ;
-                    }
+        if ( doc ) {
+            this.doc = doc ;
+            for ( let i=0; i<this.fieldlist.length; ++i ) {
+                let contain = this.li[2*i+1].querySelector('input') ;
+                let field = this.fieldlist[i][0] ;
+                if ( field in this.doc ) {
+                    contain.value = this.doc[field] ;
+                } else {
+                    contain.value = "" ;
                 }
-            }).bind(this)
-            ).catch( function(err) {
-                // no matching record
-                console.log(err);
-            });
+            }
+        } else {
+            this.doc = { "_id": "" } ;
         }
         
         this.ul.addEventListener( 'input', (e) => {
@@ -607,14 +620,14 @@ class EditPList extends FieldList {
         }
     }
     
-    toId() {
-        this.doc._id = [ DbaseVersion, this.doc.LastName, this.doc.FirstName, this.doc.DOB ].join(";") ;
+    makePatientId() {
+        return [ DbaseVersion, this.doc.LastName, this.doc.FirstName, this.doc.DOB ].join(";") ;
     }
     
     add() {
         this.tolist() ;
         if ( this.doc._id == "" ) {
-            this.toId() ;
+            this.doc_id = this.makePatientId() ;
         }
         selectPatient( this.doc._id ) ;
         db.put(this.doc).then( function(d) {
@@ -623,6 +636,22 @@ class EditPList extends FieldList {
             console.log(err) ;
         }) ;
     }
+}
+
+function splitPatientId() {
+    if ( patientId ) {
+        var spl = patientId.split(";") ;
+        if ( spl.length !== 4 ) {
+            return null ;
+        }
+        return {
+            "version": spl[0],
+            "last" : spl[1],
+            "first": spl[2],
+            "dob": spl[3],
+        } ;
+    }
+    return null ;
 }
 
 function newPatient() {
@@ -1051,19 +1080,26 @@ function showScreen( bool ) {
     });
 }    
 
-function printCard( doc ) {
-    console.log("test");
-    showScreen( false ) ;
-    var card = document.getElementById("printCard") ;
-    var link = window.location.href + "?patientId=" + encodeURIComponent(patientId) ;
-    var qr = new QR(
-        card.querySelector(".qrCard"),
-        link,
-        128,128,
-        4) ;
-    window.print() ;
-    showScreen( true ) ;
-    displayStateChange() ;
+function printCard() {
+    if ( patientId == null ) {
+        return showInvalidPatient() ;
+    }
+    db.get( patientId ). then( function(doc) {
+        showScreen( false ) ;
+        var card = document.getElementById("printCard") ;
+        var link = window.location.href + "?patientId=" + encodeURIComponent(patientId) ;
+        var qr = new QR(
+            card.querySelector(".qrCard"),
+            link,
+            128,128,
+            4) ;
+        window.print() ;
+        showScreen( true ) ;
+        displayStateChange() ;
+    }).catch( function(err) {
+        console.log(err) ;
+        showInvalidPatient() ;
+    });
 }
 
 function setRemote() {
@@ -1128,10 +1164,13 @@ setRemoteButton() ;
     if (remoteCouch) {
         sync();
     }
+
+    // Initial start
     displayState = getCookie( "displayState" ) ;
     displayStateChange() ;
     showScreen(true) ;
     patientId = getCookie( "patientId" ) ;
+    console.log( splitPatientId() ) ;
     if ( patientId ) {
         selectPatient( patientId ) ;
     }

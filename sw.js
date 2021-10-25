@@ -9,17 +9,18 @@ var urlsToCache = [
   '/js/base.js',
   '/index.html',
   '/js/pouchdb-7.2.1.min.js',
+  '/js/qrenc-4.0.0.min.js',
 ];
 
 self.addEventListener('install', function(event) {
     // Perform install steps
     event.waitUntil(
-        caches.open(CACHE_NAME).then(function(cache) {
+        caches.open(CACHE_NAME).then( function(cache) {
             console.log('Opened cache');
-            cache.addAll(urlsToCache.map(function(urlToPrefetch) {
+            cache.addAll( urlsToCache.map( function(urlToPrefetch) {
                 console.log(urlToPrefetch);
                 return new Request(urlToPrefetch, { mode: 'no-cors' });
-            })).then(function() {
+            })).then( function() {
                 console.log('All resources have been fetched and cached.');
             });
         });
@@ -35,7 +36,8 @@ self.addEventListener('fetch', function(event) {
               return response;
           }
           return fetch(event.request);
-      }).catch( function (err) { console.log(err) ; 
+      }).catch( function (err) {
+          console.log(err) ; 
 	  }) ;
     );
 });
