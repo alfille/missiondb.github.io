@@ -861,11 +861,11 @@ class CommentList {
             li.classList.add("choice") ;
         }
         if ( "doc" in comment ) {
-
-            if ("_attachments" in comment.doc ){
+            let imagedata = getImageFromDoc( comment.doc ) ;
+            if ( imagedata ){
                 let img = document.createElement("img") ;
                 img.className = "fullimage" ;
-                img.src = URL.createObjectURL(comment.doc._attachments.image.data) ;
+                img.src = imagedata ;
                 li.appendChild(img);
             }
 
@@ -890,6 +890,28 @@ class CommentList {
         return li ;
     }
 
+}
+
+function getImageFromDoc( doc ) {
+    if ("_attachments" in doc ){
+        return URL.createObjectURL(doc._attachments.image.data) ;
+    }
+    return null ;
+}
+
+function deleteImageFromDoc( doc ) {
+    if ( "_attachments" in doc ) {
+        delete doc["_attachments"] ;
+    }
+}
+
+function putImageInDoc( doc, itype, idata ) {
+    doc._attachments = {
+        image: {
+            content_type: itype,
+            data: idata,
+        }
+    }
 }
 
 function makeCommentId() {
@@ -919,16 +941,9 @@ function saveComment( plaintext, file0 ) {
         db.get(commentId).then( function(doc) {
             doc.text = plaintext ;
             if ( file0 === "remove") {
-                if ( "_attachments" in doc ) {
-                    delete doc["_attachments"] ;
-                }
+                deleteImageFromDoc( doc ) ;
             } else if (file0 ) {
-                doc._attachments = {
-                    image: {
-                        content_type: file0.type,
-                        data: file0,
-                    }
-                }
+                putImageInDoc( doc, file0.type, file0 ) ;
             }
             db.put( doc ) ;
         }).then( x => {
@@ -945,12 +960,7 @@ function saveComment( plaintext, file0 ) {
             text: plaintext,
         } ;
         if (file0 && file0 !== "remove") {
-            doc._attachments = {
-                image: {
-                    content_type: file0.type,
-                    data: file0,
-                }
-            }
+            putImageInDoc( doc, file0.type, file0 ) ;
         }                
         db.put(doc).then( x => {
             showCommentList() ;
@@ -979,17 +989,14 @@ function quickImage2() {
     const files = document.getElementById('imageQ') ;
     const image = files.files[0] ;
 
-    db.put( {
+    let doc = {
         _id: makeCommentId(),
         text: "",
         author: userName,
-        _attachments: {
-            image: {
-                content_type: image.type,
-                data: image,
-            }
-        }
-    }).then( function(doc) {
+    } ;
+    putImageInDoc( doc, image.type, image ) ;
+
+    db.put( doc ).then( function(doc) {
         showCommentList() ;
     }).catch( function(err) {
         console.log(err) ;
@@ -1022,17 +1029,14 @@ function saveImage() {
     const image = files.files[0];
     const text = document.getElementById("annotation").innerText ;
 
-    db.put( {
+    let doc = {
         _id: makeCommentId(),
         text: text.value,
         author: userName,
-        _attachments: {
-            image: {
-                content_type: image.type,
-                data: image,
-            }
-        }
-    }).then( function(doc) {
+    } ;
+    putImageInDoc( doc, image.type, image ) ;
+
+    db.put( doc ).then( function(doc) {
         console.log(doc) ;
         showCommentList() ;
     }).catch( function(err) {
