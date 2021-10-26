@@ -1095,7 +1095,7 @@ function printCard() {
         var qr = new QR(
             card.querySelector(".qrCard"),
             link,
-            128,128,
+            200,200,
             4) ;
         window.print() ;
         showScreen( true ) ;
@@ -1117,6 +1117,21 @@ function setRemote() {
         window.location.reload(false) ;
     }
 }
+
+function parseQuery() {
+    s = window.location.search ;
+    if ( s.length < 1 ) {
+        return null ;
+    }
+    r = {} ;
+    s.substring(1).split("&").forEach( function(q) {
+        let qq = q.split("=") ;
+        if ( qq.length== 2 ) {
+            r[decodeURIComponent(qq[0])] = decodeURIComponent(qq[1]) ;
+        }
+    }) ;
+    return r ;
+};
 
 remoteCouch = getCookie( "remoteCouch" ) ;
 setRemoteButton() ;
@@ -1170,16 +1185,25 @@ setRemoteButton() ;
     }
 
     // Initial start
-    displayState = getCookie( "displayState" ) ;
-    displayStateChange() ;
     showScreen(true) ;
+    
+    // first try the search field
+    let q = parseQuery() ;
+    if (q) {
+        if ( patientId in q ) {
+            selectPatient( q.patientId ) ;
+            showPatientOpen() ;
+        }
+    }
+    
+    // No search, use cookies
     patientId = getCookie( "patientId" ) ;
-    console.log( splitPatientId() ) ;
     if ( patientId ) {
         selectPatient( patientId ) ;
     }
+    displayState = getCookie( "displayState" ) ;
+    displayStateChange() ;
     
-
 })();
 
   
