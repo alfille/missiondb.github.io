@@ -237,7 +237,7 @@ footer {
 @media print {  
   @page {
   size: 6in 4in; /* landscape */
-  margin: .25in;
+  margin: 0;
   }
 }
 #printCard {
@@ -245,26 +245,31 @@ footer {
     background: lightgrey ;
     left: 0 ;
     top: 0 ;
-    border: 2px solid black ;
+    border: -2px solid black ;
     display: flex;
-    flex-flow: column nowrap;
+    flex-flow: row nowrap;
     width: 100%;
     height: 100%;
     align-items: flex-start;
 }
 .rowCard {
     display: flex;
-    flex-flow: row nowrap;
+    flex-flow: column nowrap;
+    flex-grow: 1;
     justify-content: space-between;
-    width: 100%;
-    padding: 5px;
+    padding: 1px;
 }
 .rowCard div {
     width: 100% ;
 }
+.rowCard:first-child {
+    flex-grow: 0;
+    flex-basis: 180px;
+}
 #printCard table {
     table-layout: auto;
-    border: 1px;
+    border-collapse: collapse;
+    border: 0;
   }
 #printCard tr {
     background: white;

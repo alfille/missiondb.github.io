@@ -614,7 +614,8 @@ class PatientEdit extends FieldList {
             }) ;
     }
     
-    tolist() {
+    fields2doc() {
+        // load fields from form into doc
         for ( let i=0; i<this.fieldlist.length; ++i ) {
             this.doc[this.fieldlist[i][0]] =  this.li[2*i+1].querySelector('input').value ;
         }
@@ -625,9 +626,10 @@ class PatientEdit extends FieldList {
     }
     
     add() {
-        this.tolist() ;
+        // add or save changes on a patient
+        this.fields2doc() ;
         if ( this.doc._id == "" ) {
-            this.doc_id = this.makePatientId() ;
+            this.doc._id = this.makePatientId() ;
         }
         selectPatient( this.doc._id ) ;
         db.put(this.doc).then( function(d) {
@@ -1130,6 +1132,7 @@ function parseQuery() {
             r[decodeURIComponent(qq[0])] = decodeURIComponent(qq[1]) ;
         }
     }) ;
+    sindow.location.search = "" ;
     return r ;
 };
 
