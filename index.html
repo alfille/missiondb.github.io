@@ -13,8 +13,12 @@
                 <h1>Mission<br>Database</h1>
                 <div id="buttonheader">
                     <div class="PatientList pageOverlay">
-                        <button type="button" class="divbutton" onclick="newPatient()">Add Patient</button>
+                        <button type="button" class="divbutton" onclick="showPatientNew()">Add Patient</button>
                         <button type="button" class="divbutton" onclick="showPatientOpen()" id="editreviewpatient">Review/Edit Patient</button>
+                    </div>
+                    <div class="PatientNew pageOverlay">
+                        <button type="button" class="divbutton" id="addPatient" onclick="addPatient()">Create</button>
+                        <button type="button" class="divbutton" onclick="showPatientList()">Cancel</button>
                     </div>
                     <div class="PatientOpen pageOverlay">
                         <button type="button" class="divbutton" onclick="printCard()">Print Card</button>
@@ -44,6 +48,13 @@
             </div>
             <div class="PatientOpen pageOverlay">
                 <div id="PatientOpenContent" ></div>
+            </div>
+            <div class="PatientNew pageOverlay">
+                <div id="PatientNewContent" >
+                    <label>First name: <input type="text" id="newFirst" onInput="checkNew()" x-webkit-speech></label><br>
+                    <label>Last name: <input type="text" id="newLast" onInput="checkNew()" x-webkit-speech></label><br>
+                    <label>Date of birth: <input type="date" id="newDOB" onInput="checkNew()"></label>
+                </div>
             </div>
             <div class="PatientEdit pageOverlay">
                 <div id="PatientEditContent" ></div>

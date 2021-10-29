@@ -200,6 +200,11 @@ function showPatientEdit() {
     displayStateChange() ;
 }
 
+function showPatientNew() {
+    displayState = "PatientNew" ;
+    displayStateChange() ;
+}
+
 function showInvalidPatient() {
     displayState = "InvalidPatient" ;
     displayStateChange() ;
@@ -305,6 +310,10 @@ function displayStateChange() {
             }
             break ;
             
+        case "PatientNew":
+            newPatient() ;
+            break ;
+            
         case "PatientEdit":            
             if ( patientId ) {
                 db.get( patientId ).then( function(doc) {
@@ -314,7 +323,7 @@ function displayStateChange() {
                     showInvalidPatient() ;
                 }) ;
             } else {
-                objectPatientEdit = new PatientEdit( null ) ;
+                showPatientList() ;
             }
             break ;
             
@@ -594,19 +603,18 @@ class PatientEdit extends FieldList {
             this.li[2*i+1].appendChild(inp) ;
         }
 
-        if ( doc ) {
-            this.doc = doc ;
-            for ( let i=0; i<this.fieldlist.length; ++i ) {
-                let contain = this.li[2*i+1].querySelector('input') ;
-                let field = this.fieldlist[i][0] ;
-                if ( field in this.doc ) {
-                    contain.value = this.doc[field] ;
-                } else {
-                    contain.value = "" ;
-                }
+        this.doc = doc ;
+        for ( let i=0; i<this.fieldlist.length; ++i ) {
+            let contain = this.li[2*i+1].querySelector('input') ;
+            let field = this.fieldlist[i][0] ;
+            if ( field in this.doc ) {
+                contain.value = this.doc[field] ;
+            } else {
+                contain.value = "" ;
             }
-        } else {
-            this.doc = { "_id": "" } ;
+            if ( ["LastName","FirstName","DOB"].indexOf(this.fieldlist[i][0]) >= 0 ) {
+                contain.readOnly = true ;
+            }
         }
         
         this.ul.addEventListener( 'input', (e) => {
@@ -621,23 +629,20 @@ class PatientEdit extends FieldList {
         }
     }
     
-    makePatientId() {
-        return [ DbaseVersion, this.doc.LastName, this.doc.FirstName, this.doc.DOB ].join(";") ;
-    }
     
     add() {
-        // add or save changes on a patient
+        // save changes on a patient
         this.fields2doc() ;
-        if ( this.doc._id == "" ) {
-            this.doc._id = this.makePatientId() ;
-        }
-        selectPatient( this.doc._id ) ;
         db.put(this.doc).then( function(d) {
             showPatientOpen() ;
         }).catch( function(err) {
             console.log(err) ;
         }) ;
     }
+}
+
+function makePatientId(doc) {
+    return [ DbaseVersion, this.doc.LastName, this.doc.FirstName, this.doc.DOB ].join(";") ;
 }
 
 function splitPatientId() {
@@ -656,9 +661,36 @@ function splitPatientId() {
     return null ;
 }
 
+function checkNew() {
+    document.getElementById("addPatient").disabled =
+        ( document.getElementById("newLast").value == "" ) || 
+        ( document.getElementById("newFirst").value == "" ) || 
+        ( document.getElementById("newDOB").value == "" ) ;
+} 
+
 function newPatient() {
     unselectPatient() ;
-    showPatientEdit() ;  
+    document.getElementById("newLast").value = "" ; 
+    document.getElementById("newFirst").value = "" ; 
+    document.getElementById("newDOB").value = "" ;
+    checkNew() ;
+}
+
+function addPatient() {
+    doc = {
+        FirstName: document.getElementById("newFirst").value,
+        LastName: document.getElementById("newLast").value,
+        DOB: document.getElementById("newDOB").value,
+    } ;
+    doc._id = makePatientId(doc) ;
+
+    db.put( doc ).then( function( d ) {
+        selectPatient( doc._id ) ;
+        showPatientEdit() ;
+    }).catch( function(e) {
+        console.log(e) ;
+        showPatientList() ;
+    });
 }
 
 function savePatient() {
