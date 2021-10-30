@@ -1,0 +1,17 @@
+{
+    "manifest_version": 3,
+    "short_name": "MissionDB",
+    "name": "Mission Database for Underresourced Medical Care",
+    "icons": [
+        {
+            "src": "/images/missiondb.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ],
+    "start_url": "/index.html",
+    "background_color": "#8C9BFB",
+    "display": "standalone",
+    "scope": "/",
+    "theme_color": "#4d4d4d"
+}
