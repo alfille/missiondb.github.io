@@ -4,14 +4,29 @@
     "name": "Mission Database for Underresourced Medical Care",
     "icons": [
         {
-            "src": "/images/missiondb.png",
+            "src": "/images/missiondb512.png",
             "type": "image/png",
             "sizes": "512x512"
+        },
+        {
+            "src": "/images/missiondb192.png",
+            "type": "image/png",
+            "sizes": "192x192"
         }
     ],
     "start_url": "/index.html",
     "background_color": "#8C9BFB",
     "display": "standalone",
     "scope": "/",
-    "theme_color": "#4d4d4d"
+    "theme_color": "#4d4d4d",
+    "scope": "/",
+    "permissions": {
+        "audio-capture" : {
+            "description" : "Audio capture"
+        },
+        "speech-recognition" : {
+            "description" : "Speech recognition"
+        }
+    },
+    "type": "privileged"
 }

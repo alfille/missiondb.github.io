@@ -523,6 +523,7 @@ class dataTable extends sortTable {
                     row.classList.add("choice") ;
                 }
                 row.addEventListener( 'click', (e) => {
+                    selectPatient( record._id ) ;
                     console.log("select by click");
                 }) ;
                 row.addEventListener( 'dblclick', (e) => {
