@@ -15,9 +15,115 @@ var remoteCouch = 'http://192.168.1.5:5984/mdb';
 
 var DbaseVersion = "v0" ;
 
-function tbarFunc(command) {
-    document.execCommand(command, false, null);
-}
+var Struct_ID = [
+    {
+        name: "LastName",
+        hint: "Patient's last name",
+        type: "text",
+    },
+    {
+        name: "FirstName",
+        hint: "Patient's first name",
+        type: "text",
+    },
+    {
+        name: "DOB",
+        hint: "Patient's date of birth",
+        type: "date",
+    },
+] ;
+
+var Struct_Demographics = [
+    {
+        name: "Picture",
+        hint: "Recent photo of the patient",
+        type: "image",
+    },
+    {
+        name: "Sex",
+        hint: "Patient gender",
+        type: "radio",
+        choices: ["?","M","F","X"],
+    },
+    {
+        name: "email",
+        hint: "email address",
+        type: "email",
+    },
+    {
+        name: "phone",
+        hint: "Contact phone number",
+        type: "tel",
+    },
+    {
+        name: "Address",
+        hint: "Patient home address",
+        type: "text",
+    },
+    {
+        name: "Contact",
+        hint: "Additional contact information (family member, local address,...)",
+        type: "text",
+    },
+] ;
+    
+
+var Struct_Medical = [
+    {
+        name: "Dx",
+        hint: "Diagnosis",
+        type: "text",
+    } , 
+    {
+        name: "Complaint",
+        hint: "Main complaint (patient's view of the problem)",
+        type: "text",
+    },
+    {
+        name: "ASA",
+        hint: "ASA classification",
+        type: "radio",
+        choices: ["I","II","III","IV"],
+    },
+    {
+        name: "Allergies",
+        hint: "Allergies and intolerances",
+        type: "text",
+    },
+    {
+        name: "Meds",
+        hint: "Medicine and antibiotics",
+        type: "text",
+    },
+] ;
+
+var Struct_Procedure = [
+    {
+        name: "Procedure",
+        hint: "Surgical operation / procedure",
+        type: "text",
+    },
+    {
+        name: "Surgeon",
+        hint: "Surgeon(s) involved",
+        type: "text",
+    },
+    {
+        name: "Length",
+        hint: "Length of operation (hours) with prep and cleanup",
+        type: "real",
+    },
+    {
+        name: "Equipment",
+        hint: "Special equipment",
+        type: "text",
+    },
+    {
+        name: "Schedule",
+        hint: "Scheduled date and time",
+        type: "datetime-local",
+    },
+] ;
 
 class Tbar {
     constructor() {
@@ -33,7 +139,6 @@ class Tbar {
 
     startedit( existingdiv, savefunc, deletefunc ) {
         // false if already exists
-        this.comment = false ;
         if ( !this.active() ) {
             this.savefunc = savefunc ;
             this.deletefunc = deletefunc ;
@@ -60,8 +165,52 @@ class Tbar {
         }
     }
 
+    saveedit() {
+        if ( this.active() ) {
+            this.text = this.textdiv.innerText ;
+            this.img = this.imageslot ;
+            this.canceledit() ;
+            this.savefunc( this.text ) ;
+        }
+    }
+
+    canceledit() {
+        if ( this.active() ) {
+            this.parent.innerHTML = ""
+            this.textdiv = null ;
+        }
+        this.buttonsdisabled( false ) ;
+        this.parent.innerText = this.text ;
+    }
+
+    deleteedit() {
+        if (this.deletefunc()) {
+            this.textdiv = null
+            this.text = null ;
+        }
+    }
+
+    getImage() {
+        this.toolbar.querySelector(".imageBar").click() ;
+    }
+
+    handleImage() {
+        const files = this.parent.querySelector('.imageBar')
+        this.file0 = files.files[0];
+        this.imageslot.src = URL.createObjectURL(this.file0) ;
+        this.imageslot.style.display = "block" ;
+        this.toolbar.querySelector(".tbarxpic").disabled = false ;
+    }
+
+    removeImage() {
+        this.imageslot.style.display = "none" ;
+        this.file0 = "remove" ;
+        this.toolbar.querySelector(".tbarxpic").disabled = true ;
+    }
+}
+
+class Cbar extends Tbar {
     startcommentedit( existingdiv ) {
-        this.comment = true ;
         if ( this.active() ) {
             return false ;
         }
@@ -116,11 +265,7 @@ class Tbar {
             this.text = this.textdiv.innerText ;
             this.img = this.imageslot ;
             this.canceledit() ;
-            if ( this.comment ) {
-                saveComment( this.text, this.file0 ) ;
-            } else {
-                this.savefunc( this.text ) ;
-            }
+            saveComment( this.text, this.file0 ) ;
         }
     }
 
@@ -130,44 +275,15 @@ class Tbar {
             this.textdiv = null ;
         }
         this.buttonsdisabled( false ) ;
-        if ( this.comment ) {
-            if ( this.img ) {
-                this.parent.appendChild( this.img ) ;
-            }
-            this.ctext.innerText = this.text ;
-            this.parent.appendChild( this.ctext ) ;
-        } else {
-            this.parent.innerText = this.text ;
+        if ( this.img ) {
+            this.parent.appendChild( this.img ) ;
         }
-    }
-
-    deleteedit() {
-        if (this.deletefunc()) {
-            this.textdiv = null
-            this.text = null ;
-        }
-    }
-
-    getImage() {
-        this.toolbar.querySelector(".imageBar").click() ;
-    }
-
-    handleImage() {
-        const files = this.parent.querySelector('.imageBar')
-        this.file0 = files.files[0];
-        this.imageslot.src = URL.createObjectURL(this.file0) ;
-        this.imageslot.style.display = "block" ;
-        this.toolbar.querySelector(".tbarxpic").disabled = false ;
-    }
-
-    removeImage() {
-        this.imageslot.style.display = "none" ;
-        this.file0 = "remove" ;
-        this.toolbar.querySelector(".tbarxpic").disabled = true ;
+        this.ctext.innerText = this.text ;
+        this.parent.appendChild( this.ctext ) ;
     }
 }
 
-var editBar = new Tbar() ;        
+var editBar = new Cbar() ;        
 
 var PatientInfoList = [
     ["LastName","text"],
@@ -524,7 +640,6 @@ class dataTable extends sortTable {
                 }
                 row.addEventListener( 'click', (e) => {
                     selectPatient( record._id ) ;
-                    console.log("select by click");
                 }) ;
                 row.addEventListener( 'dblclick', (e) => {
                     selectPatient( record._id ) ;

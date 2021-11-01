@@ -14,7 +14,7 @@ var urlsToCache = [
 
 self.addEventListener('install', function(event) {
     // Perform install steps
-    event.waitUntil(
+    function preCache() {
         caches.open(CACHE_NAME).then( function(cache) {
             console.log('Opened cache');
             cache.addAll( urlsToCache.map( function(urlToPrefetch) {
@@ -24,20 +24,21 @@ self.addEventListener('install', function(event) {
                 console.log('All resources have been fetched and cached.');
             });
         });
-	);
+    }
+    event.waitUntil( preCache() ) ;
 });
 
 self.addEventListener('fetch', function(event) {
     console.log(["Fetch",event]) ;  
     event.respondWith(
-      caches.match(event.request).then(function(response) {
-          // Cache hit - return response
-          if (response) {
-              return response;
-          }
-          return fetch(event.request);
-      }).catch( function (err) {
-          console.log(err) ; 
-	  }) ;
+        caches.match(event.request).then(function(response) {
+            // Cache hit - return response
+            if (response) {
+                return response;
+            }
+            return fetch(event.request);
+        }).catch( function (err) {
+        console.log(err) ; 
+        }) ;
     );
 });
