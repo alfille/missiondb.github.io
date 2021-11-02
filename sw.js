@@ -1,15 +1,15 @@
 var CACHE_NAME = 'my-site-cache-v1';
 var urlsToCache = [
   '/',
+  '/index.html',
+  '/manifest.json',
   '/style/base.css',
-  '/style/bg.png',
   '/style/NoPhoto.png',
-  '/style/card.css',
   '/js/app.js',
   '/js/base.js',
-  '/index.html',
   '/js/pouchdb-7.2.1.min.js',
   '/js/qrenc-4.0.0.min.js',
+  '/images/missiondb.png',
 ];
 
 self.addEventListener('install', function(event) {
