@@ -210,7 +210,8 @@ class Tbar {
 }
 
 class Cbar extends Tbar {
-    startcommentedit( existingdiv ) {
+    // for comments
+    startedit( existingdiv ) {
         if ( this.active() ) {
             return false ;
         }
@@ -237,7 +238,70 @@ class Cbar extends Tbar {
         this.toolbar.querySelector(".tbardel").style.visibility = (this.deletefunc!=null) ? "visible" : "hidden" ;
 
         this.imageslot = document.createElement("img") ;
-        this.imageslot.className = "fullimage glurg" ;
+        this.imageslot.className = "fullimage" ;
+        this.file0 = null ;
+        if ( this.img ) {
+            this.imageslot.src = this.img.src ;
+            this.imageslot.style.display = "block" ;
+        } else {
+            this.imageslot.style.display = "none" ;
+        }
+
+        this.parent.innerHTML = "" ;
+
+        this.textdiv = document.createElement("div") ;
+        this.textdiv.innerText = this.text ;
+        this.textdiv.contentEditable = true ;
+        this.textdiv.id = "textdiv" ;
+
+        // elements of the edit fields
+        this.parent.appendChild( this.imageslot ) ;
+        this.parent.appendChild(this.toolbar) ;
+        this.parent.appendChild(this.textdiv) ;
+        return true ;
+    }
+
+    saveedit() {
+        if ( this.active() ) {
+            this.text = this.textdiv.innerText ;
+            this.img = this.imageslot ;
+            this.canceledit() ;
+            saveComment( this.text, this.file0 ) ;
+        }
+    }
+
+    canceledit() {
+        if ( this.active() ) {
+            this.parent.innerHTML = ""
+            this.textdiv = null ;
+        }
+        this.buttonsdisabled( false ) ;
+        if ( this.img ) {
+            this.parent.appendChild( this.img ) ;
+        }
+        this.ctext.innerText = this.text ;
+        this.parent.appendChild( this.ctext ) ;
+    }
+}
+
+class Ibar extends Tbar {
+    // for Patient picture
+    startedit( existingdiv ) {
+        if ( this.active() ) {
+            return false ;
+        }
+        if ( patientId == null ) {
+            return null ;
+        }
+        this.buttonsdisabled( true ) ;
+        this.deletefunc = deleteComment ;
+        this.parent = existingdiv ;
+        this.img = this.parent.querySelector( ".fullimage" ) ;
+        this.ctext = "" ;
+        this.text = "" ;
+            
+        this.imageslot = document.createElement("img") ;
+        this.imageslot.className = "fullimage" ;
         this.file0 = null ;
         if ( this.img ) {
             this.imageslot.src = this.img.src ;
@@ -1022,7 +1086,7 @@ class CommentList {
             let textdiv = document.createElement("div") ;
             textdiv.innerText = ("text" in comment.doc) ? comment.doc.text : "" ;
             li.addEventListener( 'dblclick', (e) => {
-                editBar.startcommentedit( li ) ;
+                editBar.startedit( li ) ;
             }) ;
             textdiv.className = "commenttext" ;
             li.appendChild(textdiv);
@@ -1034,7 +1098,7 @@ class CommentList {
         label.getElementsByClassName("editthecomment")[0].onclick =
             (e) => {
             selectComment( comment.id ) ;
-            editBar.startcommentedit( li ) ;
+            editBar.startedit( li ) ;
         } ;
 
         return li ;
@@ -1075,7 +1139,7 @@ function CommentNew() {
     console.log("new comment") ;
     let d = document.getElementById("CommentNewText") ;
     d.innerHTML = "" ;
-    editBar.startcommentedit( d ) ;
+    editBar.startedit( d ) ;
 }
 
 function commentCancel() {
