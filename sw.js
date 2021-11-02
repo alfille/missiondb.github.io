@@ -15,9 +15,9 @@ var urlsToCache = [
 self.addEventListener('install', function(event) {
     // Perform install steps
     function preCache() {
-        caches.open(CACHE_NAME).then( function(cache) {
+        caches.open(CACHE_NAME).then( function(cache_list) {
             console.log('Opened cache');
-            cache.addAll( urlsToCache.map( function(urlToPrefetch) {
+            cache_list.addAll( urlsToCache.map( function(urlToPrefetch) {
                 console.log(urlToPrefetch);
                 return new Request(urlToPrefetch, { mode: 'no-cors' });
             })).then( function() {
@@ -29,16 +29,17 @@ self.addEventListener('install', function(event) {
 });
 
 self.addEventListener('fetch', function(event) {
-    console.log(["Fetch",event]) ;  
-    event.respondWith(
-        caches.match(event.request).then(function(response) {
-            // Cache hit - return response
-            if (response) {
-                return response;
-            }
-            return fetch(event.request);
-        }).catch( function (err) {
-        console.log(err) ; 
-        }) ;
-    );
+	console.log(["Fetch",event]) ;  
+	function responder() {
+		caches.match(event.request).then(function(response) {
+			// Cache hit - return response
+			if (response) {
+				return response;
+			}
+			return fetch(event.request);
+		}).catch( function (err) {
+				console.log(err) ; 
+		}) ;
+	}
+	event.respondWith( responder() ) ;
 });
