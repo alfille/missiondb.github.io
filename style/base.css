@@ -82,7 +82,7 @@ ul {
   background: red;
   float: right;
 }
-.commenttext {
+.entryfield_text {
   min-height: 1em;
 }
   
@@ -159,12 +159,12 @@ footer {
   background: #99ddff;
 }
 
-.fullimage {
+.entryfield_image {
   max-width: 100%;
   height: auto ;
 }
 @media only and (orientation: landscape) {
-  .fullimage {
+  .entryfield_image {
     max-height: 80%;
   width: auto ;
   }

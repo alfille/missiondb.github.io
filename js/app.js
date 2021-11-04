@@ -144,7 +144,7 @@ class Tbar {
 
 		this.working = {} ;
 		this.working.parent = existingdiv ;t
-        this.working.toolbar = document.getElementById("templates").querySelector(".editworking.toolbar").cloneNode(true) ;
+        this.working.toolbar = document.getElementById("templates").querySelector(".editToolbar").cloneNode(true) ;
 		this.working.newText = this.existing.oldText ;
 
     startedit( existingdiv, savefunc, deletefunc ) {
@@ -237,12 +237,12 @@ class Cbar extends Tbar {
             this.deletefunc = null ;
         }
         this.fieldset( existingdiv ) ;
-        this.img = this.working.parent.querySelector( ".fullimage" ) ;
-        this.ctext = this.working.parent.querySelector( ".commenttext" ) ;
+        this.img = this.working.parent.querySelector( ".entryfield_image" ) ;
+        this.ctext = this.working.parent.querySelector( ".entryfield_text" ) ;
         if ( ! this.ctext ) {
         } else {
             this.ctext = document.createElement("div") ;
-            this.ctext.className = "commenttext" ;
+            this.ctext.className = "entryfield_text" ;
             this.existing.oldText = "" ;
         }
             
@@ -250,7 +250,7 @@ class Cbar extends Tbar {
         this.working.toolbar.querySelector(".tbardel").style.visibility = (this.deletefunc!=null) ? "visible" : "hidden" ;
 
         this.imageslot = document.createElement("img") ;
-        this.imageslot.className = "fullimage" ;
+        this.imageslot.className = "entryfield_image" ;
         this.file0 = null ;
         if ( this.img ) {
             this.imageslot.src = this.img.src ;
@@ -1028,7 +1028,7 @@ class CommentList {
             let imagedata = getImageFromDoc( comment.doc ) ;
             if ( imagedata ){
                 let img = document.createElement("img") ;
-                img.className = "fullimage" ;
+                img.className = "entryfield_image" ;
                 img.src = imagedata ;
                 li.appendChild(img);
             }
@@ -1038,7 +1038,7 @@ class CommentList {
             li.addEventListener( 'dblclick', (e) => {
                 editBar.startedit( li ) ;
             }) ;
-            textdiv.className = "commenttext" ;
+            textdiv.className = "entryfield_text" ;
             li.appendChild(textdiv);
         }    
         
