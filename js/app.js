@@ -127,6 +127,7 @@ var Struct_Procedure = [
 
 class Tbar {
     constructor() {
+		this.is_active = false ;
         this.textdiv = null ;
         this.text = null ;
         this.toolbar = document.getElementById("templates").querySelector(".editToolbar").cloneNode(true) ;
@@ -134,12 +135,13 @@ class Tbar {
 
     active() {
         // in edit mode already?
-        return this.textdiv ;
+        return this.is_active ;
     }
 
     startedit( existingdiv, savefunc, deletefunc ) {
         // false if already exists
         if ( !this.active() ) {
+			this.is_active = true ;
             this.savefunc = savefunc ;
             this.deletefunc = deletefunc ;
             this.parent = existingdiv ;
@@ -181,6 +183,7 @@ class Tbar {
         }
         this.buttonsdisabled( false ) ;
         this.parent.innerText = this.text ;
+        this.is_active = false ;
     }
 
     deleteedit() {
@@ -215,6 +218,7 @@ class Cbar extends Tbar {
         if ( this.active() ) {
             return false ;
         }
+		this.is_active = true ;
         if ( commentId ) {
             selectComment(existingdiv.getAttribute("data-id")) ;
             this.buttonsdisabled( true ) ;
@@ -281,69 +285,7 @@ class Cbar extends Tbar {
         }
         this.ctext.innerText = this.text ;
         this.parent.appendChild( this.ctext ) ;
-    }
-}
-
-class Ibar extends Tbar {
-    // for Patient picture
-    startedit( existingdiv ) {
-        if ( this.active() ) {
-            return false ;
-        }
-        if ( patientId == null ) {
-            return null ;
-        }
-        this.buttonsdisabled( true ) ;
-        this.deletefunc = deleteComment ;
-        this.parent = existingdiv ;
-        this.img = this.parent.querySelector( ".fullimage" ) ;
-        this.ctext = "" ;
-        this.text = "" ;
-            
-        this.imageslot = document.createElement("img") ;
-        this.imageslot.className = "fullimage" ;
-        this.file0 = null ;
-        if ( this.img ) {
-            this.imageslot.src = this.img.src ;
-            this.imageslot.style.display = "block" ;
-        } else {
-            this.imageslot.style.display = "none" ;
-        }
-
-        this.parent.innerHTML = "" ;
-
-        this.textdiv = document.createElement("div") ;
-        this.textdiv.innerText = this.text ;
-        this.textdiv.contentEditable = true ;
-        this.textdiv.id = "textdiv" ;
-
-        // elements of the edit fields
-        this.parent.appendChild( this.imageslot ) ;
-        this.parent.appendChild(this.toolbar) ;
-        this.parent.appendChild(this.textdiv) ;
-        return true ;
-    }
-
-    saveedit() {
-        if ( this.active() ) {
-            this.text = this.textdiv.innerText ;
-            this.img = this.imageslot ;
-            this.canceledit() ;
-            saveComment( this.text, this.file0 ) ;
-        }
-    }
-
-    canceledit() {
-        if ( this.active() ) {
-            this.parent.innerHTML = ""
-            this.textdiv = null ;
-        }
-        this.buttonsdisabled( false ) ;
-        if ( this.img ) {
-            this.parent.appendChild( this.img ) ;
-        }
-        this.ctext.innerText = this.text ;
-        this.parent.appendChild( this.ctext ) ;
+        this.is_active = false ;
     }
 }
 
