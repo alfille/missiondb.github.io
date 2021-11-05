@@ -9,7 +9,10 @@ var urlsToCache = [
   '/js/base.js',
   '/js/pouchdb-7.2.1.min.js',
   '/js/qrenc-4.0.0.min.js',
-  '/images/missiondb.png',
+  '/images/missiondb32.png',
+  '/images/missiondb64.png',
+  '/images/missiondb192.png',
+  '/images/missiondb512.png',
 ];
 
 self.addEventListener('install', function(event) {
@@ -29,17 +32,17 @@ self.addEventListener('install', function(event) {
 });
 
 self.addEventListener('fetch', function(event) {
-	console.log(["Fetch",event]) ;  
-	function responder() {
-		caches.match(event.request).then(function(response) {
-			// Cache hit - return response
-			if (response) {
-				return response;
-			}
-			return fetch(event.request);
-		}).catch( function (err) {
-				console.log(err) ; 
-		}) ;
-	}
-	event.respondWith( responder() ) ;
+  console.log(["Fetch",event]) ;  
+  function responder() {
+    caches.match(event.request).then(function(response) {
+      // Cache hit - return response
+      if (response) {
+        return response;
+      }
+      return fetch(event.request);
+    }).catch( function (err) {
+        console.log(err) ; 
+    }) ;
+  }
+  event.respondWith( responder() ) ;
 });
