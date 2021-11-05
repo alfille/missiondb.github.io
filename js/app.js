@@ -127,7 +127,7 @@ var Struct_Procedure = [
 
 class Tbar {
     constructor() {
-		this.is_active = false ;
+        this.is_active = false ;
         this.textdiv = null ;
     }
 
@@ -136,21 +136,22 @@ class Tbar {
         return this.is_active ;
     }
 
-	fieldset( existingdiv ) {
-		this.existing = {} ;
-		this.existing.parent = existingdiv ;
-		this.existing.oldText = this.existing.parent.innerText || "" ;
+    fieldset( existingdiv ) {
+        this.existing = {} ;
+        this.existing.parent = existingdiv ;
+        this.existing.oldText = this.existing.parent.innerText || "" ;
 
 
-		this.working = {} ;
-		this.working.parent = existingdiv ;t
+        this.working = {} ;
+        this.working.parent = existingdiv ;
         this.working.toolbar = document.getElementById("templates").querySelector(".editToolbar").cloneNode(true) ;
-		this.working.newText = this.existing.oldText ;
+        this.working.newText = this.existing.oldText ;
+    }
 
     startedit( existingdiv, savefunc, deletefunc ) {
         // false if already exists
         if ( !this.active() ) {
-			this.is_active = true ;
+            this.is_active = true ;
             this.savefunc = savefunc ;
             this.deletefunc = deletefunc ;
             this.fieldset( existingdiv ) ;
@@ -227,7 +228,7 @@ class Cbar extends Tbar {
         if ( this.active() ) {
             return false ;
         }
-		this.is_active = true ;
+        this.is_active = true ;
         if ( commentId ) {
             selectComment(existingdiv.getAttribute("data-id")) ;
             this.buttonsdisabled( true ) ;
