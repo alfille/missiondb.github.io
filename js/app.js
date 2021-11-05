@@ -137,20 +137,19 @@ class Tbar {
 
     fieldset( existingdiv ) {
         this.existing = {} ;
-        this.existing.parent = existingdiv ;
+        this.existing.parent  = existingdiv ;
         this.existing.textDiv = existingdiv.querySelector( ".entryfield_text" ) ;
         this.existing.oldText = existingdiv.innerText || "" ;
-        console.log(this.existing.oldText) ;
-
+        this.existing.img     = existingdiv.querySelector( ".entryfield_image" ) ;
 
         this.working = {} ;
-        this.working.parent = existingdiv ;
+        this.working.parent  = existingdiv ;
         this.working.toolbar = document.getElementById("templates").querySelector(".editToolbar").cloneNode(true) ;
         this.working.newText = this.existing.oldText ;
 		this.working.textDiv = document.createElement("div") ;
 		this.working.textDiv.innerText = this.existing.oldText ;
 		this.working.textDiv.contentEditable = true ;
-        this.working.img = document.createElement("img") ;
+        this.working.img     = document.createElement("img") ;
         this.working.img.className = "entryfield_image" ;
         this.working.upload = null
     }
@@ -182,7 +181,7 @@ class Tbar {
     saveedit() {
         if ( this.active() ) {
             this.existing.oldText = this.working.textDiv.innerText ;
-            this.img = this.working.img ;
+            this.existing.img  = this.working.img ;
             this.canceledit() ;
             this.savefunc( this.existing.oldText ) ;
         }
@@ -238,18 +237,17 @@ class Cbar extends Tbar {
             this.deletefunc = null ;
         }
         this.fieldset( existingdiv ) ;
-        this.img = this.existing.parent.querySelector( ".entryfield_image" ) ;
         if ( this.existing.textDiv == null ) {
             this.existing.textDiv = document.createElement("div") ;
             this.existing.textDiv.className = "entryfield_text" ;
             this.existing.oldText = "" ;
         }
             
-        this.working.toolbar.querySelector(".tbarxpic").disabled = (this.img == null) ;
+        this.working.toolbar.querySelector(".tbarxpic").disabled = (this.existing.img  == null) ;
         this.working.toolbar.querySelector(".tbardel").style.visibility = (this.deletefunc!=null) ? "visible" : "hidden" ;
 
-        if ( this.img ) {
-            this.working.img.src = this.img.src ;
+        if ( this.existing.img  ) {
+            this.working.img.src = this.existing.img .src ;
             this.working.img.style.display = "block" ;
         } else {
             this.working.img.style.display = "none" ;
@@ -267,7 +265,7 @@ class Cbar extends Tbar {
     saveedit() {
         if ( this.active() ) {
             this.existing.oldText = this.working.textDiv.innerText ;
-            this.img = this.working.img ;
+            this.existing.img  = this.working.img ;
             this.canceledit() ;
             saveComment( this.existing.oldText, this.working.upload ) ;
         }
@@ -279,8 +277,8 @@ class Cbar extends Tbar {
             this.working.textDiv = null ;
         }
         this.buttonsdisabled( false ) ;
-        if ( this.img ) {
-            this.working.parent.appendChild( this.img ) ;
+        if ( this.existing.img  ) {
+            this.working.parent.appendChild( this.existing.img  ) ;
         }
         this.existing.textDiv.innerText = this.existing.oldText ;
         this.existing.parent.appendChild( this.existing.textDiv ) ;
