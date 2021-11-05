@@ -128,7 +128,6 @@ var Struct_Procedure = [
 class Tbar {
     constructor() {
         this.is_active = false ;
-        this.textdiv = null ;
     }
 
     active() {
@@ -139,13 +138,21 @@ class Tbar {
     fieldset( existingdiv ) {
         this.existing = {} ;
         this.existing.parent = existingdiv ;
-        this.existing.oldText = this.existing.parent.innerText || "" ;
+        this.existing.textDiv = existingdiv.querySelector( ".entryfield_text" ) ;
+        this.existing.oldText = existingdiv.innerText || "" ;
+        console.log(this.existing.oldText) ;
 
 
         this.working = {} ;
         this.working.parent = existingdiv ;
         this.working.toolbar = document.getElementById("templates").querySelector(".editToolbar").cloneNode(true) ;
         this.working.newText = this.existing.oldText ;
+		this.working.textDiv = document.createElement("div") ;
+		this.working.textDiv.innerText = this.existing.oldText ;
+		this.working.textDiv.contentEditable = true ;
+        this.working.img = document.createElement("img") ;
+        this.working.img.className = "entryfield_image" ;
+        this.working.upload = null
     }
 
     startedit( existingdiv, savefunc, deletefunc ) {
@@ -156,16 +163,11 @@ class Tbar {
             this.deletefunc = deletefunc ;
             this.fieldset( existingdiv ) ;
             this.working.toolbar.querySelector(".tbardel").style.visibility = (deletefunc!=null) ? "visible" : "none" ;
-            this.text = this.existing.parent.innerText || "" ;
 
             this.working.parent.innerHTML = "" ;
             this.working.parent.appendChild(this.working.toolbar) ;
 
-            this.textdiv = document.createElement("div") ;
-            this.textdiv.innerText = this.text ;
-            this.textdiv.contentEditable = true ;
-            this.textdiv.id = "textdiv" ;
-            this.working.parent.appendChild(this.textdiv) ;
+            this.working.parent.appendChild(this.working.textDiv) ;
             return true ;
         }
         return false ;
@@ -179,8 +181,8 @@ class Tbar {
 
     saveedit() {
         if ( this.active() ) {
-            this.existing.oldText = this.textdiv.innerText ;
-            this.img = this.imageslot ;
+            this.existing.oldText = this.working.textDiv.innerText ;
+            this.img = this.working.img ;
             this.canceledit() ;
             this.savefunc( this.existing.oldText ) ;
         }
@@ -189,7 +191,6 @@ class Tbar {
     canceledit() {
         if ( this.active() ) {
             this.working.parent.innerHTML = ""
-            this.textdiv = null ;
         }
         this.buttonsdisabled( false ) ;
         this.working.parent.innerText = this.existing.oldText ;
@@ -198,7 +199,6 @@ class Tbar {
 
     deleteedit() {
         if (this.deletefunc()) {
-            this.textdiv = null
             this.existing.oldText = null ;
         }
     }
@@ -209,15 +209,15 @@ class Tbar {
 
     handleImage() {
         const files = this.working.parent.querySelector('.imageBar')
-        this.file0 = files.files[0];
-        this.imageslot.src = URL.createObjectURL(this.file0) ;
-        this.imageslot.style.display = "block" ;
+        this.working.upload = files.files[0];
+        this.working.img.src = URL.createObjectURL(this.working.upload) ;
+        this.working.img.style.display = "block" ;
         this.working.toolbar.querySelector(".tbarxpic").disabled = false ;
     }
 
     removeImage() {
-        this.imageslot.style.display = "none" ;
-        this.file0 = "remove" ;
+        this.working.img.style.display = "none" ;
+        this.working.upload = "remove" ;
         this.working.toolbar.querySelector(".tbarxpic").disabled = true ;
     }
 }
@@ -238,62 +238,52 @@ class Cbar extends Tbar {
             this.deletefunc = null ;
         }
         this.fieldset( existingdiv ) ;
-        this.img = this.working.parent.querySelector( ".entryfield_image" ) ;
-        this.ctext = this.working.parent.querySelector( ".entryfield_text" ) ;
-        if ( ! this.ctext ) {
-        } else {
-            this.ctext = document.createElement("div") ;
-            this.ctext.className = "entryfield_text" ;
+        this.img = this.existing.parent.querySelector( ".entryfield_image" ) ;
+        if ( this.existing.textDiv == null ) {
+            this.existing.textDiv = document.createElement("div") ;
+            this.existing.textDiv.className = "entryfield_text" ;
             this.existing.oldText = "" ;
         }
             
         this.working.toolbar.querySelector(".tbarxpic").disabled = (this.img == null) ;
         this.working.toolbar.querySelector(".tbardel").style.visibility = (this.deletefunc!=null) ? "visible" : "hidden" ;
 
-        this.imageslot = document.createElement("img") ;
-        this.imageslot.className = "entryfield_image" ;
-        this.file0 = null ;
         if ( this.img ) {
-            this.imageslot.src = this.img.src ;
-            this.imageslot.style.display = "block" ;
+            this.working.img.src = this.img.src ;
+            this.working.img.style.display = "block" ;
         } else {
-            this.imageslot.style.display = "none" ;
+            this.working.img.style.display = "none" ;
         }
 
         this.working.parent.innerHTML = "" ;
 
-        this.textdiv = document.createElement("div") ;
-        this.textdiv.innerText = this.existing.oldText ;
-        this.textdiv.contentEditable = true ;
-        this.textdiv.id = "textdiv" ;
-
-        // elements of the edit fields
-        this.working.parent.appendChild( this.imageslot ) ;
+        // elements of the working fields
+        this.working.parent.appendChild(this.working.img ) ;
         this.working.parent.appendChild(this.working.toolbar) ;
-        this.working.parent.appendChild(this.textdiv) ;
+        this.working.parent.appendChild(this.working.textDiv) ;
         return true ;
     }
 
     saveedit() {
         if ( this.active() ) {
-            this.existing.oldText = this.textdiv.innerText ;
-            this.img = this.imageslot ;
+            this.existing.oldText = this.working.textDiv.innerText ;
+            this.img = this.working.img ;
             this.canceledit() ;
-            saveComment( this.existing.oldText, this.file0 ) ;
+            saveComment( this.existing.oldText, this.working.upload ) ;
         }
     }
 
     canceledit() {
         if ( this.active() ) {
             this.working.parent.innerHTML = ""
-            this.textdiv = null ;
+            this.working.textDiv = null ;
         }
         this.buttonsdisabled( false ) ;
         if ( this.img ) {
             this.working.parent.appendChild( this.img ) ;
         }
-        this.ctext.innerText = this.existing.oldText ;
-        this.working.parent.appendChild( this.ctext ) ;
+        this.existing.textDiv.innerText = this.existing.oldText ;
+        this.existing.parent.appendChild( this.existing.textDiv ) ;
         this.is_active = false ;
     }
 }

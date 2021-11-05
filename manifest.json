@@ -12,17 +12,17 @@
             "src": "/images/missiondb192.png",
             "type": "image/png",
             "sizes": "192x192"
-        }
+        },
         {
             "src": "/images/missiondb360.png",
             "type": "image/png",
             "sizes": "360x360"
-        }
+        },
         {
             "src": "/images/missiondb64.png",
             "type": "image/png",
             "sizes": "64x64"
-        }
+        },
         {
             "src": "/images/missiondb32.png",
             "type": "image/png",
