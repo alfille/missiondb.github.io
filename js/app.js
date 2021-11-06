@@ -139,61 +139,59 @@ class Tbar {
         this.existing = {} ;
         this.existing.parent  = existingdiv ;
         this.existing.textDiv = existingdiv.querySelector( ".entryfield_text" ) ;
-        this.existing.oldText = existingdiv.innerText || "" ;
+        this.existing.oldText = "" ;
         this.existing.img     = existingdiv.querySelector( ".entryfield_image" ) ;
+        if ( this.existing.textDiv ) {
+            this.existing.oldText = this.existing.textDiv.innerText ;
+        } else {
+            this.existing.textDiv = document.createElement("div") ;
+            this.existing.textDiv.classNames = "entryfield_text" ;
+            this.existing.oldText = "" ;
+        }
+        console.log( this.existing.oldText ) ;
 
         this.working = {} ;
         this.working.parent  = existingdiv ;
         this.working.toolbar = document.getElementById("templates").querySelector(".editToolbar").cloneNode(true) ;
         this.working.newText = this.existing.oldText ;
-		this.working.textDiv = document.createElement("div") ;
-		this.working.textDiv.innerText = this.existing.oldText ;
-		this.working.textDiv.contentEditable = true ;
+        this.working.textDiv = document.createElement("div") ;
+        this.working.textDiv.innerText = this.existing.oldText ;
+        this.working.textDiv.contentEditable = true ;
         this.working.img     = document.createElement("img") ;
         this.working.img.className = "entryfield_image" ;
         this.working.upload = null
     }
 
-    startedit( existingdiv, savefunc, deletefunc ) {
-        // false if already exists
-        if ( !this.active() ) {
-            this.is_active = true ;
-            this.savefunc = savefunc ;
-            this.deletefunc = deletefunc ;
-            this.fieldset( existingdiv ) ;
-            this.working.toolbar.querySelector(".tbardel").style.visibility = (deletefunc!=null) ? "visible" : "none" ;
-
-            this.working.parent.innerHTML = "" ;
-            this.working.parent.appendChild(this.working.toolbar) ;
-
-            this.working.parent.appendChild(this.working.textDiv) ;
-            return true ;
+    working2existing() {
+        let t = this.working.textDiv.innerText ;
+        this.existing.textDiv.innerText = t ;
+        if ( t && t.length>0 ) {
+            this.existing.textDiv.style.visibility = "visible" ;
         }
-        return false ;
+        
+        let i = this.working.img ;
+        this.existing.img = i ;
     }
+    
+    existing2show() {
+        this.existing.parent.innerHTML = "" ;
+        if ( this.existing.img ) {
+            this.existing.img.classList.add("entryfield_image") ;
+            this.existing.parent.appendChild( this.existing.img ) ;
+        }
+        if ( this.existing.textDiv ) {
+            this.existing.textDiv.classList.add("entryfield_text") ;
+            this.existing.parent.appendChild( this.existing.textDiv ) ;
+        }
+        this.buttonsdisabled( false ) ;
+        this.is_active = false ;
+    }        
+            
 
     buttonsdisabled( bool ) {
         for ( let b of document.getElementsByClassName( "libutton" ) ) {
             b.disabled = bool ;
         }
-    }
-
-    saveedit() {
-        if ( this.active() ) {
-            this.existing.oldText = this.working.textDiv.innerText ;
-            this.existing.img  = this.working.img ;
-            this.canceledit() ;
-            this.savefunc( this.existing.oldText ) ;
-        }
-    }
-
-    canceledit() {
-        if ( this.active() ) {
-            this.working.parent.innerHTML = ""
-        }
-        this.buttonsdisabled( false ) ;
-        this.working.parent.innerText = this.existing.oldText ;
-        this.is_active = false ;
     }
 
     deleteedit() {
@@ -253,7 +251,7 @@ class Cbar extends Tbar {
             this.working.img.style.display = "none" ;
         }
 
-        this.working.parent.innerHTML = "" ;
+        this.existing.parent.innerHTML = "" ;
 
         // elements of the working fields
         this.working.parent.appendChild(this.working.img ) ;
@@ -264,25 +262,57 @@ class Cbar extends Tbar {
 
     saveedit() {
         if ( this.active() ) {
-            this.existing.oldText = this.working.textDiv.innerText ;
-            this.existing.img  = this.working.img ;
-            this.canceledit() ;
-            saveComment( this.existing.oldText, this.working.upload ) ;
+            if ( commentId ) {
+                // existing comment
+                db.get(commentId).then(( function(doc) {
+                    console.log(doc);
+                    console.log(this.working) ;
+                    console.log(this.working.textDiv) ;
+                    doc.text = this.working.textDiv.innerText ;
+                    console.log(doc.text) ;
+                    if ( this.working.upload == null ) {
+                        console.log(doc.text) ;
+                    } else if ( this.working.upload === "remove") {
+                        console.log(doc.text) ;
+                        deleteImageFromDoc( doc ) ;
+                    } else {
+                        console.log(doc.text) ;
+                        putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
+                    }
+                    console.log(doc.text) ;
+                    return db.put( doc ) ;
+                }).bind(this)).then(( function() {
+                    this.working2existing() ;
+                }).bind(this)).catch( function(err) {
+                    console.log(err) ;
+                }).finally(( function() {
+                    this.existing2show() ;
+                    if ( displayState != "CommentList" ) {
+                        showCommentList() ;
+                    }
+                }).bind(this)) ;
+            } else {
+                // new comment
+                let doc = {
+                    _id: makeCommentId(),
+                    author: userName,
+                    text: this.working.textDiv.innerText,
+                } ;
+                if (this.working.upload && this.working.upload !== "remove") {
+                    putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
+                }                
+                db.put(doc).then(( function() {
+                    this.working2existing() ;
+                }).bind(this)).catch( function(err) {
+                    console.log(err);
+                }).finally(( function () {
+                    this.existing2show() ;
+                    if ( displayState != "CommentList" ) {
+                        showCommentList() ;
+                    }
+                }).bind(this)) ;
+            }
         }
-    }
-
-    canceledit() {
-        if ( this.active() ) {
-            this.working.parent.innerHTML = ""
-            this.working.textDiv = null ;
-        }
-        this.buttonsdisabled( false ) ;
-        if ( this.existing.img  ) {
-            this.working.parent.appendChild( this.existing.img  ) ;
-        }
-        this.existing.textDiv.innerText = this.existing.oldText ;
-        this.existing.parent.appendChild( this.existing.textDiv ) ;
-        this.is_active = false ;
     }
 }
 
@@ -996,6 +1026,7 @@ class CommentList {
 
     liLabel( comment ) {
         let li = document.createElement("li") ;
+        li.setAttribute("data-id", comment.id ) ;
 
         li.appendChild( document.getElementById("templates").getElementsByClassName("editthecomment")[0].cloneNode(true) );
 
@@ -1003,6 +1034,9 @@ class CommentList {
         cdiv.innerHTML = commentTitle(comment) ;
         cdiv.className = "inly" ;
         li.appendChild(cdiv) ;
+        li.addEventListener( 'click', (e) => {
+            selectComment( comment.id ) ;
+        }) ;
 
         return li ;
     }
@@ -1039,6 +1073,9 @@ class CommentList {
             selectComment( comment.id ) ;
             editBar.startedit( li ) ;
         } ;
+        label.addEventListener( 'dblclick', (e) => {
+            editBar.startedit( li ) ;
+        }) ;
 
         return li ;
     }
@@ -1082,48 +1119,12 @@ function CommentNew() {
 }
 
 function commentCancel() {
-    editBar.canceledit() ;
+    editBar.existing2show() ;
     if ( displayState != "CommentList" ) {
         showCommentList() ;
     }
 }
 
-function saveComment( plaintext, file0 ) {
-    if ( commentId ) {
-        // existing comment
-        db.get(commentId).then( function(doc) {
-            doc.text = plaintext ;
-            if ( file0 === "remove") {
-                deleteImageFromDoc( doc ) ;
-            } else if (file0 ) {
-                putImageInDoc( doc, file0.type, file0 ) ;
-            }
-            db.put( doc ) ;
-        }).then( x => {
-            showCommentList() ;
-        }).catch( err => {
-            console.log(err) ;
-            showCommentList() ;
-        });
-    } else {
-        // new comment
-        let doc = {
-            _id: makeCommentId(),
-            author: userName,
-            text: plaintext,
-        } ;
-        if (file0 && file0 !== "remove") {
-            putImageInDoc( doc, file0.type, file0 ) ;
-        }                
-        db.put(doc).then( x => {
-            showCommentList() ;
-        }).catch( err => {
-            console.log(err);
-            showCommentList() ;
-        });
-    }
-}
-  
 function CommentImage() {
     let inp = document.getElementById("imageInput") ;
     if ( isAndroid() ) {
