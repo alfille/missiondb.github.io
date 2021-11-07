@@ -11,6 +11,14 @@ html, body {
   width: 100%;
   background: #lightblue;
 }
+#titlebox {
+  width: 100%;
+  background: #D5CCFF;
+  color: black ;
+  height: 1em;
+  text-align: center;
+  padding: 3px 3px 8px ;
+}
 table {
   border-collapse: collapse;
   width: 100% ;

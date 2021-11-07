@@ -404,6 +404,8 @@ function selectPatient( pid ) {
         }
     }
     document.getElementById("editreviewpatient").disabled = false ;
+    let plist = pid.split(";") ;
+    document.getElementById( "titlebox" ).innerHTML = "Name: <B>"+plist[1]+"</B>, <B>"+plist[2]+"</B>  DOB: <B>"+plist[3]+"/<B>" ;
 }
 
 
@@ -419,6 +421,7 @@ function unselectPatient() {
         }
     }
     document.getElementById("editreviewpatient").disabled = true ;
+    document.getElementById( "titlebox" ).innerHTML = "" ;
 }
 
 function displayStateChange() {
@@ -434,7 +437,7 @@ function displayStateChange() {
     objectCommentImage= null ;
 
     switch( displayState ) {
-        case "PatientList":            
+        case "PatientList":
             db.allDocs({include_docs: true, descending: true}).then( function(docs) {
                 objectPatientList.fill(docs.rows) ;
                 if ( patientId ) {
@@ -976,15 +979,9 @@ class CommentList {
             parent.removeChild(uls[0]) ;
         }
 
-        let ul = document.createElement('ul') ;
-        ul.setAttribute( "id", "CommentList" ) ;
-
-        ul.appendChild( this.lifirst() ) ;
-
-        ul.appendChild( this.lisecond() ) ;
-
-        this.ul = ul ;
-        parent.appendChild(ul) ;
+        this.ul = document.createElement('ul') ;
+        this.ul.setAttribute( "id", "CommentList" ) ;
+        parent.appendChild(this.ul) ;
 
         // get comments
         let skey = [ patientId, "Comment" ].join(";") ;
@@ -1007,22 +1004,6 @@ class CommentList {
         ).catch( function(err) {
             console.log(err) ;
         }); 
-    }
-
-    lifirst() {
-        let li = document.createElement("li") ;
-        li.appendChild( document.createTextNode("Notes and Comments")) ;
-        return li ;
-    }
-
-    lisecond() {
-        let li = document.createElement("li") ;
-
-        let id = patientId.split(';');
-        let pdiv = document.createElement("div");
-        pdiv.innerHTML = "Patient: <b>"+id[1]+", "+id[2]+"</b>   DOB: "+id[3] ;
-        li.appendChild(pdiv) ;
-        return li ;
     }
 
     liLabel( comment ) {
