@@ -1,10 +1,3 @@
-main {
-  background: #FFF;
-  width: 100%;
-  margin: 50px auto;
-  padding: 10px 30px 80px;
-  box-shadow: 0 3px 5px rgba(0,0,0,0.2);
-}
 #tabs {
     display: flex;
     flex-wrap: wrap;
@@ -25,7 +18,7 @@ label {
   font-size: 14px;
   display: block;
   float: left;
-  padding: 5px 10px;
+  padding: 5px ;
   border-top: 2px solid transparent;
   border-right: 1px solid transparent;
   border-left: 1px solid transparent;
@@ -35,7 +28,7 @@ label:hover {
   cursor: pointer;
   color: red;
 }
-#tab_picture:checked~#Content_picture, #tab_demo:checked ~ #Content_demo, #tab_medical:checked ~ #Content_medical, #tab_procedures:checked ~ #Content_procedures  #tab_comments:checked ~ #Content_comments {
+#tab_picture:checked~#Content_picture, #tab_demo:checked ~ #Content_demo, #tab_medical:checked ~ #Content_medical, #tab_procedures:checked ~ #Content_procedures,  #tab_comments:checked ~ #Content_comments {
   display: block;
 }
 input:checked + label {
