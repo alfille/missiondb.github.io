@@ -287,9 +287,6 @@ class Cbar extends Tbar {
                     console.log(err) ;
                 }).finally(( function() {
                     this.existing2show() ;
-                    if ( displayState != "CommentList" ) {
-                        showCommentList() ;
-                    }
                 }).bind(this)) ;
             } else {
                 // new comment
@@ -307,11 +304,15 @@ class Cbar extends Tbar {
                     console.log(err);
                 }).finally(( function () {
                     this.existing2show() ;
-                    if ( displayState != "CommentList" ) {
-                        showCommentList() ;
-                    }
                 }).bind(this)) ;
             }
+        }
+    }
+    
+    existing2show() {
+        super.existing2show() ;
+        if ( displayState != "CommentList" ) {
+            showCommentList() ;
         }
     }
 }
@@ -901,7 +902,7 @@ function deleteComment() {
             showCommentList() ;
         }).catch( function(err) {
             console.log(err) ;
-            return false ;
+            editBar.existing2show() ;
         });
     }
     return true ;
@@ -1116,13 +1117,6 @@ function CommentNew() {
     let d = document.getElementById("CommentNewText") ;
     d.innerHTML = "" ;
     editBar.startedit( d ) ;
-}
-
-function commentCancel() {
-    editBar.existing2show() ;
-    if ( displayState != "CommentList" ) {
-        showCommentList() ;
-    }
 }
 
 function CommentImage() {
