@@ -298,3 +298,17 @@ footer {
 .screen {
     display: block ;
 }
+#PatientOpenContent {
+	margin: auto ;
+}
+#PatientOpenContent img {
+	max-width: 50%;
+}
+#PatientPhotoButtons {
+	display: flex;
+	flex-direction: row ;
+}
+#PatientOpenButtons .divbutton {
+	display: block ;
+}
+

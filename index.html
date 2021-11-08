@@ -21,6 +21,13 @@
                         <button type="button" class="divbutton" id="addPatient" onclick="addPatient()">Create</button>
                         <button type="button" class="divbutton" onclick="showPatientList()">Cancel</button>
                     </div>
+                    <div class="PatientPhoto pageOverlay">
+                        <button type="button" class="divbutton" onclick="printCard()">Print Card</button>
+                        <button type="button" class="divbutton" onclick="showPatientEdit()">Edit Patient Data</button>
+                        <button type="button" class="divbutton" onclick="showCommentList()">Case Comments</button>
+                        <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
+                        <button type="button" class="divbutton delete" onclick="deletePatient()" id="deletepatient">Delete Patient</button>
+                    </div>
                     <div class="PatientOpen pageOverlay">
                         <button type="button" class="divbutton" onclick="printCard()">Print Card</button>
                         <button type="button" class="divbutton" onclick="showPatientEdit()">Edit Patient Data</button>
@@ -51,6 +58,23 @@
             </div>
             <div class="PatientOpen pageOverlay">
                 <div id="PatientOpenContent" ></div>
+            </div>
+            <div class="PatientPhoto pageOverlay">
+                <div id="PatientPhotoContent" >
+					<img class="entryfield_image">
+					<div class="entryfield_text">Patient Photo</div>
+                </div>
+                <div id="PatientPhotoButtons">
+					<div>
+                        <button type="button" class="divbutton" onclick="showPatientEdit()">Demographics</button>
+                        <button type="button" class="divbutton" onclick="showCommentList()">Medical</button>
+                        <button type="button" class="divbutton return" onclick="showCommentList()">Comments</button>
+                        <button type="button" class="divbutton" onclick="printCard()">Print Card</button>
+					</div>
+					<div id="PatientProcButtons">
+                        <button type="button" class="divbutton" onclick="showPatientEdit()">Add Procedure</button>
+					</div>
+                </div>
             </div>
             <div class="PatientNew pageOverlay">
                 <div id="PatientNewContent" >

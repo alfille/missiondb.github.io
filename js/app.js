@@ -12,26 +12,8 @@ var db = new PouchDB('mdb') ;
 console.log(db.adapter); // prints 'idb'
 console.log(db); // prints 'idb'
 var remoteCouch = 'http://192.168.1.5:5984/mdb';
-
+console.log(document.querySelector("#PatientPhotoButtons"));
 var DbaseVersion = "v0" ;
-
-var Struct_ID = [
-    {
-        name: "LastName",
-        hint: "Patient's last name",
-        type: "text",
-    },
-    {
-        name: "FirstName",
-        hint: "Patient's first name",
-        type: "text",
-    },
-    {
-        name: "DOB",
-        hint: "Patient's date of birth",
-        type: "date",
-    },
-] ;
 
 var Struct_Demographics = [
     {
