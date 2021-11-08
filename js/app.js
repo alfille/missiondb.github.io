@@ -369,6 +369,15 @@ function showPatientOpen() {
     displayStateChange() ;
 }
 
+function showPatientTest() {
+    displayState = "PatientTest" ;
+    if ( patientId ) {
+    } else {
+        displayState = "PatientList" ;
+    }
+    displayStateChange() ;
+}
+
 function showCommentList() {
     displayState = "CommentList" ;
     displayStateChange() ;
@@ -404,6 +413,7 @@ function selectPatient( pid ) {
         }
     }
     document.getElementById("editreviewpatient").disabled = false ;
+    document.getElementById("edittest").disabled = false ;
     let plist = pid.split(";") ;
     document.getElementById( "titlebox" ).innerHTML = "Name: <B>"+plist[1]+"</B>, <B>"+plist[2]+"</B>  DOB: <B>"+plist[3]+"/<B>" ;
 }
@@ -421,6 +431,7 @@ function unselectPatient() {
         }
     }
     document.getElementById("editreviewpatient").disabled = true ;
+    document.getElementById("edittest").disabled = true ;
     document.getElementById( "titlebox" ).innerHTML = "" ;
 }
 
@@ -459,6 +470,12 @@ function displayStateChange() {
                     showInvalidPatient() ;
                 }) ;
             } else {
+                showPatientList() ;
+            }
+            break ;
+            
+        case "PatientTest":
+            if ( patientId == null) {
                 showPatientList() ;
             }
             break ;
