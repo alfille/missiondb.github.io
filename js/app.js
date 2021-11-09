@@ -351,6 +351,15 @@ function showPatientOpen() {
     displayStateChange() ;
 }
 
+function showPatientPhoto() {
+    displayState = "PatientPhoto" ;
+    if ( patientId ) {
+    } else {
+        displayState = "PatientList" ;
+    }
+    displayStateChange() ;
+}
+
 function showCommentList() {
     displayState = "CommentList" ;
     displayStateChange() ;
@@ -436,6 +445,19 @@ function displayStateChange() {
             if ( patientId ) {
                 db.get( patientId ).then( function(doc) {
                     objectPatientOpen = new PatientOpen( doc ) ;
+                }).catch( function(err) {
+                    console.log(err) ;
+                    showInvalidPatient() ;
+                }) ;
+            } else {
+                showPatientList() ;
+            }
+            break ;
+            
+        case "PatientPhoto":
+            if ( patientId ) {
+                db.get( patientId ).then( function(doc) {
+                    PatientPhoto( doc ) ;
                 }).catch( function(err) {
                     console.log(err) ;
                     showInvalidPatient() ;
@@ -821,7 +843,7 @@ function addPatient() {
 
     db.put( doc ).then( function( d ) {
         selectPatient( doc._id ) ;
-        showPatientEdit() ;
+        showPatientPhoto() ;
     }).catch( function(e) {
         console.log(e) ;
         showPatientList() ;
@@ -832,7 +854,7 @@ function savePatient() {
     objectPatientEdit.add() ;
 }
   
- function deletePatient() {
+function deletePatient() {
     let indexdoc ;
     if ( patientId ) {        
         db.get(patientId).then( function(doc) {
@@ -865,6 +887,16 @@ function savePatient() {
         });
     }
 }
+
+function PatientPhoto( doc ) {
+	let i = getImageFromDoc( doc ) ;
+	if ( i == null ) {
+		document.getElementById("PatientPhotoPhoto").src = "/style/NoPhoto.png" ;
+	} else {
+		document.getElementById("PatientPhotoPhoto").src = i ;
+	}
+}
+
 
 function newImage() {
     console.log("new image");

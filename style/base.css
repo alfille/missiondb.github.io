@@ -298,8 +298,15 @@ footer {
 .screen {
     display: block ;
 }
-#PatientOpenContent {
-	margin: auto ;
+#PatientPhotoContent {
+	display: flex ;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column ; 
+}
+#PatientPhotoPhoto {
+	display: block ;
+	max-width: 60% ;
 }
 #PatientOpenContent img {
 	max-width: 50%;
@@ -307,6 +314,11 @@ footer {
 #PatientPhotoButtons {
 	display: flex;
 	flex-direction: row ;
+	justify-content: space-around;
+}
+.PatientProcButtons {
+	display: flex;
+	flex-direction: column;
 }
 #PatientOpenButtons .divbutton {
 	display: block ;
