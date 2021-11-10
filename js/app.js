@@ -117,7 +117,7 @@ class Tbar {
         return this.is_active ;
     }
 
-    fieldset( existingdiv ) {
+    fieldset( existingdiv, toolbarclass ) {
         this.existing = {} ;
         this.existing.parent  = existingdiv ;
         this.existing.textDiv = existingdiv.querySelector( ".entryfield_text" ) ;
@@ -134,7 +134,7 @@ class Tbar {
 
         this.working = {} ;
         this.working.parent  = existingdiv ;
-        this.working.toolbar = document.getElementById("templates").querySelector(".editToolbar").cloneNode(true) ;
+        this.working.toolbar = document.getElementById("templates").querySelector(toolbarclass).cloneNode(true) ;
         this.working.newText = this.existing.oldText ;
         this.working.textDiv = document.createElement("div") ;
         this.working.textDiv.innerText = this.existing.oldText ;
@@ -216,7 +216,7 @@ class Cbar extends Tbar {
             unselectComment() ;
             this.deletefunc = null ;
         }
-        this.fieldset( existingdiv ) ;
+        this.fieldset( existingdiv, ".editToolbar" ) ;
         if ( this.existing.textDiv == null ) {
             this.existing.textDiv = document.createElement("div") ;
             this.existing.textDiv.className = "entryfield_text" ;
@@ -227,15 +227,14 @@ class Cbar extends Tbar {
         this.working.toolbar.querySelector(".tbardel").style.visibility = (this.deletefunc!=null) ? "visible" : "hidden" ;
 
         if ( this.existing.img  ) {
-            this.working.img.src = this.existing.img .src ;
+            this.working.img.src = this.existing.img.src ;
             this.working.img.style.display = "block" ;
         } else {
             this.working.img.style.display = "none" ;
         }
 
-        this.existing.parent.innerHTML = "" ;
-
         // elements of the working fields
+        this.working.parent.innerHTML = "" ;
         this.working.parent.appendChild(this.working.img ) ;
         this.working.parent.appendChild(this.working.toolbar) ;
         this.working.parent.appendChild(this.working.textDiv) ;
@@ -247,26 +246,17 @@ class Cbar extends Tbar {
             if ( commentId ) {
                 // existing comment
                 db.get(commentId).then(( function(doc) {
-                    console.log(doc);
-                    console.log(this.working) ;
-                    console.log(this.working.textDiv) ;
                     doc.text = this.working.textDiv.innerText ;
-                    console.log(doc.text) ;
                     if ( this.working.upload == null ) {
-                        console.log(doc.text) ;
                     } else if ( this.working.upload === "remove") {
-                        console.log(doc.text) ;
                         deleteImageFromDoc( doc ) ;
                     } else {
-                        console.log(doc.text) ;
                         putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
                     }
-                    console.log(doc.text) ;
                     return db.put( doc ) ;
                 }).bind(this)).then(( function() {
                     this.working2existing() ;
                 }).bind(this)).catch( function(err) {
-                    console.log(err) ;
                 }).finally(( function() {
                     this.existing2show() ;
                 }).bind(this)) ;
@@ -283,7 +273,6 @@ class Cbar extends Tbar {
                 db.put(doc).then(( function() {
                     this.working2existing() ;
                 }).bind(this)).catch( function(err) {
-                    console.log(err);
                 }).finally(( function () {
                     this.existing2show() ;
                 }).bind(this)) ;
@@ -300,6 +289,68 @@ class Cbar extends Tbar {
 }
 
 var editBar = new Cbar() ;        
+
+class Pbar extends Tbar {
+    // for PatientPhoto
+    startedit() {
+		let existingdiv = document.getElementById("PatientPhotoContent") ;
+        if ( this.active() ) {
+            return false ;
+        }
+        this.is_active = true ;
+		this.buttonsdisabled( true ) ;
+        this.fieldset( existingdiv, ".photoToolbar" ) ;
+        this.working.textDiv.contenteditable = false ;
+            
+        this.working.toolbar.querySelector(".tbarxpic").disabled = false ;
+
+		this.working.img.style.display = "block" ;
+
+        // elements of the working fields
+        this.working.parent.innerHTML = "" ;
+        this.working.parent.appendChild(this.working.img ) ;
+        this.working.parent.appendChild(this.working.toolbar) ;
+        this.working.parent.appendChild(this.working.textDiv) ;
+        return true ;
+    }
+
+    removeImage() {
+        this.working.upload = "remove" ;
+        this.working.img.src = "/style/NoPhoto.png" ;
+    }
+
+    saveedit() {
+        if ( this.active() ) {
+            if ( patientId ) {
+                // existing comment
+                db.get(patientId).then(( function(doc) {
+                    if ( this.working.upload == null ) {
+                    } else if ( this.working.upload === "remove") {
+                        deleteImageFromDoc( doc ) ;
+                    } else {
+                        putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
+                    }
+                    return db.put( doc ) ;
+                }).bind(this)).then(( function() {
+                    this.working2existing() ;
+                }).bind(this)).catch( function(err) {
+                    console.log(err) ;
+                }).finally(( function() {
+                    this.existing2show() ;
+                }).bind(this)) ;
+            }
+        }
+    }
+    
+    existing2show() {
+        super.existing2show() ;
+        if ( displayState != "PatientPhoto" ) {
+            showPatientPhoto() ;
+        }
+    }
+}
+
+var photoBar = new Pbar() ;        
 
 var PatientInfoList = [
     ["LastName","text"],
