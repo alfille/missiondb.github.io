@@ -12,7 +12,6 @@ var db = new PouchDB('mdb') ;
 console.log(db.adapter); // prints 'idb'
 console.log(db); // prints 'idb'
 var remoteCouch = 'http://192.168.1.5:5984/mdb';
-console.log(document.querySelector("#PatientPhotoButtons"));
 var DbaseVersion = "v0" ;
 
 var Struct_Demographics = [
@@ -144,32 +143,6 @@ class Tbar {
         this.working.upload = null
     }
 
-    working2existing() {
-        let t = this.working.textDiv.innerText ;
-        this.existing.textDiv.innerText = t ;
-        if ( t && t.length>0 ) {
-            this.existing.textDiv.style.visibility = "visible" ;
-        }
-        
-        let i = this.working.img ;
-        this.existing.img = i ;
-    }
-    
-    existing2show() {
-        this.existing.parent.innerHTML = "" ;
-        if ( this.existing.img ) {
-            this.existing.img.classList.add("entryfield_image") ;
-            this.existing.parent.appendChild( this.existing.img ) ;
-        }
-        if ( this.existing.textDiv ) {
-            this.existing.textDiv.classList.add("entryfield_text") ;
-            this.existing.parent.appendChild( this.existing.textDiv ) ;
-        }
-        this.buttonsdisabled( false ) ;
-        this.is_active = false ;
-    }        
-            
-
     buttonsdisabled( bool ) {
         for ( let b of document.getElementsByClassName( "libutton" ) ) {
             b.disabled = bool ;
@@ -177,9 +150,8 @@ class Tbar {
     }
 
     deleteedit() {
-        if (this.deletefunc()) {
-            this.existing.oldText = null ;
-        }
+        this.buttonsdisabled( false ) ;
+        this.deletefunc() ;
     }
 
     getImage() {
@@ -254,11 +226,9 @@ class Cbar extends Tbar {
                         putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
                     }
                     return db.put( doc ) ;
-                }).bind(this)).then(( function() {
-                    this.working2existing() ;
                 }).bind(this)).catch( function(err) {
                 }).finally(( function() {
-                    this.existing2show() ;
+                    showCommentList() ;
                 }).bind(this)) ;
             } else {
                 // new comment
@@ -270,29 +240,22 @@ class Cbar extends Tbar {
                 if (this.working.upload && this.working.upload !== "remove") {
                     putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
                 }                
-                db.put(doc).then(( function() {
-                    this.working2existing() ;
-                }).bind(this)).catch( function(err) {
-                }).finally(( function () {
-                    this.existing2show() ;
-                }).bind(this)) ;
+                db.put(doc).catch( function(err) {
+                    console.log(err) ;
+                }).finally( function () {
+                    showCommentList() ;
+                }) ;
             }
         }
     }
-    
-    existing2show() {
-        super.existing2show() ;
-        if ( displayState != "CommentList" ) {
-            showCommentList() ;
-        }
-    }
 }
-
+    
 var editBar = new Cbar() ;        
 
 class Pbar extends Tbar {
     // for PatientPhoto
     startedit() {
+        console.log(patientId) ;
 		let existingdiv = document.getElementById("PatientPhotoContent") ;
         if ( this.active() ) {
             return false ;
@@ -300,10 +263,11 @@ class Pbar extends Tbar {
         this.is_active = true ;
 		this.buttonsdisabled( true ) ;
         this.fieldset( existingdiv, ".photoToolbar" ) ;
-        this.working.textDiv.contenteditable = false ;
+        this.working.textDiv.contentEditable = false ;
             
         this.working.toolbar.querySelector(".tbarxpic").disabled = false ;
 
+        this.working.img.src = this.existing.img.src ;
 		this.working.img.style.display = "block" ;
 
         // elements of the working fields
@@ -331,25 +295,16 @@ class Pbar extends Tbar {
                         putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
                     }
                     return db.put( doc ) ;
-                }).bind(this)).then(( function() {
-                    this.working2existing() ;
                 }).bind(this)).catch( function(err) {
                     console.log(err) ;
-                }).finally(( function() {
-                    this.existing2show() ;
-                }).bind(this)) ;
+                }).finally( function() {
+                    showPatientPhoto() ;
+                }) ;
             }
         }
     }
-    
-    existing2show() {
-        super.existing2show() ;
-        if ( displayState != "PatientPhoto" ) {
-            showPatientPhoto() ;
-        }
-    }
 }
-
+    
 var photoBar = new Pbar() ;        
 
 var PatientInfoList = [
@@ -506,7 +461,9 @@ function displayStateChange() {
             break ;
             
         case "PatientPhoto":
+            console.log(patientId);
             if ( patientId ) {
+                console.log(patientId);
                 db.get( patientId ).then( function(doc) {
                     PatientPhoto( doc ) ;
                 }).catch( function(err) {
@@ -735,7 +692,7 @@ class dataTable extends sortTable {
                 }) ;
                 row.addEventListener( 'dblclick', (e) => {
                     selectPatient( record._id ) ;
-                    showPatientOpen() ;
+                    showPatientPhoto() ;
                 }) ;
                 collist.forEach( function(colname,i) {
                     let c = row.insertCell(i) ;
@@ -967,11 +924,11 @@ function deleteComment() {
             return db.remove(doc) ;
         }).then( function() {
             unselectComment() ;
-            showCommentList() ;
         }).catch( function(err) {
             console.log(err) ;
-            editBar.existing2show() ;
-        });
+        }).finally( function () {
+            showCommentList() ;
+        }) ;
     }
     return true ;
 }    
@@ -1131,6 +1088,15 @@ class CommentList {
 
 function getImageFromDoc( doc ) {
     if ("_attachments" in doc ){
+        console.log(doc);
+        if ( !("image" in doc._attachments) ) {
+            console.log("No image") ;
+            return null ;
+        }
+        if ( !("data" in doc._attachments.image) ) {
+            console.log("No image data") ;
+            return null ;
+        }
         return URL.createObjectURL(doc._attachments.image.data) ;
     }
     return null ;
@@ -1343,6 +1309,7 @@ setRemoteButton() ;
         switch (displayState) {
             case "PatientList":
             case "PatientOpen":
+            case "PatientPhoto":
             case "CommentList":
                 displayStateChange();
                 break ;
