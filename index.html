@@ -26,7 +26,6 @@
                         <button type="button" class="divbutton" onclick="showPatientEdit()">Edit Patient Data</button>
                         <button type="button" class="divbutton" onclick="showCommentList()">Case Comments</button>
                         <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
-                        <button type="button" class="divbutton delete" onclick="deletePatient()" id="deletepatient">Delete Patient</button>
                     </div>
                     <div class="PatientOpen pageOverlay">
                         <button type="button" class="divbutton" onclick="printCard()">Print Card</button>
@@ -61,24 +60,25 @@
             </div>
             <div class="PatientPhoto pageOverlay">
                 <div id="PatientPhotoContent" >
-					<img id="PatientPhotoPhoto" class="entryfield_image">
-					<div class="entryfield_text">
-						<button class="editthecomment libutton" type="button" onClick="photoBar.startedit()">Edit</button>
-						Patient Photo
-					</div>
+                    <img class="entryfield_image">
+                    <div class="entryfield_text">
+                        <button class="editthecomment libutton" type="button" onClick="photoBar.startedit()">Edit</button>
+                        Patient Photo
+                    </div>
                 </div>
                 <div id="PatientPhotoButtons">
-					<div class="PatientProcButtons">
+                    <div class="PatientProcButtons">
                         <button type="button" class="divbutton" onclick="showPatientEdit()">Demographics</button>
                         <button type="button" class="divbutton" onclick="showCommentList()">Medical</button>
-					</div>
-					<div class="PatientProcButtons" id="ProcList">
-                        <button type="button" class="divbutton" onclick="showPatientEdit()">Add Procedure</button>
-					</div>
-					<div class="PatientProcButtons">
-                        <button type="button" class="divbutton return" onclick="showCommentList()">Comments</button>
+                        <button type="button" class="divbutton" onclick="showCommentList()">Comments</button>
                         <button type="button" class="divbutton" onclick="printCard()">Print Card</button>
-					</div>
+                    </div>
+                    <div class="PatientProcButtons" id="ProcList">
+                        <button type="button" class="divbutton" onclick="showPatientEdit()">Add Procedure</button>
+                    </div>
+                    <div class="PatientProcButtons">
+                        <button type="button" class="divbutton delete" onclick="deletePatient()" id="deletepatient">Delete Patient</button>
+                    </div>
                 </div>
             </div>
             <div class="PatientNew pageOverlay">
@@ -127,7 +127,7 @@
         <div id="templates" class="pageOverlay">
             <div class="editToolbar">
                 <button type="button" onclick="editBar.saveedit()"><span><B>Save</B></span></button>
-                <button type="button" onclick="editBar.existing2show()"><span><B>Cancel</B></span></button>
+                <button type="button" onclick="editBar.leave()"><span><B>Cancel</B></span></button>
                 <button type="button" onclick="editBar.getImage()" title="Get image"><span><B>&#128247;</B></span></button>            
                 <button type="button" onclick="editBar.removeImage()" class="tbarxpic" title="Remove image"><span><B>&#128473;&#128247;</B></span></button>
                 <button type="button" onclick="editBar.deleteedit()" class="tbardel delete" title="Delete comment"><span><B>Delete</B></span></button>
@@ -135,12 +135,19 @@
             </div>
             <div class="photoToolbar">
                 <button type="button" onclick="photoBar.saveedit()"><span><B>Save</B></span></button>
-                <button type="button" onclick="photoBar.existing2show()"><span><B>Cancel</B></span></button>
+                <button type="button" onclick="photoBar.leave()"><span><B>Cancel</B></span></button>
                 <button type="button" onclick="photoBar.getImage()" title="Get image"><span><B>&#128247;</B></span></button>            
                 <button type="button" onclick="photoBar.removeImage()" class="tbarxpic" title="Remove image"><span><B>&#128473;&#128247;</B></span></button>
                 <input type="file" accept="image/*" class="imageBar" onchange="photoBar.handleImage()" capture="environment">
             </div>
             <button class="editthecomment libutton" type="button">Edit</button>
+            <div id="phototemplate">
+                <img class="entryfield_image">
+                <div class="entryfield_text">
+                    <button class="editthecomment libutton" type="button" onClick="photoBar.startedit()">Edit</button>
+                    Patient Photo
+                </div>
+            </div>
         </div>
         <footer class="screen">
             <p><a href="http://github.com/alfille/missiondb">Mission Database</a>

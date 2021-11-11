@@ -116,6 +116,17 @@ class Tbar {
         return this.is_active ;
     }
 
+    enter() {
+        this.is_active = true ;
+        this.buttonsdisabled(true) ;
+    }
+    
+    leave(showFunction) {
+        this.is_active = false ;
+        this.buttonsdisabled(false) ;
+        showFunction() ;
+    }
+
     fieldset( existingdiv, toolbarclass ) {
         this.existing = {} ;
         this.existing.parent  = existingdiv ;
@@ -126,10 +137,9 @@ class Tbar {
             this.existing.oldText = this.existing.textDiv.innerText ;
         } else {
             this.existing.textDiv = document.createElement("div") ;
-            this.existing.textDiv.classNames = "entryfield_text" ;
+            this.existing.textDiv.classList.add("entryfield_text") ;
             this.existing.oldText = "" ;
         }
-        console.log( this.existing.oldText ) ;
 
         this.working = {} ;
         this.working.parent  = existingdiv ;
@@ -139,7 +149,7 @@ class Tbar {
         this.working.textDiv.innerText = this.existing.oldText ;
         this.working.textDiv.contentEditable = true ;
         this.working.img     = document.createElement("img") ;
-        this.working.img.className = "entryfield_image" ;
+        this.working.img.classList.add("entryfield_image") ;
         this.working.upload = null
     }
 
@@ -147,11 +157,14 @@ class Tbar {
         for ( let b of document.getElementsByClassName( "libutton" ) ) {
             b.disabled = bool ;
         }
+        for ( let b of document.getElementsByClassName( "divbutton" ) ) {
+            b.disabled = bool ;
+        }
     }
 
     deleteedit() {
-        this.buttonsdisabled( false ) ;
         this.deletefunc() ;
+        this.leave() ;
     }
 
     getImage() {
@@ -160,6 +173,7 @@ class Tbar {
 
     handleImage() {
         const files = this.working.parent.querySelector('.imageBar')
+        console.log(files);
         this.working.upload = files.files[0];
         this.working.img.src = URL.createObjectURL(this.working.upload) ;
         this.working.img.style.display = "block" ;
@@ -179,7 +193,7 @@ class Cbar extends Tbar {
         if ( this.active() ) {
             return false ;
         }
-        this.is_active = true ;
+        this.enter()
         if ( commentId ) {
             selectComment(existingdiv.getAttribute("data-id")) ;
             this.buttonsdisabled( true ) ;
@@ -191,7 +205,7 @@ class Cbar extends Tbar {
         this.fieldset( existingdiv, ".editToolbar" ) ;
         if ( this.existing.textDiv == null ) {
             this.existing.textDiv = document.createElement("div") ;
-            this.existing.textDiv.className = "entryfield_text" ;
+            this.existing.textDiv.classList.add("entryfield_text") ;
             this.existing.oldText = "" ;
         }
             
@@ -228,7 +242,7 @@ class Cbar extends Tbar {
                     return db.put( doc ) ;
                 }).bind(this)).catch( function(err) {
                 }).finally(( function() {
-                    showCommentList() ;
+                    this.leave() ;
                 }).bind(this)) ;
             } else {
                 // new comment
@@ -242,11 +256,15 @@ class Cbar extends Tbar {
                 }                
                 db.put(doc).catch( function(err) {
                     console.log(err) ;
-                }).finally( function () {
-                    showCommentList() ;
-                }) ;
+                }).finally(( function () {
+                    this.leave() ;
+                }).bind(this)) ;
             }
         }
+    }
+
+    leave() {
+        super.leave(showCommentList) ;
     }
 }
     
@@ -255,20 +273,18 @@ var editBar = new Cbar() ;
 class Pbar extends Tbar {
     // for PatientPhoto
     startedit() {
-        console.log(patientId) ;
-		let existingdiv = document.getElementById("PatientPhotoContent") ;
+        let existingdiv = document.getElementById("PatientPhotoContent") ;
         if ( this.active() ) {
             return false ;
         }
-        this.is_active = true ;
-		this.buttonsdisabled( true ) ;
+        this.enter() ;
         this.fieldset( existingdiv, ".photoToolbar" ) ;
         this.working.textDiv.contentEditable = false ;
             
         this.working.toolbar.querySelector(".tbarxpic").disabled = false ;
 
         this.working.img.src = this.existing.img.src ;
-		this.working.img.style.display = "block" ;
+        this.working.img.style.display = "block" ;
 
         // elements of the working fields
         this.working.parent.innerHTML = "" ;
@@ -289,19 +305,30 @@ class Pbar extends Tbar {
                 // existing comment
                 db.get(patientId).then(( function(doc) {
                     if ( this.working.upload == null ) {
+                        console.log("No image change") ;
                     } else if ( this.working.upload === "remove") {
+                        console.log("Remove image") ;
                         deleteImageFromDoc( doc ) ;
                     } else {
+                        console.log("Add image") ;
+                        console.log(this.working) ;
+                        console.log(this.working.upload) ;
+                        console.log(this.working.upload.type) ;
                         putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
                     }
+                    console.log(doc);
                     return db.put( doc ) ;
                 }).bind(this)).catch( function(err) {
                     console.log(err) ;
-                }).finally( function() {
-                    showPatientPhoto() ;
-                }) ;
+                }).finally(( function() {
+                    this.leave() ;
+                }).bind(this)) ;
             }
         }
+    }
+    
+    leave() {
+        super.leave(showPatientPhoto) ;
     }
 }
     
@@ -464,7 +491,13 @@ function displayStateChange() {
             console.log(patientId);
             if ( patientId ) {
                 console.log(patientId);
-                db.get( patientId ).then( function(doc) {
+                let srch = {
+                    include_docs: true ,
+                    binary: true ,
+                    attachments: true ,
+                } ;
+
+                db.get( patientId, srch ).then( function(doc) {
                     PatientPhoto( doc ) ;
                 }).catch( function(err) {
                     console.log(err) ;
@@ -897,12 +930,20 @@ function deletePatient() {
 }
 
 function PatientPhoto( doc ) {
-	let i = getImageFromDoc( doc ) ;
-	if ( i == null ) {
-		document.getElementById("PatientPhotoPhoto").src = "/style/NoPhoto.png" ;
-	} else {
-		document.getElementById("PatientPhotoPhoto").src = i ;
-	}
+    let d = document.getElementById("PatientPhotoContent") ;
+    let c = document.getElementById("phototemplate") ;
+    d.innerHTML = "" ;
+    c.childNodes.forEach( cc => {
+        d.appendChild(cc.cloneNode(true) ) ;
+    });
+    
+    let i = getImageFromDoc( doc ) ;
+    let p = document.getElementById("PatientPhotoContent").getElementsByTagName("img")[0] ;
+    if ( i == null ) {
+        p.src = "/style/NoPhoto.png" ;
+    } else {
+        p.src = i ;
+    }
 }
 
 
@@ -1036,7 +1077,7 @@ class CommentList {
 
         let cdiv = document.createElement("div");
         cdiv.innerHTML = commentTitle(comment) ;
-        cdiv.className = "inly" ;
+        cdiv.classList.add("inly") ;
         li.appendChild(cdiv) ;
         li.addEventListener( 'click', (e) => {
             selectComment( comment.id ) ;
@@ -1055,7 +1096,7 @@ class CommentList {
             let imagedata = getImageFromDoc( comment.doc ) ;
             if ( imagedata ){
                 let img = document.createElement("img") ;
-                img.className = "entryfield_image" ;
+                img.classList.add("entryfield_image") ;
                 img.src = imagedata ;
                 li.appendChild(img);
             }
@@ -1065,7 +1106,7 @@ class CommentList {
             li.addEventListener( 'dblclick', (e) => {
                 editBar.startedit( li ) ;
             }) ;
-            textdiv.className = "entryfield_text" ;
+            textdiv.classList.add("entryfield_text") ;
             li.appendChild(textdiv);
         }    
         
@@ -1087,19 +1128,21 @@ class CommentList {
 }
 
 function getImageFromDoc( doc ) {
-    if ("_attachments" in doc ){
-        console.log(doc);
-        if ( !("image" in doc._attachments) ) {
-            console.log("No image") ;
-            return null ;
-        }
-        if ( !("data" in doc._attachments.image) ) {
-            console.log("No image data") ;
-            return null ;
-        }
-        return URL.createObjectURL(doc._attachments.image.data) ;
+    console.log("Get Image");
+    console.log(doc) ;
+    if ( !("_attachments" in doc) ) {
+        console.log("No attachments");
+        return null ;
     }
-    return null ;
+    if ( !("image" in doc._attachments) ) {
+        console.log("No image") ;
+        return null ;
+    }
+    if ( !("data" in doc._attachments.image) ) {
+        console.log("No image data") ;
+        return null ;
+    }
+    return URL.createObjectURL(doc._attachments.image.data) ;
 }
 
 function deleteImageFromDoc( doc ) {
@@ -1115,6 +1158,7 @@ function putImageInDoc( doc, itype, idata ) {
             data: idata,
         }
     }
+    console.log(doc) ;
 }
 
 function makeCommentId() {

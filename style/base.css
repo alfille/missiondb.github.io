@@ -299,28 +299,28 @@ footer {
     display: block ;
 }
 #PatientPhotoContent {
-	display: flex ;
-	justify-content: center;
-	align-items: center;
-	flex-direction: column ; 
+  display: flex ;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column ; 
 }
-#PatientPhotoPhoto {
-	display: block ;
-	max-width: 60% ;
+#PatientPhoto img {
+  display: block ;
+  max-width: 60% ;
 }
 #PatientOpenContent img {
-	max-width: 50%;
+  max-width: 50%;
 }
 #PatientPhotoButtons {
-	display: flex;
-	flex-direction: row ;
-	justify-content: space-around;
+  display: flex;
+  flex-direction: row ;
+  justify-content: space-around;
 }
 .PatientProcButtons {
-	display: flex;
-	flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 #PatientOpenButtons .divbutton {
-	display: block ;
+  display: block ;
 }
 
