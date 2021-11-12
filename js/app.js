@@ -1,8 +1,11 @@
 var displayState ;
 var patientId ;
 var commentId ;
+var procedureId ;
 var objectPatientOpen  ;
 var objectPatientEdit  ;
+var objectPatientData  ;
+var objectPatientData  ;
 var objectCommentList ;
 var objectCommentNew ;
 var objectCommentImage ;
@@ -15,17 +18,6 @@ var remoteCouch = 'http://192.168.1.5:5984/mdb';
 var DbaseVersion = "v0" ;
 
 var Struct_Demographics = [
-    {
-        name: "Picture",
-        hint: "Recent photo of the patient",
-        type: "image",
-    },
-    {
-        name: "Sex",
-        hint: "Patient gender",
-        type: "radio",
-        choices: ["?","M","F","X"],
-    },
     {
         name: "email",
         hint: "email address",
@@ -47,7 +39,43 @@ var Struct_Demographics = [
         type: "text",
     },
 ] ;
-    
+
+function editField( target, nam, typ ) {
+	Tbar.buttonsdisabled(true) ;
+	console.log(target) ;
+	console.log(nam ) ;
+	console.log( typ ) ;
+}
+
+class PatientData {
+	constructor( doc, struct ) {
+		this.parent = document.getElementByClass("PatientDataContent") ;
+		this.struct = struct ;
+		this.doc = doc ;
+		
+		parent.innerHTML = "" ;
+		this.ul = document.createElement('ul') ;
+		this.parent.appendChild(this.ul) ;
+		let li_base = document.getElementByClass("litemplate") ;
+		
+		struct.forEach( function(item) {
+			let li = li_base.cloneNode(true);
+			
+			let l = li.querySelector("label") ;
+			l.innerText = item.name ;
+			l.title = item.hint ;
+			
+			let i = li.querySelector("input") ;
+			i.type = item.type ;
+			i.title = item.hint ;
+			if ( item.name in doc ) {
+				i.value = doc[item.name] ;
+			}
+			
+			this.ul.appendChild( li ) ;
+		});
+	}
+}
 
 var Struct_Medical = [
     {
@@ -59,6 +87,22 @@ var Struct_Medical = [
         name: "Complaint",
         hint: "Main complaint (patient's view of the problem)",
         type: "text",
+    },
+    {
+        name: "Sex",
+        hint: "Patient gender",
+        type: "radio",
+        choices: ["?","M","F","X"],
+    },
+    {
+        name: "Weight",
+        hint: "Patient weight (kg)",
+        type: "number",
+    },
+    {
+        name: "Height",
+        hint: "Patient height (cm?)",
+        type: "number",
     },
     {
         name: "ASA",
@@ -77,6 +121,7 @@ var Struct_Medical = [
         type: "text",
     },
 ] ;
+
 
 var Struct_Procedure = [
     {
@@ -105,6 +150,7 @@ var Struct_Procedure = [
         type: "datetime-local",
     },
 ] ;
+
 
 class Tbar {
     constructor() {
@@ -365,6 +411,26 @@ function showPatientEdit() {
     displayStateChange() ;
 }
 
+function showPatientDemographics() {
+	displayState = "PatientDemographics" ;
+    displayStateChange() ;
+}
+	
+function showPatientMedical() {
+	displayState = "PatientMedical" ;
+    displayStateChange() ;
+}
+
+function showPatientProcedure() {
+	displayState = "PatientProcedure" ;
+    displayStateChange() ;
+}
+
+function showProcedureList() {
+	displayState = "ProcedureList" ;
+	displayStateChange() ;
+}
+	
 function showPatientNew() {
     displayState = "PatientNew" ;
     displayStateChange() ;
@@ -386,10 +452,6 @@ function showPatientOpen() {
 
 function showPatientPhoto() {
     displayState = "PatientPhoto" ;
-    if ( patientId ) {
-    } else {
-        displayState = "PatientList" ;
-    }
     displayStateChange() ;
 }
 
@@ -432,8 +494,6 @@ function selectPatient( pid ) {
     document.getElementById( "titlebox" ).innerHTML = "Name: <B>"+plist[1]+"</B>, <B>"+plist[2]+"</B>  DOB: <B>"+plist[3]+"/<B>" ;
 }
 
-
-
 function unselectPatient() {
     patientId = undefined ;
     deleteCookie( "patientId" ) ;
@@ -457,6 +517,7 @@ function displayStateChange() {
 
     objectPatientOpen = null ;
     objectPatientEdit = null ;
+    objectPatientData = null ;
     objectCommentList = null ;
     objectCommentImage= null ;
 
@@ -487,8 +548,20 @@ function displayStateChange() {
             }
             break ;
             
+        case "PatientDemographics":
+            if ( patientId ) {
+                db.get( patientId ).then( function(doc) {
+                    objectPatientData = new PatientData( doc, struct_Demographics ) ;
+                }).catch( function(err) {
+                    console.log(err) ;
+                    showInvalidPatient() ;
+                }) ;
+            } else {
+                showPatientList() ;
+            }
+            break ;
+            
         case "PatientPhoto":
-            console.log(patientId);
             if ( patientId ) {
                 console.log(patientId);
                 let srch = {
