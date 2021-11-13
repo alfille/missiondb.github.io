@@ -52,27 +52,27 @@ class PatientData {
 		this.parent = document.getElementById("PatientDataContent") ;
         console.log(this.parent);
 		this.struct = struct ;
-		this.doc = doc ;
+		
+		this.ButtonStatus( true ) ;
 		
 		parent.innerHTML = "" ;
 		this.ul = document.createElement('ul') ;
 		this.parent.appendChild(this.ul) ;
 
 		let li_base = document.querySelector(".litemplate") ;
-        console.log(li_base) ;
 		
-		struct.forEach(( function(item) {
+		struct.forEach(( function( item, idx ) {
 			let li = li_base.cloneNode(true);
-            console.log(li) ;
-            console.log(item);
+			li.setAttribute("data-index",idx) ;
+			li.addEventListener( 'dblclick', (e) => {
+				objectPatientData.Click(e.target.firstChild) ;
+			}) ;
 			
 			let l = li.querySelector("label") ;
-            console.log(l) ;
-			l.insertBefore(document.createTextNode(item.name),null) ;
+			let i = li.querySelector("input") ;
+			l.insertBefore(document.createTextNode(item.name + ": "),i) ;
 			l.title = item.hint ;
 			
-			let i = li.querySelector("input") ;
-            console.log(i) ;
 			i.type = item.type ;
 			i.title = item.hint ;
 			if ( item.name in doc ) {
@@ -81,6 +81,41 @@ class PatientData {
 			
 			this.ul.appendChild( li ) ;
 		}).bind(this));
+	}
+	
+	ButtonStatus( bool ) {
+		document.getElementById("savepatientdata").disabled = bool ;
+		document.getElementById("discardpatientdata").disabled = bool ;
+		document.getElementById("returnpatientdata").disabled = !bool ;
+	}
+		
+
+	Click( e ) {
+		this.ButtonStatus( false ) ;
+		let parent = e.parentElement ;
+		let idx = parent.getAttribute("data-index") ;
+		let b = parent.querySelector("button") ;
+		if (b ) {
+			b.style.display = "none" ;
+		}
+		let i = parent.querySelector("input") ;
+		i.type = (this.struct)[idx].type ;
+		i.readOnly = false ;
+	}
+	
+	savePatientData() {
+		db.get(patientId)
+		.then(( function(doc) {
+			this.ul.querySelectorAll("li").forEach( function(li) {
+				doc[this.struct[i.getAttribute("data-index")].name] = li.querySelector("input").value ;
+			}) ;
+			db.put(doc) ;
+		}).bind(this)
+		).catch( function( err ) {
+			console.log(err) ;
+		}).finally ( function() {
+			showPatientPhoto() ;
+		});
 	}
 }
 
@@ -284,7 +319,8 @@ class Cbar extends Tbar {
         if ( this.active() ) {
             if ( commentId ) {
                 // existing comment
-                db.get(commentId).then(( function(doc) {
+                db.get(commentId)
+                .then(( function(doc) {
                     doc.text = this.working.textDiv.innerText ;
                     if ( this.working.upload == null ) {
                     } else if ( this.working.upload === "remove") {
@@ -356,7 +392,8 @@ class Pbar extends Tbar {
         if ( this.active() ) {
             if ( patientId ) {
                 // existing comment
-                db.get(patientId).then(( function(doc) {
+                db.get(patientId)
+                .then(( function(doc) {
                     if ( this.working.upload == null ) {
                         console.log("No image change") ;
                     } else if ( this.working.upload === "remove") {
@@ -530,7 +567,8 @@ function displayStateChange() {
 
     switch( displayState ) {
         case "PatientList":
-            db.allDocs({include_docs: true, descending: true}).then( function(docs) {
+            db.allDocs({include_docs: true, descending: true})
+            .then( function(docs) {
                 objectPatientList.fill(docs.rows) ;
                 if ( patientId ) {
                     selectPatient( patientId ) ;
@@ -544,7 +582,8 @@ function displayStateChange() {
             
         case "PatientOpen":
             if ( patientId ) {
-                db.get( patientId ).then( function(doc) {
+                db.get( patientId )
+                .then( function(doc) {
                     objectPatientOpen = new PatientOpen( doc ) ;
                 }).catch( function(err) {
                     console.log(err) ;
@@ -557,7 +596,8 @@ function displayStateChange() {
             
         case "PatientDemographics":
             if ( patientId ) {
-                db.get( patientId ).then( function(doc) {
+                db.get( patientId )
+                .then( function(doc) {
                     objectPatientData = new PatientData( doc, structDemographics ) ;
                 }).catch( function(err) {
                     console.log(err) ;
@@ -577,7 +617,8 @@ function displayStateChange() {
                     attachments: true ,
                 } ;
 
-                db.get( patientId, srch ).then( function(doc) {
+                db.get( patientId, srch )
+                .then( function(doc) {
                     PatientPhoto( doc ) ;
                 }).catch( function(err) {
                     console.log(err) ;
@@ -594,7 +635,8 @@ function displayStateChange() {
             
         case "PatientEdit":            
             if ( patientId ) {
-                db.get( patientId ).then( function(doc) {
+                db.get( patientId )
+                .then( function(doc) {
                     objectPatientEdit = new PatientEdit( doc ) ;
                 }).catch( function(err) {
                     console.log(err) ;
@@ -611,7 +653,8 @@ function displayStateChange() {
 
         case "CommentList":            
             if ( patientId ) {
-                db.get( patientId ).then( function(doc) {
+                db.get( patientId )
+                .then( function(doc) {
                     objectCommentList = new CommentList( CommentListContent ) ;
                 }).catch( function(err) {
                     console.log(err) ;
@@ -911,7 +954,8 @@ class PatientEdit extends FieldList {
     add() {
         // save changes on a patient
         this.fields2doc() ;
-        db.put(this.doc).then( function(d) {
+        db.put(this.doc)
+        .then( function(d) {
             showPatientOpen() ;
         }).catch( function(err) {
             console.log(err) ;
@@ -962,7 +1006,8 @@ function addPatient() {
     } ;
     doc._id = makePatientId(doc) ;
 
-    db.put( doc ).then( function( d ) {
+    db.put( doc )
+    .then( function( d ) {
         selectPatient( doc._id ) ;
         showPatientPhoto() ;
     }).catch( function(e) {
@@ -978,7 +1023,8 @@ function savePatient() {
 function deletePatient() {
     let indexdoc ;
     if ( patientId ) {        
-        db.get(patientId).then( function(doc) {
+        db.get(patientId)
+        .then( function(doc) {
             indexdoc = doc ;
             return plusComments(false) ;
         }).then( function(docs) {
@@ -1035,7 +1081,8 @@ function newImage() {
 
 function deleteComment() {
     if ( commentId ) {
-        db.get( commentId ).then( function(doc) {
+        db.get( commentId )
+        .then( function(doc) {
             if ( confirm("Delete comment on patient" + commentId.split(';')[2] + " " + commentId.split(';')[1] + " " +  + commentId.split(';')[4] + ".\n -- Are you sure?") ) {
                 return doc ;
             } else {
@@ -1131,7 +1178,8 @@ class CommentList {
         console.log(skey);
         console.log(skey+'\\fff0');
         
-        plusComments(true).then(( function(docs) {
+        plusComments(true)
+        .then(( function(docs) {
             console.log(docs);
             docs.rows.forEach(( function(comment, i) {
 
@@ -1280,7 +1328,8 @@ function quickImage2() {
     } ;
     putImageInDoc( doc, image.type, image ) ;
 
-    db.put( doc ).then( function(doc) {
+    db.put( doc )
+    .then( function(doc) {
         showCommentList() ;
     }).catch( function(err) {
         console.log(err) ;
@@ -1320,7 +1369,8 @@ function saveImage() {
     } ;
     putImageInDoc( doc, image.type, image ) ;
 
-    db.put( doc ).then( function(doc) {
+    db.put( doc )
+    .then( function(doc) {
         console.log(doc) ;
         showCommentList() ;
     }).catch( function(err) {
@@ -1372,7 +1422,8 @@ function printCard() {
     if ( patientId == null ) {
         return showInvalidPatient() ;
     }
-    db.get( patientId ). then( function(doc) {
+    db.get( patientId )
+	.then( function(doc) {
         showScreen( false ) ;
         var card = document.getElementById("printCard") ;
         var link = window.location.href + "?patientId=" + encodeURIComponent(patientId) ;

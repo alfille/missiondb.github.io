@@ -32,8 +32,8 @@
                         <button type="button" class="divbutton delete" onclick="deletePatient()" id="deletepatient">Delete Patient</button>
                     </div>
                     <div class="PatientData PatientDemographics PatientMedical PatientProcedure pageOverlay">
-                        <button type="button" class="divbutton" onclick="savePatientData()" id="savepatientdata">Save Changes</button>
-                        <button type="button" class="divbutton return" onclick="showPatientPhoto()" id="discardpatientdata">Discard Changes</button>
+                        <button type="button" class="divbutton" onclick="objectPatientData.savePatientData()" id="savepatientdata">Save Changes</button>
+                        <button type="button" class="divbutton return" onclick="displayStateChange()" id="discardpatientdata">Discard Changes</button>
                         <button type="button" class="divbutton return" onclick="showPatientPhoto()" id="returnpatientdata">Return</button>
                     </div>
                     <div class="PatientEdit pageOverlay">
@@ -156,8 +156,8 @@
             </div>
             <ul>
 				<li class="litemplate">
-					<button class="editthecomment libutton" type="button">Edit</button>
-					<label> <input type="text" readonly></label>
+					<button class="editthecomment libutton" type="button" onClick="objectPatientData.Click(this)">Edit</button>
+					<label> <input type="text" size=40 readonly></label>
 				</li>
             </ul>
         </div>
