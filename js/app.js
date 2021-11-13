@@ -17,7 +17,7 @@ console.log(db); // prints 'idb'
 var remoteCouch = 'http://192.168.1.5:5984/mdb';
 var DbaseVersion = "v0" ;
 
-var Struct_Demographics = [
+var structDemographics = [
     {
         name: "email",
         hint: "email address",
@@ -49,23 +49,30 @@ function editField( target, nam, typ ) {
 
 class PatientData {
 	constructor( doc, struct ) {
-		this.parent = document.getElementByClass("PatientDataContent") ;
+		this.parent = document.getElementById("PatientDataContent") ;
+        console.log(this.parent);
 		this.struct = struct ;
 		this.doc = doc ;
 		
 		parent.innerHTML = "" ;
 		this.ul = document.createElement('ul') ;
 		this.parent.appendChild(this.ul) ;
-		let li_base = document.getElementByClass("litemplate") ;
+
+		let li_base = document.querySelector(".litemplate") ;
+        console.log(li_base) ;
 		
-		struct.forEach( function(item) {
+		struct.forEach(( function(item) {
 			let li = li_base.cloneNode(true);
+            console.log(li) ;
+            console.log(item);
 			
 			let l = li.querySelector("label") ;
-			l.innerText = item.name ;
+            console.log(l) ;
+			l.insertBefore(document.createTextNode(item.name),null) ;
 			l.title = item.hint ;
 			
 			let i = li.querySelector("input") ;
+            console.log(i) ;
 			i.type = item.type ;
 			i.title = item.hint ;
 			if ( item.name in doc ) {
@@ -73,11 +80,11 @@ class PatientData {
 			}
 			
 			this.ul.appendChild( li ) ;
-		});
+		}).bind(this));
 	}
 }
 
-var Struct_Medical = [
+var structMedical = [
     {
         name: "Dx",
         hint: "Diagnosis",
@@ -123,7 +130,7 @@ var Struct_Medical = [
 ] ;
 
 
-var Struct_Procedure = [
+var structProcedure = [
     {
         name: "Procedure",
         hint: "Surgical operation / procedure",
@@ -551,7 +558,7 @@ function displayStateChange() {
         case "PatientDemographics":
             if ( patientId ) {
                 db.get( patientId ).then( function(doc) {
-                    objectPatientData = new PatientData( doc, struct_Demographics ) ;
+                    objectPatientData = new PatientData( doc, structDemographics ) ;
                 }).catch( function(err) {
                     console.log(err) ;
                     showInvalidPatient() ;

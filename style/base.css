@@ -323,4 +323,7 @@ footer {
 #PatientOpenButtons .divbutton {
   display: block ;
 }
+#InvalidPatientContent {
+    padding: 5px ;
+}
 
