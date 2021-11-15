@@ -56,6 +56,17 @@ tr:nth-child(odd):hover, li:nth-child(even):hover {
   background: lightyellow ;
 }
 
+.PatientData li {
+  background: #E6F2FF ;
+  margin: 0 0 0 0;
+  border-style: double none none none ;
+  padding: 4px;
+}
+
+.PatientData li:nth-child(odd) {
+  background: #CCCCFF ;
+}
+
 ul {
   list-style-type: none;
   margin: 0;
@@ -309,9 +320,6 @@ footer {
   max-width: 50% ;
   height: auto;
 }
-#PatientOpenContent img {
-  max-width: 50%;
-}
 #PatientPhotoButtons {
   display: flex;
   flex-direction: row ;
@@ -320,9 +328,6 @@ footer {
 .PatientProcButtons {
   display: flex;
   flex-direction: column;
-}
-#PatientOpenButtons .divbutton {
-  display: block ;
 }
 #InvalidPatientContent {
     padding: 5px ;
@@ -333,6 +338,7 @@ footer {
 }
 .PatientData textarea {
     background: #F6F6F6 ;
+    vertical-align: top;
     rows: 3;
     cols: 35;
 }

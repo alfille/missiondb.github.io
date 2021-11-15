@@ -40,6 +40,79 @@ var structDemographics = [
     },
 ] ;
 
+var structMedical = [
+    {
+        name: "Dx",
+        hint: "Diagnosis",
+        type: "textarea",
+    } , 
+    {
+        name: "Complaint",
+        hint: "Main complaint (patient's view of the problem)",
+        type: "textarea",
+    },
+    {
+        name: "Sex",
+        hint: "Patient gender",
+        type: "radio",
+        choices: ["?","M","F","X"],
+    },
+    {
+        name: "Weight",
+        hint: "Patient weight (kg)",
+        type: "number",
+    },
+    {
+        name: "Height",
+        hint: "Patient height (cm?)",
+        type: "number",
+    },
+    {
+        name: "ASA",
+        hint: "ASA classification",
+        type: "radio",
+        choices: ["I","II","III","IV"],
+    },
+    {
+        name: "Allergies",
+        hint: "Allergies and intolerances",
+        type: "textarea",
+    },
+    {
+        name: "Meds",
+        hint: "Medicine and antibiotics",
+        type: "textarea",
+    },
+] ;
+
+var structProcedure = [
+    {
+        name: "Procedure",
+        hint: "Surgical operation / procedure",
+        type: "text",
+    },
+    {
+        name: "Surgeon",
+        hint: "Surgeon(s) involved",
+        type: "text",
+    },
+    {
+        name: "Length",
+        hint: "Length of operation (hours) with prep and cleanup",
+        type: "real",
+    },
+    {
+        name: "Equipment",
+        hint: "Special equipment",
+        type: "text",
+    },
+    {
+        name: "Schedule",
+        hint: "Scheduled date and time",
+        type: "datetime-local",
+    },
+] ;
+
 function editField( target, nam, typ ) {
 	Tbar.buttonsdisabled(true) ;
 	console.log(target) ;
@@ -175,81 +248,6 @@ class PatientData {
 		});
 	}
 }
-
-var structMedical = [
-    {
-        name: "Dx",
-        hint: "Diagnosis",
-        type: "text",
-    } , 
-    {
-        name: "Complaint",
-        hint: "Main complaint (patient's view of the problem)",
-        type: "text",
-    },
-    {
-        name: "Sex",
-        hint: "Patient gender",
-        type: "radio",
-        choices: ["?","M","F","X"],
-    },
-    {
-        name: "Weight",
-        hint: "Patient weight (kg)",
-        type: "number",
-    },
-    {
-        name: "Height",
-        hint: "Patient height (cm?)",
-        type: "number",
-    },
-    {
-        name: "ASA",
-        hint: "ASA classification",
-        type: "radio",
-        choices: ["I","II","III","IV"],
-    },
-    {
-        name: "Allergies",
-        hint: "Allergies and intolerances",
-        type: "text",
-    },
-    {
-        name: "Meds",
-        hint: "Medicine and antibiotics",
-        type: "text",
-    },
-] ;
-
-
-var structProcedure = [
-    {
-        name: "Procedure",
-        hint: "Surgical operation / procedure",
-        type: "text",
-    },
-    {
-        name: "Surgeon",
-        hint: "Surgeon(s) involved",
-        type: "text",
-    },
-    {
-        name: "Length",
-        hint: "Length of operation (hours) with prep and cleanup",
-        type: "real",
-    },
-    {
-        name: "Equipment",
-        hint: "Special equipment",
-        type: "text",
-    },
-    {
-        name: "Schedule",
-        hint: "Scheduled date and time",
-        type: "datetime-local",
-    },
-] ;
-
 
 class Tbar {
     constructor() {
@@ -507,11 +505,6 @@ function showPatientList() {
     displayStateChange() ;
 }
 
-function showPatientEdit() {
-    displayState = "PatientEdit" ;
-    displayStateChange() ;
-}
-
 function showPatientDemographics() {
 	displayState = "PatientDemographics" ;
     displayStateChange() ;
@@ -542,15 +535,6 @@ function showInvalidPatient() {
     displayStateChange() ;
 }
     
-function showPatientOpen() {
-    displayState = "PatientOpen" ;
-    if ( patientId ) {
-    } else {
-        displayState = "PatientList" ;
-    }
-    displayStateChange() ;
-}
-
 function showPatientPhoto() {
     displayState = "PatientPhoto" ;
     displayStateChange() ;
@@ -637,20 +621,6 @@ function displayStateChange() {
             });
             break ;
             
-        case "PatientOpen":
-            if ( patientId ) {
-                db.get( patientId )
-                .then( function(doc) {
-                    objectPatientOpen = new PatientOpen( doc ) ;
-                }).catch( function(err) {
-                    console.log(err) ;
-                    showInvalidPatient() ;
-                }) ;
-            } else {
-                showPatientList() ;
-            }
-            break ;
-            
         case "PatientDemographics":
             if ( patientId ) {
                 db.get( patientId )
@@ -702,20 +672,6 @@ function displayStateChange() {
             
         case "PatientNew":
             newPatient() ;
-            break ;
-            
-        case "PatientEdit":            
-            if ( patientId ) {
-                db.get( patientId )
-                .then( function(doc) {
-                    objectPatientEdit = new PatientEdit( doc ) ;
-                }).catch( function(err) {
-                    console.log(err) ;
-                    showInvalidPatient() ;
-                }) ;
-            } else {
-                showPatientList() ;
-            }
             break ;
             
         case "InvalidPatient":
@@ -937,103 +893,6 @@ class dataTable extends sortTable {
 
 var objectPatientList = new dataTable( "PatientTable", PatientListContent, ["LastName", "FirstName", "DOB","Dx","Procedure" ] ) ;
 
-class FieldList {
-    constructor( idname, parent, fieldlist ) {
-        if ( parent == null ) {
-            parent = document.body ;
-        }
-        this.fieldlist = fieldlist ;
-
-        let uls = parent.getElementsByTagName('ul') ;
-        if (uls.length > 0 ) {
-            parent.removeChild(uls[0]) ;
-        }
-
-        let ul = document.createElement('ul') ;
-        ul.setAttribute( "id", idname ) ;
-        for ( let i=0; i<this.fieldlist.length; ++i ) {
-            let li = document.createElement("li") ;
-            li.appendChild(document.createTextNode(this.fieldlist[i][0])) ;
-            ul.appendChild(li) ;
-
-            li = document.createElement("li") ;
-            ul.appendChild(li)
-        }
-        this.ul = ul ;
-        parent.appendChild(ul) ;
-        this.li = this.ul.getElementsByTagName('li')
-    }
-
-    nonnullstring(s) {
-        if (s == "" ) {
-            return '\u200B' ;
-        }
-        return s ;
-    }
-}
-  
-class PatientOpen extends FieldList {
-    constructor( doc ) {
-        super( "PatientOpen", PatientOpenContent, PatientInfoList ) ;
-        this.ul.addEventListener( 'dblclick', (e) => {
-            showPatientEdit() ;
-        }) ;
-
-        for ( let i=0; i < this.fieldlist.length; ++i ) {
-            this.li[2*i+1].appendChild(document.createTextNode(this.nonnullstring(doc[this.fieldlist[i][0]]))) ;
-        }
-    }
-}
-
-class PatientEdit extends FieldList {
-    constructor( doc ) {
-        super( "PatientEdit", PatientEditContent, PatientInfoList ) ;
-        document.getElementById("saveeditpatient").disabled = true ;
-        for ( let i=0; i<this.fieldlist.length; ++i ) {
-            let inp = document.createElement("input") ;
-            inp.type = this.fieldlist[i][1] ;
-            this.li[2*i+1].appendChild(inp) ;
-        }
-
-        this.doc = doc ;
-        for ( let i=0; i<this.fieldlist.length; ++i ) {
-            let contain = this.li[2*i+1].querySelector('input') ;
-            let field = this.fieldlist[i][0] ;
-            if ( field in this.doc ) {
-                contain.value = this.doc[field] ;
-            } else {
-                contain.value = "" ;
-            }
-            if ( ["LastName","FirstName","DOB"].indexOf(this.fieldlist[i][0]) >= 0 ) {
-                contain.readOnly = true ;
-            }
-        }
-        
-        this.ul.addEventListener( 'input', (e) => {
-            document.getElementById("saveeditpatient").disabled = false ;
-            }) ;
-    }
-    
-    fields2doc() {
-        // load fields from form into doc
-        for ( let i=0; i<this.fieldlist.length; ++i ) {
-            this.doc[this.fieldlist[i][0]] =  this.li[2*i+1].querySelector('input').value ;
-        }
-    }
-    
-    
-    add() {
-        // save changes on a patient
-        this.fields2doc() ;
-        db.put(this.doc)
-        .then( function(d) {
-            showPatientOpen() ;
-        }).catch( function(err) {
-            console.log(err) ;
-        }) ;
-    }
-}
-
 function makePatientId(doc) {
     return [ DbaseVersion, this.doc.LastName, this.doc.FirstName, this.doc.DOB ].join(";") ;
 }
@@ -1143,7 +1002,6 @@ function PatientPhoto( doc ) {
     }
 }
 
-
 function newImage() {
     console.log("new image");
     unselectComment() ;
@@ -1202,7 +1060,6 @@ function unselectComment() {
         }
     }
 }
-
 
 function commentTitle( doc ) {
     if ( doc ) {
@@ -1554,13 +1411,10 @@ setRemoteButton() ;
     }).on('change', function(change) {
         switch (displayState) {
             case "PatientList":
-            case "PatientOpen":
             case "PatientPhoto":
-            case "CommentList":
                 displayStateChange();
                 break ;
-            case "PatientEdit":
-            case "CommentNew":
+            default:
                 break ;
         }
     });
@@ -1600,7 +1454,7 @@ setRemoteButton() ;
     if (q) {
         if ( patientId in q ) {
             selectPatient( q.patientId ) ;
-            showPatientOpen() ;
+            showPatientPhoto() ;
         }
     }
     

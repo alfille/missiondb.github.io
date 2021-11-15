@@ -24,21 +24,10 @@
                     <div class="PatientPhoto pageOverlay">
                         <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
                     </div>
-                    <div class="PatientOpen pageOverlay">
-                        <button type="button" class="divbutton" onclick="printCard()">Print Card</button>
-                        <button type="button" class="divbutton" onclick="showPatientEdit()">Edit Patient Data</button>
-                        <button type="button" class="divbutton" onclick="showCommentList()">Case Comments</button>
-                        <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
-                        <button type="button" class="divbutton delete" onclick="deletePatient()" id="deletepatient">Delete Patient</button>
-                    </div>
                     <div class="PatientData PatientDemographics PatientMedical PatientProcedure pageOverlay">
                         <button type="button" class="divbutton" onclick="objectPatientData.savePatientData()" id="savepatientdata">Save Changes</button>
                         <button type="button" class="divbutton return" onclick="displayStateChange()" id="discardpatientdata">Discard Changes</button>
                         <button type="button" class="divbutton return" onclick="showPatientPhoto()" id="returnpatientdata">Return</button>
-                    </div>
-                    <div class="PatientEdit pageOverlay">
-                        <button type="button" class="divbutton" onclick="savePatient()" id="saveeditpatient">Save</button>
-                        <button type="button" class="divbutton return" onclick="showPatientOpen()">Cancel</button>
                     </div>
                     <div class="InvalidPatient pageOverlay">
                         <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
@@ -46,7 +35,7 @@
                     <div class="CommentList pageOverlay">
                         <button class="createthecomment libutton divbutton" type="button" onclick="showCommentNew()">New Comment</button>
                         <button class="createtheimage libutton divbutton" type="button" onclick="quickImage()" title="Quick picture">&#128247;</button>
-                        <button class="returnfromcomment libutton divbutton return" type="button" onclick="showPatientOpen()">Return</button>
+                        <button class="returnfromcomment libutton divbutton return" type="button" onclick="showPatientPhoto()">Return</button>
                     </div>
                 </div>
             </div>
@@ -56,9 +45,6 @@
         <div id="missiondbody" class="screen">
             <div class="PatientList pageOverlay">
                 <div id="PatientListContent" ></div>
-            </div>
-            <div class="PatientOpen pageOverlay">
-                <div id="PatientOpenContent" ></div>
             </div>
             <div class="PatientData PatientDemographics PatientMedical PatientProcedure pageOverlay">
                 <div id="PatientDataContent" ></div>
@@ -92,9 +78,6 @@
                     <label>Last name: <input type="text" id="newLast" onInput="checkNew()"></label><br>
                     <label>Date of birth: <input type="date" id="newDOB" onInput="checkNew()"></label>
                 </div>
-            </div>
-            <div class="PatientEdit pageOverlay">
-                <div id="PatientEditContent" ></div>
             </div>
             <div class="InvalidPatient pageOverlay">
                 <div id="InvalidPatientContent" >
