@@ -12,6 +12,18 @@ console.log(db); // prints 'idb'
 var remoteCouch = 'http://192.168.1.5:5984/mdb';
 var DbaseVersion = "v0" ;
 
+const RecordFormat = {
+	type: {
+		patient: "p" ,
+		operation: "o" ,
+		comment: "c" ,
+		staff: "s" ,
+		list: "l" ,
+		} ,
+	version: 0,
+} ;
+		
+
 const structDemographics = [
     {
         name: "email",
@@ -865,20 +877,70 @@ class dataTable extends sortTable {
 var objectPatientList = new dataTable( "PatientTable", PatientListContent, ["LastName", "FirstName", "DOB","Dx","Procedure" ] ) ;
 
 function makePatientId(doc) {
-    return [ DbaseVersion, this.doc.LastName, this.doc.FirstName, this.doc.DOB ].join(";") ;
+    return [ 
+		RecordFormat.type.patient,
+		RecordFormat.version,
+		doc.LastName,
+		doc.FirstName,
+		doc.DOB 
+		].join(";") ;
 }
 
 function splitPatientId() {
     if ( patientId ) {
         var spl = patientId.split(";") ;
-        if ( spl.length !== 4 ) {
+        if ( spl.length !== 5 ) {
             return null ;
         }
         return {
-            "version": spl[0],
-            "last" : spl[1],
-            "first": spl[2],
-            "dob": spl[3],
+			"type": spl[0],
+            "version": spl[1],
+            "last" : spl[2],
+            "first": spl[3],
+            "dob": spl[4],
+        } ;
+    }
+    return null ;
+}
+
+function makeCommentId(position=none) {
+	let d ;
+	switch (position) {
+		case: "first":
+			d = "" ;
+			break ;
+		case "last":
+			d = "\\fff0" ;
+			break ;
+		default:
+			d = new Date().toISOString() ;
+			break;
+	}
+    let spl = splitPatientId() ;
+    
+    return [ 
+		RecordFormat.type.comment,
+		RecordFormat.version,
+		spl.last,
+		doc.first,
+		doc.dob,
+		d , 
+		].join(";") ;
+}
+
+function splitCommentId() {
+    if ( patientId ) {
+        var spl = patientId.split(";") ;
+        if ( spl.length !== 6 ) {
+            return null ;
+        }
+        return {
+			type: spl[0],
+            version: spl[1],
+            last: spl[2],
+            first: spl[3],
+            dob: spl[4],
+            date: spl[5],
         } ;
     }
     return null ;
@@ -983,7 +1045,8 @@ function deleteComment() {
     if ( commentId ) {
         db.get( commentId )
         .then( function(doc) {
-            if ( confirm("Delete comment on patient" + commentId.split(';')[2] + " " + commentId.split(';')[1] + " " +  + commentId.split(';')[4] + ".\n -- Are you sure?") ) {
+			let spl = splitCommentId() ;
+            if ( confirm("Delete comment on patient" + spl.first + " " + spl.last + " from " +  + spl.date + ".\n -- Are you sure?") ) {
                 return doc ;
             } else {
                 throw "No delete" ;
@@ -1186,11 +1249,6 @@ function putImageInDoc( doc, itype, idata ) {
         }
     }
     console.log(doc) ;
-}
-
-function makeCommentId() {
-    let d = new Date().toISOString() ;
-    return [ patientId, "Comment" , d ].join(";") ;
 }
 
 function CommentNew() {
