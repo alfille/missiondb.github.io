@@ -2,13 +2,8 @@ var displayState ;
 var patientId ;
 var commentId ;
 var procedureId ;
-var objectPatientOpen  ;
-var objectPatientEdit  ;
-var objectPatientData  ;
 var objectPatientData  ;
 var objectCommentList ;
-var objectCommentNew ;
-var objectCommentImage ;
 var userName ;
   
 var db = new PouchDB('mdb') ;
@@ -17,7 +12,7 @@ console.log(db); // prints 'idb'
 var remoteCouch = 'http://192.168.1.5:5984/mdb';
 var DbaseVersion = "v0" ;
 
-var structDemographics = [
+const structDemographics = [
     {
         name: "email",
         hint: "email address",
@@ -40,7 +35,7 @@ var structDemographics = [
     },
 ] ;
 
-var structMedical = [
+const structMedical = [
     {
         name: "Dx",
         hint: "Diagnosis",
@@ -85,7 +80,7 @@ var structMedical = [
     },
 ] ;
 
-var structProcedure = [
+const structProcedure = [
     {
         name: "Procedure",
         hint: "Surgical operation / procedure",
@@ -479,27 +474,6 @@ class Pbar extends Tbar {
     
 var photoBar = new Pbar() ;        
 
-var PatientInfoList = [
-    ["LastName","text"],
-    ["FirstName","text"],
-    ["DOB","date"],
-    ["Weight(kg)","number"],
-    ["Dx","text"], 
-    ["Complaints","text"], 
-    ["Procedure","text"],
-    ["Length","time"],
-    ["Equipment","text"],
-    ["Sex","text"],
-    ["Meds","text"],
-    ["Allergies","text"],
-    ["Surgeon","text"],
-    ["ASA class","number"],
-    ["phone","tel"], 
-    ["email","email"], 
-    ["address","text"], 
-    ["Contact","text"] 
-    ] ;
-
 function showPatientList() {
     displayState = "PatientList" ;
     displayStateChange() ;
@@ -600,11 +574,8 @@ function displayStateChange() {
 
     setCookie("displayState",displayState) ;
 
-    objectPatientOpen = null ;
-    objectPatientEdit = null ;
     objectPatientData = null ;
     objectCommentList = null ;
-    objectCommentImage= null ;
 
     switch( displayState ) {
         case "PatientList":
