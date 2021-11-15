@@ -31,12 +31,12 @@ var structDemographics = [
     {
         name: "Address",
         hint: "Patient home address",
-        type: "text",
+        type: "textarea",
     },
     {
         name: "Contact",
         hint: "Additional contact information (family member, local address,...)",
-        type: "text",
+        type: "textarea",
     },
 ] ;
 
@@ -50,12 +50,12 @@ function editField( target, nam, typ ) {
 class PatientData {
 	constructor( doc, struct ) {
 		this.parent = document.getElementById("PatientDataContent") ;
-        console.log(this.parent);
+        this.doc = doc ;
 		this.struct = struct ;
 		
 		this.ButtonStatus( true ) ;
 		
-		parent.innerHTML = "" ;
+		this.parent.innerHTML = "" ;
 		this.ul = document.createElement('ul') ;
 		this.parent.appendChild(this.ul) ;
 
@@ -69,15 +69,48 @@ class PatientData {
 			}) ;
 			
 			let l = li.querySelector("label") ;
-			let i = li.querySelector("input") ;
-			l.insertBefore(document.createTextNode(item.name + ": "),i) ;
+			l.appendChild( document.createTextNode(item.name + ": ") );
 			l.title = item.hint ;
-			
-			i.type = item.type ;
-			i.title = item.hint ;
-			if ( item.name in doc ) {
-				i.value = doc[item.name] ;
-			}
+
+            let i = null;
+            switch( item.type ) {
+                case "radio":
+                    let v = doc[item.name] ;
+                    if ( !item.choices.includes(v) && ( item.choices.length > 0 ) ) {
+                        v = item.choices[0] ;
+                    }
+                    item.choices.forEach( function(c) {
+                        i = document.createElement("input") ;
+                        i.type = "radio" ;
+                        i.name = item.name ;
+                        i.value = c ;
+                        if ( c == v ) {
+                            i.checked = true ;
+                            i.disabled = false ;
+                        } else {
+                            i.disabled = true ;
+                        }
+                        i.title = item.hint ;
+                        l.appendChild(i) ;
+                        l.appendChild( document.createTextNode(c) ) ;
+                    }) ;
+                    break ;
+                case "textarea" :
+                    i = document.createElement("textarea") ;
+                    // fall through
+                default:
+                    if ( i == null ) {
+                        i = document.createElement("input") ;
+                        i.type = item.type ;
+                    }
+                    i.title = item.hint ;
+                    i.readOnly = true ;
+                    if ( item.name in doc ) {
+                        i.value = doc[item.name] ;
+                    }
+                    l.appendChild(i) ;
+                    break ;
+            }                
 			
 			this.ul.appendChild( li ) ;
 		}).bind(this));
@@ -98,23 +131,47 @@ class PatientData {
 		if (b ) {
 			b.style.display = "none" ;
 		}
-		let i = parent.querySelector("input") ;
-		i.type = (this.struct)[idx].type ;
-		i.readOnly = false ;
+        switch ( this.struct[idx].type ) {
+            case "radio":
+                document.getElementsByName(this.struct[idx].name).forEach( function (i) {
+                    i.disabled = false ;
+                }) ;
+                break ;
+            case "textarea":
+                parent.querySelector("textarea").readOnly = false ;
+                break ;
+            default:
+                parent.querySelector("input").readOnly = false ;
+                break ;
+        }
 	}
 	
 	savePatientData() {
-		db.get(patientId)
-		.then(( function(doc) {
-			this.ul.querySelectorAll("li").forEach( function(li) {
-				doc[this.struct[i.getAttribute("data-index")].name] = li.querySelector("input").value ;
-			}) ;
-			db.put(doc) ;
-		}).bind(this)
-		).catch( function( err ) {
+        this.ul.querySelectorAll("li").forEach(( function(li) {
+            let idx = li.getAttribute("data-index") ;
+            let v = "" ;
+            switch ( this.struct[idx].type ) {
+                case "radio":
+                    document.getElementsByName(this.struct[idx].name).forEach( function (i) {
+                        if ( i.checked == true ) {
+                            v = i.value ;
+                        }
+                    }) ;
+                    break ;
+                case "textarea":
+                    v = li.querySelector("textarea").value ;
+                    break ;
+                default:
+                    v = li.querySelector("input").value ;
+                    break ;
+            }
+            this.doc[this.struct[idx].name] = v ;
+        }).bind(this)) ;
+        db.put(this.doc)
+		.catch( function( err ) {
 			console.log(err) ;
 		}).finally ( function() {
-			showPatientPhoto() ;
+			displayStateChange() ;
 		});
 	}
 }
@@ -599,6 +656,20 @@ function displayStateChange() {
                 db.get( patientId )
                 .then( function(doc) {
                     objectPatientData = new PatientData( doc, structDemographics ) ;
+                }).catch( function(err) {
+                    console.log(err) ;
+                    showInvalidPatient() ;
+                }) ;
+            } else {
+                showPatientList() ;
+            }
+            break ;
+            
+        case "PatientMedical":
+            if ( patientId ) {
+                db.get( patientId )
+                .then( function(doc) {
+                    objectPatientData = new PatientData( doc, structMedical ) ;
                 }).catch( function(err) {
                     console.log(err) ;
                     showInvalidPatient() ;

@@ -304,9 +304,10 @@ footer {
   align-items: center;
   flex-direction: column ; 
 }
-#PatientPhoto img {
+#PatientPhotoContent img {
   display: block ;
-  max-width: 60% ;
+  max-width: 50% ;
+  height: auto;
 }
 #PatientOpenContent img {
   max-width: 50%;
@@ -326,4 +327,15 @@ footer {
 #InvalidPatientContent {
     padding: 5px ;
 }
+.PatientData input {
+    background: #F6F6F6 ;
+    size: 35 ;
+}
+.PatientData textarea {
+    background: #F6F6F6 ;
+    rows: 3;
+    cols: 35;
+}
+
+
 
