@@ -1,8 +1,10 @@
 var displayState ;
-var patientId ;
-var commentId ;
-var procedureId ;
+var patientId = null ;
+var commentId = null ;
+var operationId = null ;
+
 var objectPatientData  ;
+var objectOperationList  ;
 var objectCommentList ;
 var userName ;
   
@@ -10,8 +12,8 @@ var db = new PouchDB('mdb') ;
 console.log(db.adapter); // prints 'idb'
 console.log(db); // prints 'idb'
 var remoteCouch = 'http://192.168.1.5:5984/mdb';
-var DbaseVersion = "v0" ;
 
+// used for record keys ( see makePatientId, etc )
 const RecordFormat = {
 	type: {
 		patient: "p" ,
@@ -384,6 +386,7 @@ class Cbar extends Tbar {
                 db.get(commentId)
                 .then(( function(doc) {
                     doc.text = this.working.textDiv.innerText ;
+                    doc.patient_id = patientId ;
                     if ( this.working.upload == null ) {
                     } else if ( this.working.upload === "remove") {
                         deleteImageFromDoc( doc ) ;
@@ -401,6 +404,7 @@ class Cbar extends Tbar {
                     _id: makeCommentId(),
                     author: userName,
                     text: this.working.textDiv.innerText,
+                    patient_id: patientId,
                 } ;
                 if (this.working.upload && this.working.upload !== "remove") {
                     putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
@@ -502,7 +506,7 @@ function showPatientMedical() {
 }
 
 function showPatientProcedure() {
-	displayState = "PatientProcedure" ;
+	displayState = "PatientOperation" ;
     displayStateChange() ;
 }
 
@@ -548,21 +552,28 @@ function selectPatient( pid ) {
     }
         
     patientId = pid ;
-    setCookie( "patientId", pid ) ;
-    if ( displayState == "PatientList" ) {
-        // highlight the list row
-        let rows = document.getElementById("PatientTable").rows ;
-        for ( let i = 0 ; i < rows.length ; ++i ) {
-            if ( rows[i].getAttribute("data-id") == pid ) {
-                rows[i].classList.add('choice') ;
-            } else {
-                rows[i].classList.remove('choice') ;
-            }
-        }
-    }
-    document.getElementById("editreviewpatient").disabled = false ;
-    let spl = splitPatientId() ;
-    document.getElementById( "titlebox" ).innerHTML = "Name: <B>"+spl.last+"</B>, <B>"+spl.first+"</B>  DOB: <B>"+spl.dob+"/<B>" ;
+    // Check patient existence
+    db.get(patientId)
+    .then( function (doc) {
+		setCookie( "patientId", pid ) ;
+		if ( displayState == "PatientList" ) {
+			// highlight the list row
+			let rows = document.getElementById("PatientTable").rows ;
+			for ( let i = 0 ; i < rows.length ; ++i ) {
+				if ( rows[i].getAttribute("data-id") == pid ) {
+					rows[i].classList.add('choice') ;
+				} else {
+					rows[i].classList.remove('choice') ;
+				}
+			}
+		}
+		document.getElementById("editreviewpatient").disabled = false ;
+		let spl = splitPatientId() ;
+		document.getElementById( "titlebox" ).innerHTML = "Name: <B>"+spl.last+"</B>, <B>"+spl.first+"</B>  DOB: <B>"+spl.dob+"/<B>" ;
+	}).catch( function(err) {
+		console.log(err) ;
+		unselectPatient() ;
+	}) ;
 }
 
 function unselectPatient() {
@@ -925,7 +936,7 @@ function splitPatientId( pid = patientId ) {
     return null ;
 }
 
-function makeCommentId(position=none) {
+function makeCommentId(position=null) {
 	let d ;
 	switch (position) {
 		case "first":
@@ -950,9 +961,34 @@ function makeCommentId(position=none) {
 		].join(";") ;
 }
 
+function makeOperationId(position=null) {
+	let d ;
+	switch (position) {
+		case "first":
+			d = "" ;
+			break ;
+		case "last":
+			d = "\\fff0" ;
+			break ;
+		default:
+			d = new Date().toISOString() ;
+			break;
+	}
+    let spl = splitPatientId() ;
+    
+    return [ 
+		RecordFormat.type.operation,
+		RecordFormat.version,
+		spl.last,
+		doc.first,
+		doc.dob,
+		d , 
+		].join(";") ;
+}
+
 function splitCommentId() {
-    if ( patientId ) {
-        var spl = patientId.split(";") ;
+    if ( commentId ) {
+        var spl = commentId.split(";") ;
         if ( spl.length !== 6 ) {
             return null ;
         }
@@ -962,7 +998,25 @@ function splitCommentId() {
             last: spl[2],
             first: spl[3],
             dob: spl[4],
-            date: spl[5],
+            key: spl[5],
+        } ;
+    }
+    return null ;
+}
+
+function splitOperationId() {
+    if ( operationId ) {
+        var spl = operationId.split(";") ;
+        if ( spl.length !== 6 ) {
+            return null ;
+        }
+        return {
+			type: spl[0],
+            version: spl[1],
+            last: spl[2],
+            first: spl[3],
+            dob: spl[4],
+            key: spl[5],
         } ;
     }
     return null ;

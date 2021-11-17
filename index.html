@@ -17,6 +17,10 @@
                         <button type="button" class="divbutton" onclick="showPatientNew()">Add Patient</button>
                         <button type="button" class="divbutton" onclick="showPatientPhoto()" id="editreviewpatient">Review/Edit Patient</button>
                     </div>
+                    <div class="OperationList pageOverlay">
+                        <button type="button" class="divbutton" onclick="showOperationNew()">Add Operation</button>
+                        <button type="button" class="divbutton" onclick="showOperation()" id="editreviewoperation">Review/Edit Operation</button>
+                    </div>
                     <div class="PatientNew pageOverlay">
                         <button type="button" class="divbutton" id="addPatient" onclick="addPatient()">Create</button>
                         <button type="button" class="divbutton" onclick="showPatientList()">Cancel</button>
@@ -24,7 +28,7 @@
                     <div class="PatientPhoto pageOverlay">
                         <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
                     </div>
-                    <div class="PatientData PatientDemographics PatientMedical PatientProcedure pageOverlay">
+                    <div class="PatientData PatientDemographics PatientMedical PatientOperation pageOverlay">
                         <button type="button" class="divbutton" onclick="objectPatientData.savePatientData()" id="savepatientdata">Save Changes</button>
                         <button type="button" class="divbutton return" onclick="displayStateChange()" id="discardpatientdata">Discard Changes</button>
                         <button type="button" class="divbutton return" onclick="showPatientPhoto()" id="returnpatientdata">Return</button>
@@ -46,7 +50,7 @@
             <div class="PatientList pageOverlay">
                 <div id="PatientListContent" ></div>
             </div>
-            <div class="PatientData PatientDemographics PatientMedical PatientProcedure pageOverlay">
+            <div class="PatientData PatientDemographics PatientMedical PatientOperation pageOverlay">
                 <div id="PatientDataContent" ></div>
             </div>
             <div class="PatientPhoto pageOverlay">
