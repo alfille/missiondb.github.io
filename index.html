@@ -61,13 +61,13 @@
                     <div class="PatientProcButtons">
                         <button type="button" class="divbutton" onclick="showPatientDemographics()">Demographics</button>
                         <button type="button" class="divbutton" onclick="showPatientMedical()">Medical</button>
-                        <button type="button" class="divbutton" onclick="printCard()">Print Card</button>
                     </div>
                     <div class="PatientProcButtons" id="ProcList">
-                        <button type="button" class="divbutton" onclick="showPatientProcedures()">Procedures</button>
                         <button type="button" class="divbutton" onclick="showCommentList()">Comments</button>
+                        <button type="button" class="divbutton" onclick="showPatientProcedures()">New Procedure</button>
                     </div>
                     <div class="PatientProcButtons">
+                        <button type="button" class="divbutton" onclick="printCard()">Print Card</button>
                         <button type="button" class="divbutton delete" onclick="deletePatient()" id="deletepatient">Delete Patient</button>
                     </div>
                 </div>
@@ -129,7 +129,6 @@
                 <input type="file" accept="image/*" class="imageBar" onchange="photoBar.handleImage()" capture="environment">
             </div>
            <button class="editthecomment libutton" type="button">Edit</button>
-            <button class="editthetext libutton" type="button">Edit</button>
             <div id="phototemplate">
                 <img class="entryfield_image">
                 <div class="entryfield_text">

@@ -561,8 +561,8 @@ function selectPatient( pid ) {
         }
     }
     document.getElementById("editreviewpatient").disabled = false ;
-    let plist = pid.split(";") ;
-    document.getElementById( "titlebox" ).innerHTML = "Name: <B>"+plist[1]+"</B>, <B>"+plist[2]+"</B>  DOB: <B>"+plist[3]+"/<B>" ;
+    let spl = splitPatientId() ;
+    document.getElementById( "titlebox" ).innerHTML = "Name: <B>"+spl.last+"</B>, <B>"+spl.first+"</B>  DOB: <B>"+spl.dob+"/<B>" ;
 }
 
 function unselectPatient() {
@@ -591,8 +591,9 @@ function displayStateChange() {
 
     switch( displayState ) {
         case "PatientList":
-            db.allDocs({include_docs: true, descending: true})
+            getPatients(true)
             .then( function(docs) {
+                console.log(docs);
                 objectPatientList.fill(docs.rows) ;
                 if ( patientId ) {
                     selectPatient( patientId ) ;
@@ -845,30 +846,28 @@ class dataTable extends sortTable {
         tbody.innerHTML = "" ;
         let collist = this.collist ;
         doclist.forEach( function(doc) {
-            //console.log(doc);
-            if (doc.id.split(";").length < 5 ) {
-                let row = tbody.insertRow(-1) ;
-                let record = doc.doc ;
-                row.setAttribute("data-id",record._id) ;
-                if (record._id == patientId) {
-                    row.classList.add("choice") ;
-                }
-                row.addEventListener( 'click', (e) => {
-                    selectPatient( record._id ) ;
-                }) ;
-                row.addEventListener( 'dblclick', (e) => {
-                    selectPatient( record._id ) ;
-                    showPatientPhoto() ;
-                }) ;
-                collist.forEach( function(colname,i) {
-                    let c = row.insertCell(i) ;
-                    if ( colname in record ) {
-                        c.innerText = record[colname] ;
-                    } else {
-                        c.innerText = "" ;
-                    }
-                }) ;
+            console.log(doc);
+            let row = tbody.insertRow(-1) ;
+            let record = doc.doc ;
+            row.setAttribute("data-id",record._id) ;
+            if (record._id == patientId) {
+                row.classList.add("choice") ;
             }
+            row.addEventListener( 'click', (e) => {
+                selectPatient( record._id ) ;
+            }) ;
+            row.addEventListener( 'dblclick', (e) => {
+                selectPatient( record._id ) ;
+                showPatientPhoto() ;
+            }) ;
+            collist.forEach( function(colname,i) {
+                let c = row.insertCell(i) ;
+                if ( colname in record ) {
+                    c.innerText = record[colname] ;
+                } else {
+                    c.innerText = "" ;
+                }
+            }) ;
         });
     }
   
@@ -876,19 +875,42 @@ class dataTable extends sortTable {
 
 var objectPatientList = new dataTable( "PatientTable", PatientListContent, ["LastName", "FirstName", "DOB","Dx","Procedure" ] ) ;
 
-function makePatientId(doc) {
+function makePatientId(doc, position=null) {
+	switch (position) {
+		case "first":
+            return [ 
+                RecordFormat.type.patient,
+                RecordFormat.version,
+                "!",
+                "",
+                "", 
+                ].join(";") ;
+			break ;
+		case "last":
+            return [ 
+                RecordFormat.type.patient,
+                RecordFormat.version,
+                "\\fff0",
+                "",
+                "", 
+                ].join(";") ;
+			break ;
+		default:
+			d = new Date().toISOString() ;
+			break;
+	}
     return [ 
 		RecordFormat.type.patient,
 		RecordFormat.version,
 		doc.LastName,
 		doc.FirstName,
-		doc.DOB 
+		doc.DOB, 
 		].join(";") ;
 }
 
-function splitPatientId() {
-    if ( patientId ) {
-        var spl = patientId.split(";") ;
+function splitPatientId( pid = patientId ) {
+    if ( pid ) {
+        var spl = pid.split(";") ;
         if ( spl.length !== 5 ) {
             return null ;
         }
@@ -906,7 +928,7 @@ function splitPatientId() {
 function makeCommentId(position=none) {
 	let d ;
 	switch (position) {
-		case: "first":
+		case "first":
 			d = "" ;
 			break ;
 		case "last":
@@ -989,7 +1011,7 @@ function deletePatient() {
         db.get(patientId)
         .then( function(doc) {
             indexdoc = doc ;
-            return plusComments(false) ;
+            return getComments(false) ;
         }).then( function(docs) {
             let c = "Delete patient \n   " + indexdoc.FirstName + " " + indexdoc.LastName + "\n    " ;
             if (docs.rows.length == 0 ) {
@@ -1106,11 +1128,26 @@ function commentTitle( doc ) {
     return "New comment" ;
 }
 
-function plusComments(attachments) {
-    let skey = [ patientId, "Comment" ].join(";") ;
+function getPatients(attachments) {
     doc = {
-        startkey: skey,
-        endkey: skey+'\\fff0'
+        startkey: makePatientId(null,"first"),
+        endkey: makePatientId(null,"last"),
+    } ;
+    if (attachments) {
+        doc.include_docs = true ;
+        doc.binary = true ;
+        doc.attachments = true ;
+    }
+    //doc.descending = true ;
+
+    console.log(doc) ;
+    return db.allDocs(doc) ;
+}
+
+function getComments(attachments) {
+    doc = {
+        startkey: makeCommentId("first"),
+        endkey: makeCommentId("last"),
     }
     if (attachments) {
         doc.include_docs = true ;
@@ -1119,7 +1156,6 @@ function plusComments(attachments) {
     }
     return db.allDocs(doc) ;
 }
-
 
 class CommentList {
     constructor( parent ) {
@@ -1136,11 +1172,7 @@ class CommentList {
         parent.appendChild(this.ul) ;
 
         // get comments
-        let skey = [ patientId, "Comment" ].join(";") ;
-        console.log(skey);
-        console.log(skey+'\\fff0');
-        
-        plusComments(true)
+        getComments(true)
         .then(( function(docs) {
             console.log(docs);
             docs.rows.forEach(( function(comment, i) {
