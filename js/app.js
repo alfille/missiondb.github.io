@@ -4,7 +4,6 @@ var commentId = null ;
 var operationId = null ;
 
 var objectPatientData  ;
-var objectOperationList  ;
 var objectCommentList ;
 var userName ;
   
@@ -24,7 +23,6 @@ const RecordFormat = {
 		} ,
 	version: 0,
 } ;
-		
 
 const structDemographics = [
     {
@@ -94,7 +92,7 @@ const structMedical = [
     },
 ] ;
 
-const structProcedure = [
+const structOperation = [
     {
         name: "Procedure",
         hint: "Surgical operation / procedure",
@@ -505,13 +503,13 @@ function showPatientMedical() {
     displayStateChange() ;
 }
 
-function showPatientProcedure() {
+function showPatientOperation() {
 	displayState = "PatientOperation" ;
     displayStateChange() ;
 }
 
-function showProcedureList() {
-	displayState = "ProcedureList" ;
+function showOperationList() {
+	displayState = "OperationList" ;
 	displayStateChange() ;
 }
 	
@@ -576,10 +574,40 @@ function selectPatient( pid ) {
 	}) ;
 }
 
+function selectOperation( oid ) {
+    if ( operationId != oid ) {
+        // change patient -- comments dont apply
+        unselectOperation() ;
+    }
+        
+    operationId = oid ;
+    // Check patient existence
+    db.get(operationId)
+    .then( function (doc) {
+		setCookie( "operationId", oid ) ;
+		if ( displayState == "OperationList" ) {
+			// highlight the list row
+			let rows = document.getElementById("OperationTable").rows ;
+			for ( let i = 0 ; i < rows.length ; ++i ) {
+				if ( rows[i].getAttribute("data-id") == oid ) {
+					rows[i].classList.add('choice') ;
+				} else {
+					rows[i].classList.remove('choice') ;
+				}
+			}
+		}
+		document.getElementById("editreviewoperatoin").disabled = false ;
+	}).catch( function(err) {
+		console.log(err) ;
+		unselectOperation() ;
+	}) ;
+}
+
 function unselectPatient() {
     patientId = undefined ;
     deleteCookie( "patientId" ) ;
     unselectComment() ;
+    unselectOperation() ;
     if ( displayState == "PatientList" ) {
         let rows = document.getElementById("PatientTable").rows ;
         for ( let i = 0 ; i < rows.length ; ++i ) {
@@ -588,6 +616,18 @@ function unselectPatient() {
     }
     document.getElementById("editreviewpatient").disabled = true ;
     document.getElementById( "titlebox" ).innerHTML = "" ;
+}
+
+function unselectOperation() {
+    operationId = undefined ;
+    deleteCookie( "operationId" ) ;
+    if ( displayState == "OperationList" ) {
+        let rows = document.getElementById("OperationTable").rows ;
+        for ( let i = 0 ; i < rows.length ; ++i ) {
+            rows[i].classList.remove('choice') ;
+        }
+    }
+    document.getElementById("editreviewoperation").disabled = true ;
 }
 
 function displayStateChange() {
@@ -605,11 +645,26 @@ function displayStateChange() {
             getPatients(true)
             .then( function(docs) {
                 console.log(docs);
-                objectPatientList.fill(docs.rows) ;
+                objectPatientTable.fill(docs.rows) ;
                 if ( patientId ) {
                     selectPatient( patientId ) ;
                 } else {
                     unselectPatient() ;
+                }
+            }).catch( function(err) {
+                    console.log(err);
+            });
+            break ;
+            
+        case "OperationList":
+            getOperations(true)
+            .then( function(docs) {
+                console.log(docs);
+                objectOperationTable.fill(docs.rows) ;
+                if ( operationId ) {
+                    selectOperation( operationId ) ;
+                } else {
+                    unselectOperation() ;
                 }
             }).catch( function(err) {
                     console.log(err);
@@ -738,7 +793,7 @@ function isAndroid() {
     return navigator.userAgent.toLowerCase().indexOf("android") > -1 ;
 }
 
-class sortTable {
+class SortTable {
     constructor(tname) {
         this.dir = 1 ;
         this.lastth = -1 ;
@@ -825,7 +880,7 @@ class sortTable {
     } 
 }
 
-class dataTable extends sortTable {
+class PatientTable extends SortTable {
     constructor( idname, parent, collist ) {
         if ( parent == null ) {
             parent = document.body ;
@@ -848,8 +903,7 @@ class dataTable extends sortTable {
         parent.appendChild(tbl) ;
         super(tbl) ;
         this.collist = collist ;
-
-        }
+    }
 
     fill( doclist ) {
         // typically called with doc.rows from allDocs
@@ -884,7 +938,67 @@ class dataTable extends sortTable {
   
 }
 
-var objectPatientList = new dataTable( "PatientTable", PatientListContent, ["LastName", "FirstName", "DOB","Dx","Procedure" ] ) ;
+var objectPatientTable = new PatientTable( "PatientList", PatientListContent, ["LastName", "FirstName", "DOB","Dx","Procedure" ] ) ;
+
+class OperationTable extends SortTable {
+    constructor( idname, parent, collist ) {
+        if ( parent == null ) {
+            parent = document.body ;
+        }
+          
+        let tbl = document.createElement('table') ;
+        tbl.setAttribute( "id", idname ) ;
+
+        // Table Head
+        let header = tbl.createTHead() ;
+        let row = header.insertRow(0);
+        row.classList.add('head') ;
+        collist.forEach( function(v,i,a) {
+            row.insertCell(i).outerHTML='<th>'+v+'</th>' ;
+        } );
+
+        // Table Body
+        let tbody = document.createElement('tbody');
+        tbl.appendChild(tbody) ;
+        parent.appendChild(tbl) ;
+        super(tbl) ;
+        this.collist = collist ;
+    }
+
+    fill( doclist ) {
+        // typically called with doc.rows from allDocs
+        let tbody = this.tname.querySelector('tbody') ;
+        tbody.innerHTML = "" ;
+        let collist = this.collist ;
+        doclist.forEach( function(doc) {
+            console.log(doc);
+            let row = tbody.insertRow(-1) ;
+            let record = doc.doc ;
+            row.setAttribute("data-id",record._id) ;
+            if (record._id == patientId) {
+                row.classList.add("choice") ;
+            }
+            row.addEventListener( 'click', (e) => {
+                selectOperation( record._id ) ;
+            }) ;
+            row.addEventListener( 'dblclick', (e) => {
+                selectOperation( record._id ) ;
+                showPatientOperation() ;
+            }) ;
+            collist.forEach( function(colname,i) {
+                let c = row.insertCell(i) ;
+                if ( colname in record ) {
+                    c.innerText = record[colname] ;
+                } else {
+                    c.innerText = "" ;
+                }
+            }) ;
+        });
+    }
+  
+}
+
+var objectOperationTable = new OperationTable( "OperationList", OperationListContent, ["LastName", "FirstName", "DOB","Dx","Procedure" ] ) ;
 
 function makePatientId(doc, position=null) {
 	switch (position) {
@@ -1186,6 +1300,22 @@ function getPatients(attachments) {
     doc = {
         startkey: makePatientId(null,"first"),
         endkey: makePatientId(null,"last"),
+    } ;
+    if (attachments) {
+        doc.include_docs = true ;
+        doc.binary = true ;
+        doc.attachments = true ;
+    }
+    //doc.descending = true ;
+
+    console.log(doc) ;
+    return db.allDocs(doc) ;
+}
+
+function getOperations(attachments) {
+    doc = {
+        startkey: makeOperationId(null,"first"),
+        endkey: makeOperationId(null,"last"),
     } ;
     if (attachments) {
         doc.include_docs = true ;
