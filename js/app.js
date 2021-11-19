@@ -114,6 +114,12 @@ const structOperation = [
         type: "text",
     },
     {
+		name: "Status",
+		hint: "Status of operation planning",
+		type: "radio",
+		choices: ["unscheduled", "scheduled", "finished", "postponed", "cancelled"]
+	},
+    {
         name: "Schedule",
         hint: "Scheduled date and time",
         type: "datetime-local",
@@ -155,10 +161,17 @@ class PatientData {
             let i = null;
             switch( item.type ) {
                 case "radio":
-                    let v = doc[item.name] ;
-                    if ( !item.choices.includes(v) && ( item.choices.length > 0 ) ) {
-                        v = item.choices[0] ;
-                    }
+					let v  = "" ;
+					let any_choices = item.choices.length > 0 ;
+					if ( item.name in doc ) { 
+						v = doc[item.name] ;
+						if ( !item.choices.includes(v) && any_choices ) {
+							v = item.choices[0] ;
+						}
+					} else if ( any_choices ) {
+						v = item.choices[0] ;
+					}
+						
                     item.choices.forEach( function(c) {
                         i = document.createElement("input") ;
                         i.type = "radio" ;
@@ -185,9 +198,12 @@ class PatientData {
                     }
                     i.title = item.hint ;
                     i.readOnly = true ;
-                    if ( item.name in doc ) {
-                        i.value = doc[item.name] ;
-                    }
+                    i.value = "" ;
+                    if ( doc ) {
+						if ( item.name in doc ) {
+							i.value = doc[item.name] ;
+						}
+					}
                     l.appendChild(i) ;
                     break ;
             }                
@@ -204,6 +220,9 @@ class PatientData {
 		
 
 	Click( e ) {
+		if ( e == null ) {
+			return ;
+		}
 		this.ButtonStatus( false ) ;
 		let parent = e.parentElement ;
 		let idx = parent.getAttribute("data-index") ;
@@ -226,28 +245,33 @@ class PatientData {
         }
 	}
 	
+	loadDocData() {
+		this.ul.querySelectorAll("li").forEach(( function(li) {
+			let idx = li.getAttribute("data-index") ;
+			let v = "" ;
+			switch ( this.struct[idx].type ) {
+				case "radio":
+					document.getElementsByName(this.struct[idx].name).forEach( function (i) {
+						if ( i.checked == true ) {
+							v = i.value ;
+						}
+					}) ;
+					break ;
+				case "textarea":
+					v = li.querySelector("textarea").value ;
+					break ;
+				default:
+					v = li.querySelector("input").value ;
+					break ;
+			}
+			this.doc[this.struct[idx].name] = v ;
+		}).bind(this)) ;
+	}
+	
 	savePatientData() {
-        this.ul.querySelectorAll("li").forEach(( function(li) {
-            let idx = li.getAttribute("data-index") ;
-            let v = "" ;
-            switch ( this.struct[idx].type ) {
-                case "radio":
-                    document.getElementsByName(this.struct[idx].name).forEach( function (i) {
-                        if ( i.checked == true ) {
-                            v = i.value ;
-                        }
-                    }) ;
-                    break ;
-                case "textarea":
-                    v = li.querySelector("textarea").value ;
-                    break ;
-                default:
-                    v = li.querySelector("input").value ;
-                    break ;
-            }
-            this.doc[this.struct[idx].name] = v ;
-        }).bind(this)) ;
-        db.put(this.doc)
+		// Also operation data
+		this.loadDocData() ;
+		db.put(this.doc)
 		.catch( function( err ) {
 			console.log(err) ;
 		}).finally ( function() {
@@ -503,11 +527,6 @@ function showPatientMedical() {
     displayStateChange() ;
 }
 
-function showPatientOperation() {
-	displayState = "PatientOperation" ;
-    displayStateChange() ;
-}
-
 function showOperationList() {
 	displayState = "OperationList" ;
 	displayStateChange() ;
@@ -535,6 +554,17 @@ function showCommentList() {
 
 function showCommentNew() {
     displayState = "CommentNew" ;
+    displayStateChange() ;
+}
+
+function showOperationNew() {
+	unselectOperation() ;
+    displayState = "OperationEdit" ;
+    displayStateChange() ;
+}
+
+function showOperation() {
+    displayState = "OperationEdit" ;
     displayStateChange() ;
 }
 
@@ -596,7 +626,7 @@ function selectOperation( oid ) {
 				}
 			}
 		}
-		document.getElementById("editreviewoperatoin").disabled = false ;
+		document.getElementById("editreviewoperation").disabled = false ;
 	}).catch( function(err) {
 		console.log(err) ;
 		unselectOperation() ;
@@ -609,10 +639,13 @@ function unselectPatient() {
     unselectComment() ;
     unselectOperation() ;
     if ( displayState == "PatientList" ) {
-        let rows = document.getElementById("PatientTable").rows ;
-        for ( let i = 0 ; i < rows.length ; ++i ) {
-            rows[i].classList.remove('choice') ;
-        }
+		let pt = document.getElementById("PatientTable") ;
+		if ( pt ) {
+			let rows = pt.rows ;
+			for ( let i = 0 ; i < rows.length ; ++i ) {
+				rows[i].classList.remove('choice') ;
+			}
+		}
     }
     document.getElementById("editreviewpatient").disabled = true ;
     document.getElementById( "titlebox" ).innerHTML = "" ;
@@ -622,10 +655,13 @@ function unselectOperation() {
     operationId = undefined ;
     deleteCookie( "operationId" ) ;
     if ( displayState == "OperationList" ) {
-        let rows = document.getElementById("OperationTable").rows ;
-        for ( let i = 0 ; i < rows.length ; ++i ) {
-            rows[i].classList.remove('choice') ;
-        }
+		let ot = document.getElementById("OperationTable") ;
+		if ( ot ) {
+			let rows = ot.rows ;
+			for ( let i = 0 ; i < rows.length ; ++i ) {
+				rows[i].classList.remove('choice') ;
+			}
+		}
     }
     document.getElementById("editreviewoperation").disabled = true ;
 }
@@ -671,6 +707,53 @@ function displayStateChange() {
             });
             break ;
             
+        case "OperationEdit":
+            if ( patientId ) {
+				if ( operationId ) {
+					db.get( operationId )
+					.then( function(doc) {
+						objectPatientData = new PatientData( doc, structOperation ) ;
+					}).catch( function(err) {
+						console.log(err) ;
+						showInvalidPatient() ;
+					}) ;
+				} else {
+					objectPatientData = new PatientData(
+					{
+						_id: makeOperationId(),
+						patient_id: patientId,
+					} , structOperation ) ;
+				}
+            } else {
+                showPatientList() ;
+            }
+            break ;
+            
+        case "PatientNew":
+            newPatient() ;
+            break ;
+            
+        case "PatientPhoto":
+            if ( patientId ) {
+                console.log(patientId);
+                let srch = {
+                    include_docs: true ,
+                    binary: true ,
+                    attachments: true ,
+                } ;
+
+                db.get( patientId, srch )
+                .then( function(doc) {
+                    PatientPhoto( doc ) ;
+                }).catch( function(err) {
+                    console.log(err) ;
+                    showInvalidPatient() ;
+                }) ;
+            } else {
+                showPatientList() ;
+            }
+            break ;
+            
         case "PatientDemographics":
             if ( patientId ) {
                 db.get( patientId )
@@ -697,31 +780,6 @@ function displayStateChange() {
             } else {
                 showPatientList() ;
             }
-            break ;
-            
-        case "PatientPhoto":
-            if ( patientId ) {
-                console.log(patientId);
-                let srch = {
-                    include_docs: true ,
-                    binary: true ,
-                    attachments: true ,
-                } ;
-
-                db.get( patientId, srch )
-                .then( function(doc) {
-                    PatientPhoto( doc ) ;
-                }).catch( function(err) {
-                    console.log(err) ;
-                    showInvalidPatient() ;
-                }) ;
-            } else {
-                showPatientList() ;
-            }
-            break ;
-            
-        case "PatientNew":
-            newPatient() ;
             break ;
             
         case "InvalidPatient":
@@ -983,7 +1041,7 @@ class OperationTable extends SortTable {
             }) ;
             row.addEventListener( 'dblclick', (e) => {
                 selectOperation( record._id ) ;
-                showPatientOperation() ;
+                showOperationEdit() ;
             }) ;
             collist.forEach( function(colname,i) {
                 let c = row.insertCell(i) ;
@@ -1094,8 +1152,8 @@ function makeOperationId(position=null) {
 		RecordFormat.type.operation,
 		RecordFormat.version,
 		spl.last,
-		doc.first,
-		doc.dob,
+		spl.first,
+		spl.dob,
 		d , 
 		].join(";") ;
 }

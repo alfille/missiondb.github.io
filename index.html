@@ -20,6 +20,7 @@
                     <div class="OperationList pageOverlay">
                         <button type="button" class="divbutton" onclick="showOperationNew()">Add Operation</button>
                         <button type="button" class="divbutton" onclick="showOperation()" id="editreviewoperation">Review/Edit Operation</button>
+                        <button type="button" class="divbutton return" onclick="showPatientPhoto()" id="returnpatientdata">Return</button>
                     </div>
                     <div class="PatientNew pageOverlay">
                         <button type="button" class="divbutton" id="addPatient" onclick="addPatient()">Create</button>
@@ -28,10 +29,15 @@
                     <div class="PatientPhoto pageOverlay">
                         <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
                     </div>
-                    <div class="PatientData PatientDemographics PatientMedical PatientOperation pageOverlay">
+                    <div class="PatientData PatientDemographics PatientMedical pageOverlay">
                         <button type="button" class="divbutton" onclick="objectPatientData.savePatientData()" id="savepatientdata">Save Changes</button>
                         <button type="button" class="divbutton return" onclick="displayStateChange()" id="discardpatientdata">Discard Changes</button>
                         <button type="button" class="divbutton return" onclick="showPatientPhoto()" id="returnpatientdata">Return</button>
+                    </div>
+                    <div class="PatientData OperationEdit pageOverlay">
+                        <button type="button" class="divbutton" onclick="objectPatientData.savePatientData()" id="savepatientdata">Save Changes</button>
+                        <button type="button" class="divbutton return" onclick="displayStateChange()" id="discardpatientdata">Discard Changes</button>
+                        <button type="button" class="divbutton return" onclick="showOperationList()" id="returnpatientdata">Return</button>
                     </div>
                     <div class="InvalidPatient pageOverlay">
                         <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
@@ -53,7 +59,7 @@
             <div class="OperationList pageOverlay">
                 <div id="OperationListContent" ></div>
             </div>
-            <div class="PatientData PatientDemographics PatientMedical PatientOperation pageOverlay">
+            <div class="PatientData PatientDemographics PatientMedical OperationEdit pageOverlay">
                 <div id="PatientDataContent" ></div>
             </div>
             <div class="PatientPhoto pageOverlay">
@@ -71,7 +77,7 @@
                     </div>
                     <div class="PatientProcButtons" id="ProcList">
                         <button type="button" class="divbutton" onclick="showCommentList()">Comments</button>
-                        <button type="button" class="divbutton" onclick="showPatientOperations()">New Procedure</button>
+                        <button type="button" class="divbutton" onclick="showOperationList()">Operations</button>
                     </div>
                     <div class="PatientProcButtons">
                         <button type="button" class="divbutton" onclick="printCard()">Print Card</button>
