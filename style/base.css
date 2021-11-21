@@ -230,7 +230,7 @@ footer {
   background: #ffffcc;
   color: grey;
 }
-#textdiv {
+#textdiv, #CommentNewText div:nth-child(3) {
   background: gold;
   min-height: 1em;
   border: 2px solid black;

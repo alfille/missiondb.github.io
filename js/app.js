@@ -586,7 +586,7 @@ function selectPatient( pid ) {
 		setCookie( "patientId", pid ) ;
 		if ( displayState == "PatientList" ) {
 			// highlight the list row
-			let rows = document.getElementById("PatientTable").rows ;
+			let rows = document.getElementById("PatientList").rows ;
 			for ( let i = 0 ; i < rows.length ; ++i ) {
 				if ( rows[i].getAttribute("data-id") == pid ) {
 					rows[i].classList.add('choice') ;
@@ -634,7 +634,7 @@ function selectOperation( oid ) {
 }
 
 function unselectPatient() {
-    patientId = undefined ;
+    patientId = null ;
     deleteCookie( "patientId" ) ;
     unselectComment() ;
     unselectOperation() ;
@@ -652,7 +652,7 @@ function unselectPatient() {
 }
 
 function unselectOperation() {
-    operationId = undefined ;
+    operationId = null ;
     deleteCookie( "operationId" ) ;
     if ( displayState == "OperationList" ) {
 		let ot = document.getElementById("OperationTable") ;
@@ -1331,7 +1331,7 @@ function selectComment( cid ) {
 }
 
 function unselectComment() {
-    commentId = undefined ;
+    commentId = null ;
     deleteCookie( "commentId" ) ;
     if ( displayState == "CommentList" ) {
         let li = document.getElementById("CommentList").li ;
