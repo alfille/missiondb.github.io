@@ -96,7 +96,7 @@ const structOperation = [
     {
         name: "Procedure",
         hint: "Surgical operation / procedure",
-        type: "text",
+        type: "textarea",
     },
     {
         name: "Surgeon",
@@ -111,7 +111,7 @@ const structOperation = [
     {
         name: "Equipment",
         hint: "Special equipment",
-        type: "text",
+        type: "textarea",
     },
     {
         name: "Status",
@@ -120,9 +120,14 @@ const structOperation = [
         choices: ["unscheduled", "scheduled", "finished", "postponed", "cancelled"]
     },
     {
-        name: "Schedule",
-        hint: "Scheduled date and time",
-        type: "datetime-local",
+        name: "Date",
+        hint: "Scheduled date",
+        type: "date",
+    },
+    {
+        name: "Time",
+        hint: "Scheduled time",
+        type: "time",
     },
 ] ;
 
@@ -140,6 +145,7 @@ class PatientData {
         this.struct = struct ;
         
         this.ButtonStatus( true ) ;
+        picker.detach() ;
         
         this.parent.innerHTML = "" ;
         this.ul = document.createElement('ul') ;
@@ -189,8 +195,9 @@ class PatientData {
                     }) ;
                     break ;
                 case "textarea" :
-                    i = document.createElement("textarea") ;
-                    // fall through
+                    if ( i == null ) {
+                        i = document.createElement("textarea") ;
+                    }
                 default:
                     if ( i == null ) {
                         i = document.createElement("input") ;
@@ -199,10 +206,8 @@ class PatientData {
                     i.title = item.hint ;
                     i.readOnly = true ;
                     i.value = "" ;
-                    if ( doc ) {
-                        if ( item.name in doc ) {
-                            i.value = doc[item.name] ;
-                        }
+                    if ( item.name in doc ) {
+                        i.value = doc[item.name] ;
                     }
                     l.appendChild(i) ;
                     break ;
@@ -238,6 +243,11 @@ class PatientData {
             case "radio":
                 document.getElementsByName(this.struct[idx].name).forEach( function (i) {
                     i.disabled = false ;
+                }) ;
+                break ;
+            case "date":
+                picker.attach({
+                    element: parent.querySelector("input"),
                 }) ;
                 break ;
             case "textarea":
@@ -1097,6 +1107,7 @@ function makePatientId(doc, position=null) {
             d = new Date().toISOString() ;
             break;
     }
+
     return [ 
         RecordFormat.type.patient,
         RecordFormat.version,
@@ -1218,6 +1229,10 @@ function checkNew() {
 
 function newPatient() {
     unselectPatient() ;
+    picker.detach() ;
+    picker.attach({
+        target: "newDOB",
+    });
     document.getElementById("newLast").value = "" ; 
     document.getElementById("newFirst").value = "" ; 
     document.getElementById("newDOB").value = "" ;
