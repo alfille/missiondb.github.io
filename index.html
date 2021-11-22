@@ -13,14 +13,17 @@
             <div id="headerbox">
                 <h1>Mission<br>Database</h1>
                 <div id="buttonheader">
+                    <div class="MainMenu pageOverlay">
+                    </div>
                     <div class="PatientList pageOverlay">
+                        <button type="button" class="divbutton" onclick="showMainMenu()">Main Menu</button>
                         <button type="button" class="divbutton" onclick="showPatientNew()">Add Patient</button>
                         <button type="button" class="divbutton" onclick="showPatientPhoto()" id="editreviewpatient">Review/Edit Patient</button>
                     </div>
                     <div class="OperationList pageOverlay">
                         <button type="button" class="divbutton" onclick="showOperationNew()">Add Operation</button>
-                        <button type="button" class="divbutton" onclick="showOperation()" id="editreviewoperation">Review/Edit Operation</button>
-                        <button type="button" class="divbutton return" onclick="showPatientPhoto()" id="returnpatientdata">Return</button>
+                        <button type="button" class="divbutton" onclick="showOperationEdit()" id="editreviewoperation">Review/Edit Operation</button>
+                        <button type="button" class="divbutton return" onclick="showPatientPhoto()">Return</button>
                     </div>
                     <div class="PatientNew pageOverlay">
                         <button type="button" class="divbutton" id="addPatient" onclick="addPatient()">Create</button>
@@ -35,9 +38,9 @@
                         <button type="button" class="divbutton return" onclick="showPatientPhoto()" id="returnpatientdata">Return</button>
                     </div>
                     <div class="PatientData OperationEdit pageOverlay">
-                        <button type="button" class="divbutton" onclick="objectPatientData.savePatientData()" id="savepatientdata">Save Changes</button>
-                        <button type="button" class="divbutton return" onclick="displayStateChange()" id="discardpatientdata">Discard Changes</button>
-                        <button type="button" class="divbutton return" onclick="showOperationList()" id="returnpatientdata">Return</button>
+                        <button type="button" class="divbutton" onclick="objectPatientData.savePatientData()" id="saveoperationdata">Save Changes</button>
+                        <button type="button" class="divbutton return" onclick="displayStateChange()" id="discardoperationdata">Discard Changes</button>
+                        <button type="button" class="divbutton return" onclick="showOperationList()" id="returnoperationdata">Return</button>
                     </div>
                     <div class="InvalidPatient pageOverlay">
                         <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
@@ -53,11 +56,24 @@
             </div>
         </header>
         <div id="missiondbody" class="screen">
+            <div class="MainMenu pageOverlay">
+                <div id="MainMenuContent" >
+                    <div id="MainMenuContent">
+                        <button type="button" class="divbutton" onclick="showPatientList()">Patient List</button>
+                        <button type="button" class="divbutton" onclick="showSettings">Settings</button>
+                        <button type="button" class="divbutton" onclick="showPatientDemographics()">Help</button>
+                    </div>
+                </div>
+            </div>
             <div class="PatientList pageOverlay">
-                <div id="PatientListContent" ></div>
+                <div id="PatientListContent" >
+                    <table id="PatientList"></table>
+                </div>
             </div>
             <div class="OperationList pageOverlay">
-                <div id="OperationListContent" ></div>
+                <div id="OperationListContent" >
+                    <table id="OperationsList"></table>
+                </div>
             </div>
             <div class="PatientData PatientDemographics PatientMedical OperationEdit pageOverlay">
                 <div id="PatientDataContent" ></div>
@@ -150,10 +166,10 @@
                 </div>
             </div>
             <ul>
-				<li class="litemplate">
-					<button class="editthecomment libutton" type="button" onClick="objectPatientData.Click(this)">Edit</button>
-					<label> </label>
-				</li>
+                <li class="litemplate">
+                    <button class="editthecomment libutton" type="button" onClick="objectPatientData.Click(this)">Edit</button>
+                    <label> </label>
+                </li>
             </ul>
         </div>
         <footer class="screen">
@@ -195,7 +211,6 @@
         <script src="js/pouchdb-7.2.1.min.js"></script>
         <!-- qr -->
         <script src=js/qrenc-4.0.0.min.js></script>
-        <!-- medium-editor -->
         <script src="js/base.js"></script>
         <script src="js/app.js"></script>
     </body>

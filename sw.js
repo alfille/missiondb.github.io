@@ -39,7 +39,7 @@ self.addEventListener('fetch', function(event) {
       if (response) {
         return response;
       }
-      concole.log(event);
+      console.log(event);
       return fetch(event.request);
     }).catch( function (err) {
         console.log(err) ; 

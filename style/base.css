@@ -309,8 +309,9 @@ footer {
 .screen {
     display: block ;
 }
-#PatientPhotoContent {
+#PatientPhotoContent, #MainMenuContent {
   display: flex ;
+  background: #b3b3ff ;
   justify-content: center;
   align-items: center;
   flex-direction: column ; 
