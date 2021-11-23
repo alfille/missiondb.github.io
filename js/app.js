@@ -120,9 +120,9 @@ const structOperation = [
         choices: ["unscheduled", "scheduled", "finished", "postponed", "cancelled"]
     },
     {
-        name: "Date",
+        name: "Date-Time",
         hint: "Scheduled date",
-        type: "date",
+        type: "datetime",
     },
     {
         name: "Time",
@@ -146,6 +146,7 @@ class PatientData {
         
         this.ButtonStatus( true ) ;
         picker.detach() ;
+        tp.detach() ;
         
         this.parent.innerHTML = "" ;
         this.ul = document.createElement('ul') ;
@@ -193,6 +194,65 @@ class PatientData {
                         l.appendChild(i) ;
                         l.appendChild( document.createTextNode(c) ) ;
                     }) ;
+                    break ;
+                case "datetime":
+                case "datetime-local":
+                    var vdate  = "" ;
+                    var vtime  = "" ;
+                    if ( item.name in doc ) { 
+                        v = doc[item.name] ;
+                        let old_time = new Date( v ) ;
+                        if ( old_time.getTime() > 0 ) {
+                            // valid time
+                            vdate = [ 
+                                old_time.getFullYear(),
+                                old_time.getMonth(),
+                                old_time.getDate()
+                                ].join("-") ;
+                            var h = old_time.getHours() ;
+                            if ( h < 12 ) {
+                                vtime = [
+                                    old_time.getHours(),
+                                    h,
+                                    ].join(":") + " AM" ;
+                            } else {
+                                vtime = [
+                                    old_time.getHours(),
+                                    h-12,
+                                    ].join(":") + " PM" ;
+                            }
+                        }
+                    }
+                        
+                    var id = document.createElement("input") ;
+                    id.type = "date" ;
+                    id.value = vdate ;
+                    id.title = item.hint ;
+                    
+                    var it = document.createElement("input") ;
+                    it.type = "text" ;
+                    it.pattern="[0-1][0-9]:[0-5][0-9] [A|P]M" ;
+                    it.size = 9 ;
+                    it.value = vtime ;
+                    it.title = item.hint ;
+                    
+                    l.appendChild(id) ;
+                    l.appendChild(it) ;
+                    break ;
+                case "time":
+                    var vtime  = "" ;
+                    if ( item.name in doc ) { 
+                        v = doc[item.name] ;
+                    }
+                        
+                    var it = document.createElement("input") ;
+                    it.type = "text" ;
+                    it.pattern="[0-1][0-9]:[0-5][0-9] [A|P]M" ;
+                    it.size = 9 ;
+                    it.value = vtime ;
+                    it.title = item.hint ;
+                    
+                    l.appendChild(it) ;
                     break ;
                 case "textarea" :
                     if ( i == null ) {
@@ -250,6 +310,21 @@ class PatientData {
                     element: parent.querySelector("input"),
                 }) ;
                 break ;
+            case "time":
+                tp.attach({
+                    element: parent.querySelector("input"),
+                }) ;
+                break ;
+            case "datetime":
+            case "datetime-local":
+                let i = parent.querySelectorAll("input") ;
+                picker.attach({
+                    element: i[0],
+                }) ;
+                tp.attach({
+                    element: i[1],
+                }) ;
+                break ;
             case "textarea":
                 parent.querySelector("textarea").readOnly = false ;
                 break ;
@@ -264,6 +339,8 @@ class PatientData {
             console.log("li",li);
             let idx = li.getAttribute("data-index") ;
             let v = "" ;
+            let i ;
+            let d ;
             switch ( this.struct[idx].type ) {
                 case "radio":
                     document.getElementsByName(this.struct[idx].name).forEach( function (i) {
@@ -271,6 +348,37 @@ class PatientData {
                             v = i.value ;
                         }
                     }) ;
+                    break ;
+                case "date":
+                    v = li.querySelector("input").value ;
+                    d = new Date(v) ;
+                    if ( d.getTime() > 0 ) {
+                        v = d.toISOstring() ;
+                    }
+                    break ;
+                case "datetime":
+                case "datetime-local":
+                    i = li.querySelectorAll("input") ;
+                    v = i[0].value ;
+                    d = new Date(v) ;
+                    console.log("Time",i[1].value)
+                    if ( d.getTime() > 0 ) {
+                        var ampm = i[1].split(" ") ;
+                        if ( ampm.length == 2 ) {
+                            var t = ampm[0].value.split(":") ;
+                            if ( t.length == 2 ) {
+                                if ( ampm[1] == "AM" ) {
+                                    d.setHours(t[0]);
+                                    d.setMinutes(t[1]);
+                                } else {
+                                    d.setHours(t[0]+12);
+                                    d.setMinutes(t[1]);
+                                }
+                            }
+                            
+                            v = d.toISOstring() ;
+                        }
+                    }
                     break ;
                 case "textarea":
                     v = li.querySelector("textarea").value ;
