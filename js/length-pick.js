@@ -33,7 +33,7 @@ var lp = {
       val.disabled = true;
       val.className = "tp-val";
       if (segment == "hr") { val.value = "00"; }
-      else (segment == "min") { val.value = "00"; }
+      else { val.value = "00"; }
       inst[segment] = val;
 
       // Down Button

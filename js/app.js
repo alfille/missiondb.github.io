@@ -146,11 +146,13 @@ class PatientData {
         
         this.ButtonStatus( true ) ;
         picker.detach() ;
-        tp.detach() ;
+        //tp.detach() ;
         
         this.parent.innerHTML = "" ;
         this.ul = document.createElement('ul') ;
         this.parent.appendChild(this.ul) ;
+        tp.attach( { element: document.getElementById("test") } ) ;
+        console.log("Test");
 
         let li_base = document.querySelector(".litemplate") ;
         
@@ -168,7 +170,7 @@ class PatientData {
             let i = null;
             switch( item.type ) {
                 case "radio":
-                    let v  = "" ;
+                    var v  = "" ;
                     let any_choices = item.choices.length > 0 ;
                     if ( item.name in doc ) { 
                         v = doc[item.name] ;
@@ -200,47 +202,53 @@ class PatientData {
                     var vdate  = "" ;
                     var vtime  = "" ;
                     if ( item.name in doc ) { 
-                        v = doc[item.name] ;
-                        let old_time = new Date( v ) ;
-                        if ( old_time.getTime() > 0 ) {
-                            // valid time
-                            vdate = [ 
-                                old_time.getFullYear(),
-                                old_time.getMonth(),
-                                old_time.getDate()
-                                ].join("-") ;
-                            var h = old_time.getHours() ;
-                            if ( h < 12 ) {
-                                vtime = [
-                                    old_time.getHours(),
-                                    h,
-                                    ].join(":") + " AM" ;
-                            } else {
-                                vtime = [
-                                    old_time.getHours(),
-                                    h-12,
-                                    ].join(":") + " PM" ;
-                            }
+                        var d = new Date( doc[item.name] ) ;
+                        console.log("datetime",doc[item.name],d)
+                        // date
+                        try {
+                            vdate = this.YYYYMMDDfromDate( d ) ;
+                            vtime = this.AMfrom24( d.getHours(), d.getMinutes() ) ;
+                        }
+                        catch( err ) {
+                            vdate = "" ;
+                            vtime = "" ;
                         }
                     }
                         
                     var id = document.createElement("input") ;
-                    id.type = "date" ;
+                    id.type = "text" ;
+                    id.size = 10 ;
+                    id.pattern="\d+-\d+-\d+" ;
                     id.value = vdate ;
-                    id.title = item.hint ;
+                    id.title = "Date in format YYYY-MM-DD" ;
                     
                     var it = document.createElement("input") ;
                     it.type = "text" ;
                     it.pattern="[0-1][0-9]:[0-5][0-9] [A|P]M" ;
                     it.size = 9 ;
                     it.value = vtime ;
-                    it.title = item.hint ;
+                    it.title = "Time in format HH:MM AM or HH:MM PM" ;
                     
                     l.appendChild(id) ;
                     l.appendChild(it) ;
                     break ;
+                case "date":
+                    var v  = "" ;
+                    if ( item.name in doc ) { 
+                        v = doc[item.name] ;
+                    }
+                        
+                    var id = document.createElement("input") ;
+                    id.type = "text" ;
+                    id.pattern="\d+-\d+-\d+" ;
+                    id.size = 10 ;
+                    id.value = v ;
+                    id.title = "Date in format YYYY-MM-DD" ;
+                    
+                    l.appendChild(id) ;
+                    break ;
                 case "time":
-                    var vtime  = "" ;
+                    var v  = "" ;
                     if ( item.name in doc ) { 
                         v = doc[item.name] ;
                     }
@@ -249,8 +257,8 @@ class PatientData {
                     it.type = "text" ;
                     it.pattern="[0-1][0-9]:[0-5][0-9] [A|P]M" ;
                     it.size = 9 ;
-                    it.value = vtime ;
-                    it.title = item.hint ;
+                    it.value = v ;
+                    it.title = "Time in format HH:MM PM or HH:MM AM" ;
                     
                     l.appendChild(it) ;
                     break ;
@@ -276,7 +284,67 @@ class PatientData {
             this.ul.appendChild( li ) ;
         }).bind(this));
     }
-    
+
+    AMto24( inp ) {
+        if ( typeof inp != 'string' ) {
+            throw "bad" ;
+        }
+        var d = inp.match( /\d+/g ) ;
+        if ( (d == null) || d.length < 2 ) {
+            throw "bad" ;
+        } else if ( /PM/i.test(inp) ) {
+            return {
+                hr: parseInt(d[0])+12,
+                min: parseInt(d[1]),
+            } ;
+        } else {
+            return {
+                hr: parseInt(d[0]),
+                min: parseInt(d[1]),
+            } ;
+        }
+    }
+
+    AMfrom24( hr, min ) {
+        if ( hr < 13 ) {
+            return (hr+100).toString().substr(-2) + ":" + (min+100).toString().substr(-2) + " AM" ;
+        } else {
+            return (hr+100-12).toString().substr(-2) + ":" + (min+100).toString().substr(-2) + " PM" ;
+        }
+    }
+
+    YYYYMMDDtoDate( inp ) {
+        if ( typeof inp != 'string' ) {
+            throw "bad" ;
+        }
+        var d = inp.match( /\d+/g ) ;
+        if ( d.length < 3 ) {
+            throw "bad" ;
+        }
+        return new Date( d[0],d[1],d[2] ) ;
+    }
+
+    YYYYMMDDfromDate( d ) {
+        if ( d instanceof Date ) {
+            if ( d.getTime() > 0 ) {
+                return [
+                    d.getFullYear(),
+                    d.getMonth(),
+                    d.getDate(),
+                    ].join("-") ;
+            }
+        }
+        throw "bad" ;
+    }
+
+    toLocalString( d ) {
+        if ( d instanceof Date ) {
+            return new Date( d.getTime() - d.getTimezoneOffset()*1000 ).toISOString() ;
+        } else {
+            return "" ;
+        }
+    }
+
     ButtonStatus( bool ) {
         document.getElementById("savepatientdata").disabled = bool ;
         document.getElementById("discardpatientdata").disabled = bool ;
@@ -317,7 +385,7 @@ class PatientData {
                 break ;
             case "datetime":
             case "datetime-local":
-                let i = parent.querySelectorAll("input") ;
+                var i = parent.querySelectorAll("input") ;
                 picker.attach({
                     element: i[0],
                 }) ;
@@ -339,8 +407,6 @@ class PatientData {
             console.log("li",li);
             let idx = li.getAttribute("data-index") ;
             let v = "" ;
-            let i ;
-            let d ;
             switch ( this.struct[idx].type ) {
                 case "radio":
                     document.getElementsByName(this.struct[idx].name).forEach( function (i) {
@@ -349,35 +415,26 @@ class PatientData {
                         }
                     }) ;
                     break ;
-                case "date":
-                    v = li.querySelector("input").value ;
-                    d = new Date(v) ;
-                    if ( d.getTime() > 0 ) {
-                        v = d.toISOstring() ;
-                    }
-                    break ;
                 case "datetime":
                 case "datetime-local":
-                    i = li.querySelectorAll("input") ;
-                    v = i[0].value ;
-                    d = new Date(v) ;
-                    console.log("Time",i[1].value)
-                    if ( d.getTime() > 0 ) {
-                        var ampm = i[1].split(" ") ;
-                        if ( ampm.length == 2 ) {
-                            var t = ampm[0].value.split(":") ;
-                            if ( t.length == 2 ) {
-                                if ( ampm[1] == "AM" ) {
-                                    d.setHours(t[0]);
-                                    d.setMinutes(t[1]);
-                                } else {
-                                    d.setHours(t[0]+12);
-                                    d.setMinutes(t[1]);
-                                }
-                            }
-                            
-                            v = d.toISOstring() ;
+                    var i = li.querySelectorAll("input") ;
+                    console.log("New date",i[0].value);
+                    try {
+                        var d =  this.YYYYMMDDtoDate( i[0].value ) ; // date
+                        console.log("new Date",d,d.toISOString()) ;
+                        
+                        try {
+                            var t = this.AMto24( i[1].value ) ; // time
+                            console.log("time24",t) ;
+                            d.setHours( t.hr ) ;
+                            d.setMinutes( t.min ) ;
+                        } catch( err ) {
                         }
+                        // convert to local time
+                        v = d.toISOString() ;
+                    }
+                    catch( err ) {
+                        v = "" ;
                     }
                     break ;
                 case "textarea":
