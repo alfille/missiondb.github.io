@@ -104,11 +104,6 @@ const structOperation = [
         type: "text",
     },
     {
-        name: "Length",
-        hint: "Length of operation (hours) with prep and cleanup",
-        type: "real",
-    },
-    {
         name: "Equipment",
         hint: "Special equipment",
         type: "textarea",
@@ -117,7 +112,7 @@ const structOperation = [
         name: "Status",
         hint: "Status of operation planning",
         type: "radio",
-        choices: ["unscheduled", "scheduled", "finished", "postponed", "cancelled"]
+        choices: ["unscheduled", "scheduled", "finished", "postponed", "cancelled"],
     },
     {
         name: "Date-Time",
@@ -125,18 +120,17 @@ const structOperation = [
         type: "datetime",
     },
     {
-        name: "Time",
-        hint: "Scheduled time",
-        type: "time",
+        name: "Duration",
+        hint: "Case length",
+        type: "length",
+    },
+    {
+        name: "Laterality",
+        hint: "Is there a sidedness to the case?",
+        type: "radio",
+        choices: ["?", "L", "R", "L+R", "N/A"],
     },
 ] ;
-
-function editField( target, nam, typ ) {
-    Tbar.buttonsdisabled(true) ;
-    console.log(target) ;
-    console.log(nam ) ;
-    console.log( typ ) ;
-}
 
 class PatientData {
     constructor( doc, struct ) {
@@ -146,13 +140,10 @@ class PatientData {
         
         this.ButtonStatus( true ) ;
         picker.detach() ;
-        //tp.detach() ;
         
         this.parent.innerHTML = "" ;
         this.ul = document.createElement('ul') ;
         this.parent.appendChild(this.ul) ;
-        tp.attach( { element: document.getElementById("test") } ) ;
-        console.log("Test");
 
         let li_base = document.querySelector(".litemplate") ;
         
@@ -203,7 +194,6 @@ class PatientData {
                     var vtime  = "" ;
                     if ( item.name in doc ) { 
                         var d = new Date( doc[item.name] ) ;
-                        console.log("datetime",doc[item.name],d)
                         // date
                         try {
                             vdate = this.YYYYMMDDfromDate( d ) ;
@@ -262,10 +252,26 @@ class PatientData {
                     
                     l.appendChild(it) ;
                     break ;
+                case "length":
+                    var v  = 0 ;
+                    if ( item.name in doc ) { 
+                        v = doc[item.name] ;
+                    }
+                        
+                    var it = document.createElement("input") ;
+                    it.type = "text" ;
+                    it.pattern="\d+:[0-5][0-9]" ;
+                    it.size = 6 ;
+                    it.value = this.HMfromMin(v) ;
+                    it.title = "Time length in format HH:MM" ;
+                    
+                    l.appendChild(it) ;
+                    break ;
                 case "textarea" :
                     if ( i == null ) {
                         i = document.createElement("textarea") ;
                     }
+                    // fall through
                 default:
                     if ( i == null ) {
                         i = document.createElement("input") ;
@@ -285,6 +291,25 @@ class PatientData {
         }).bind(this));
     }
 
+    HMtoMin ( inp ) {
+        if ( typeof inp != 'string' ) {
+            throw "bad" ;
+        }
+        var d = inp.match( /\d+/g ) ;
+        if ( (d == null) || d.length < 2 ) {
+            throw "bad" ;
+        }
+        return parseInt(d[0]) * 60 + parseInt(d[1]) ;
+    }
+        
+    HMfromMin ( min ) {
+        if ( typeof min == 'number' ) {
+            return (Math.floor(min/60)+100).toString().substr(-2) + ":" + ((min%60)+100).toString().substr(-2) ;
+        } else {
+            return "00:00" ;
+        }
+    }
+        
     AMto24( inp ) {
         if ( typeof inp != 'string' ) {
             throw "bad" ;
@@ -346,13 +371,15 @@ class PatientData {
     }
 
     ButtonStatus( bool ) {
-        document.getElementById("savepatientdata").disabled = bool ;
-        document.getElementById("discardpatientdata").disabled = bool ;
-        document.getElementById("returnpatientdata").disabled = !bool ;
-        
-        document.getElementById("saveoperationdata").disabled = bool ;
-        document.getElementById("discardoperationdata").disabled = bool ;
-        document.getElementById("returnoperationdata").disabled = !bool ;
+        [...document.getElementsByClassName('savedata')].forEach( (e) => {
+            e.disabled = bool ;
+        });
+        [...document.getElementsByClassName('discarddata')].forEach( (e) => {
+            e.disabled = bool ;
+        });
+        [...document.getElementsByClassName('returndata')].forEach( (e) => {
+            e.disabled = !bool ;
+        });
     }
         
 
@@ -383,6 +410,11 @@ class PatientData {
                     element: parent.querySelector("input"),
                 }) ;
                 break ;
+            case "length":
+                lp.attach({
+                    element: parent.querySelector("input"),
+                }) ;
+                break ;
             case "datetime":
             case "datetime-local":
                 var i = parent.querySelectorAll("input") ;
@@ -404,7 +436,6 @@ class PatientData {
     
     loadDocData() {
         this.ul.querySelectorAll("li").forEach(( function(li) {
-            console.log("li",li);
             let idx = li.getAttribute("data-index") ;
             let v = "" ;
             switch ( this.struct[idx].type ) {
@@ -418,14 +449,11 @@ class PatientData {
                 case "datetime":
                 case "datetime-local":
                     var i = li.querySelectorAll("input") ;
-                    console.log("New date",i[0].value);
                     try {
                         var d =  this.YYYYMMDDtoDate( i[0].value ) ; // date
-                        console.log("new Date",d,d.toISOString()) ;
                         
                         try {
                             var t = this.AMto24( i[1].value ) ; // time
-                            console.log("time24",t) ;
                             d.setHours( t.hr ) ;
                             d.setMinutes( t.min ) ;
                         } catch( err ) {
@@ -437,6 +465,9 @@ class PatientData {
                         v = "" ;
                     }
                     break ;
+                case "length":
+                    v = this.HMtoMin( li.querySelector("input").value ) ;
+                    break ;
                 case "textarea":
                     v = li.querySelector("textarea").value ;
                     break ;
@@ -444,14 +475,11 @@ class PatientData {
                     v = li.querySelector("input").value ;
                     break ;
             }
-            console.log("Value",v);
             this.doc[this.struct[idx].name] = v ;
-            console.log("doc",this.doc);
         }).bind(this)) ;
     }
     
     savePatientData() {
-        // Also operation data
         this.loadDocData() ;
         db.put(this.doc)
         .catch( function( err ) {
@@ -464,7 +492,6 @@ class PatientData {
 
 class OperationData extends PatientData {
     savePatientData() {
-        // Also operation data
         this.loadDocData() ;
         db.put(this.doc)
         .then( function(doc) {
@@ -474,6 +501,13 @@ class OperationData extends PatientData {
         }).finally ( function() {
             displayStateChange() ;
         });
+    }
+}
+
+class SettingData extends PatientData {
+    savePatientData() {
+        this.loadDocData() ;
+        displayStateChange() ;
     }
 }
 
@@ -544,7 +578,6 @@ class Tbar {
 
     handleImage() {
         const files = this.working.parent.querySelector('.imageBar')
-        console.log(files);
         this.working.upload = files.files[0];
         this.working.img.src = URL.createObjectURL(this.working.upload) ;
         this.working.img.style.display = "block" ;
@@ -680,18 +713,13 @@ class Pbar extends Tbar {
                 db.get(patientId)
                 .then(( function(doc) {
                     if ( this.working.upload == null ) {
-                        console.log("No image change") ;
+                        //console.log("No image change") ;
                     } else if ( this.working.upload === "remove") {
-                        console.log("Remove image") ;
+                        //console.log("Remove image") ;
                         deleteImageFromDoc( doc ) ;
                     } else {
-                        console.log("Add image") ;
-                        console.log(this.working) ;
-                        console.log(this.working.upload) ;
-                        console.log(this.working.upload.type) ;
                         putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
                     }
-                    console.log(doc);
                     return db.put( doc ) ;
                 }).bind(this)).catch( function(err) {
                     console.log(err) ;
@@ -1246,7 +1274,7 @@ class OperationTable extends SortTable {
   
 }
 
-var objectOperationTable = new OperationTable( ["Procedure", "Surgeon", "Status","Length","Schedule","Equipment"]  ) ;
+var objectOperationTable = new OperationTable( [ "Procedure", "Surgeon", "Status", "Schedule", "Duration", "Equipment" ]  ) ;
 
 function makePatientId(doc, position=null) {
     switch (position) {
@@ -1469,12 +1497,12 @@ function PatientPhoto( doc ) {
         d.appendChild(cc.cloneNode(true) ) ;
     });
     
-    let i = getImageFromDoc( doc ) ;
     let p = document.getElementById("PatientPhotoContent").getElementsByTagName("img")[0] ;
-    if ( i == null ) {
+    try {
+        p.src = getImageFromDoc( doc ) ;
+    }
+    catch( err ) {
         p.src = "/style/NoPhoto.png" ;
-    } else {
-        p.src = i ;
     }
 }
 
@@ -1653,12 +1681,15 @@ class CommentList {
             li.classList.add("choice") ;
         }
         if ( "doc" in comment ) {
-            let imagedata = getImageFromDoc( comment.doc ) ;
-            if ( imagedata ){
+            try {
+                let imagedata = getImageFromDoc( comment.doc ) ;
                 let img = document.createElement("img") ;
                 img.classList.add("entryfield_image") ;
                 img.src = imagedata ;
                 li.appendChild(img);
+            }
+            catch(err) {
+                console.log(err) ;
             }
 
             let textdiv = document.createElement("div") ;
@@ -1691,16 +1722,13 @@ function getImageFromDoc( doc ) {
     console.log("Get Image");
     console.log(doc) ;
     if ( !("_attachments" in doc) ) {
-        console.log("No attachments");
-        return null ;
+        throw "No attachments" ;
     }
     if ( !("image" in doc._attachments) ) {
-        console.log("No image") ;
-        return null ;
+        throw "No image" ;
     }
     if ( !("data" in doc._attachments.image) ) {
-        console.log("No image data") ;
-        return null ;
+        throw "No image data" ;
     }
     return URL.createObjectURL(doc._attachments.image.data) ;
 }
@@ -1718,13 +1746,10 @@ function putImageInDoc( doc, itype, idata ) {
             data: idata,
         }
     }
-    console.log(doc) ;
 }
 
 function CommentNew() {
-    console.log(document.getElementById("CommentNewLabel")) ;
     document.getElementById("CommentNewLabel").innerHTML = commentTitle(null)  ;
-    console.log("new comment") ;
     let d = document.getElementById("CommentNewText") ;
     d.innerHTML = "" ;
     editBar.startedit( d ) ;
@@ -1737,7 +1762,6 @@ function CommentImage() {
     } else {
         inp.setAttribute("capture","environment");
     }
-    console.log("commentimage");
 }
 
 function quickImage() {
@@ -1767,7 +1791,6 @@ function quickImage2() {
 function getImage() {
     let inp = document.getElementById("imageInput") ;
     inp.click() ;
-    console.log("CLICKED");
 }
     
    

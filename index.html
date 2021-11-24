@@ -15,6 +15,11 @@
                 <div id="buttonheader">
                     <div class="MainMenu pageOverlay">
                     </div>
+                    <div class="Settings pageOverlay">
+                        <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
+                        <button type="button" class="divbutton discarddata return" onclick="displayStateChange()">Discard Changes</button>
+                        <button type="button" class="divbutton returndata return" onclick="showPatientPhoto()">Return</button>
+                    </div>
                     <div class="PatientList pageOverlay">
                         <button type="button" class="divbutton" onclick="showMainMenu()">Main Menu</button>
                         <button type="button" class="divbutton" onclick="showPatientNew()">Add Patient</button>
@@ -33,14 +38,14 @@
                         <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
                     </div>
                     <div class="PatientData PatientDemographics PatientMedical pageOverlay">
-                        <button type="button" class="divbutton" onclick="objectPatientData.savePatientData()" id="savepatientdata">Save Changes</button>
-                        <button type="button" class="divbutton return" onclick="displayStateChange()" id="discardpatientdata">Discard Changes</button>
-                        <button type="button" class="divbutton return" onclick="showPatientPhoto()" id="returnpatientdata">Return</button>
+                        <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
+                        <button type="button" class="divbutton discarddata return" onclick="displayStateChange()">Discard Changes</button>
+                        <button type="button" class="divbutton returndata return" onclick="showPatientPhoto()">Return</button>
                     </div>
                     <div class="PatientData OperationEdit pageOverlay">
-                        <button type="button" class="divbutton" onclick="objectPatientData.savePatientData()" id="saveoperationdata">Save Changes</button>
-                        <button type="button" class="divbutton return" onclick="displayStateChange()" id="discardoperationdata">Discard Changes</button>
-                        <button type="button" class="divbutton return" onclick="showOperationList()" id="returnoperationdata">Return</button>
+                        <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
+                        <button type="button" class="divbutton discarddata return" onclick="displayStateChange()">Discard Changes</button>
+                        <button type="button" class="divbutton returndata return" onclick="showOperationList()">Return</button>
                     </div>
                     <div class="InvalidPatient pageOverlay">
                         <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
@@ -65,6 +70,15 @@
                     </div>
                 </div>
             </div>
+            <div class="Settings pageOverlay">
+                <div id="SettingsContent" >
+                    <div id="MainMenuContent">
+                        <button type="button" class="divbutton" onclick="showPatientList()">Patient List</button>
+                        <button type="button" class="divbutton" onclick="showSettings">Settings</button>
+                        <button type="button" class="divbutton" onclick="showPatientDemographics()">Help</button>
+                    </div>
+                </div>
+            </div>
             <div class="PatientList pageOverlay">
                 <div id="PatientListContent" >
                     <table id="PatientList"></table>
@@ -76,7 +90,6 @@
                 </div>
             </div>
             <div class="PatientData PatientDemographics PatientMedical OperationEdit pageOverlay">
-                <input type="text" size=9 id="test">
                 <div id="PatientDataContent" ></div>
             </div>
             <div class="PatientPhoto pageOverlay">

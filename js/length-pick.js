@@ -135,9 +135,6 @@ var lp = {
   },
 
   // (G) ATTACH TIME PICKER TO TARGET
-  detach : () => {
-    lp.instances = [] ;
-  },
   attach : function (opt) {
   // element - More direct than target
   // target - input field
@@ -145,10 +142,10 @@ var lp = {
 
     // (G1) SET INPUT FIELD READONLY
     let target ;
-    if ( opt.element ) {
+    if ( "element" in opt ) {
         target = opt.element ;
     } else {
-      target = document.getElementById(opt.target);
+        target = document.getElementById(opt.target);
     }
     target.readOnly = true;
     

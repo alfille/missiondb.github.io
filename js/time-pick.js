@@ -157,9 +157,6 @@ var tp = {
   },
 
   // (G) ATTACH TIME PICKER TO TARGET
-  detach : () => {
-    tp.instances = [] ;
-  },
   attach : function (opt) {
   // element - More direct than target
   // target - input field
@@ -169,12 +166,8 @@ var tp = {
     var target ;
     if ( "element" in opt ) {
         target = opt.element ;
-        console.log("target",target);
     } else {
-      target = document.getElementById(opt.target);
-        console.log("target opt",opt);
-        console.log("target opt.target", opt.target);
-        console.log("target",target);
+        target = document.getElementById(opt.target);
     }
     target.readOnly = true;
     
@@ -188,19 +181,11 @@ var tp = {
       target.addEventListener("click", function(){
         // Get + set popup time
         let cv = this.value;
-        console.log("cv",cv) ;
-        console.log("cv",typeof cv) ;
-        console.log("cv",cv.length) ;
-        console.log("instances",tp.instances) ;
-        console.log("first instance",tp.instances[0]) ;
-        console.log("hr",tp.instances[0].hr) ;
         if (( typeof cv != "string" ) || ( cv.length < 8 ) ) {
-          console.log("TP reset");
           tp.instances[0].hr.value = "01";
           tp.instances[0].min.value = "00";
           tp.instances[0].ap.value = "AM";
         } else {
-          console.log("TP reuse");
           tp.instances[0].hr.value = cv.substring(0, 2);
           tp.instances[0].min.value = cv.substring(3, 5);
           tp.instances[0].ap.value = cv.substring(6, 8);
