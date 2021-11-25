@@ -54,13 +54,14 @@ var picker = {
     // (A3-3) HTML YEAR SELECT
     inst.hYear = document.createElement("select");
     inst.hYear.classList.add("picker-y");
-    for (let y = thisYear-inst.yrange; y < thisYear+inst.yrange; y++) {
+    //for (let y = thisYear-inst.yrange; y < thisYear+inst.yrange; y++) {
+    for (let y = thisYear-100; y < thisYear+inst.yrange; y++) {
       temp = document.createElement("option");
       temp.value = y;
       temp.text = y;
       inst.hYear.appendChild(temp);
     }
-    inst.hYear.selectedIndex = inst.yrange;
+    inst.hYear.selectedIndex = 100;
     inst.hYear.onchange = () => { picker.draw(id); };
     inst.hPick.appendChild(inst.hYear);
 
