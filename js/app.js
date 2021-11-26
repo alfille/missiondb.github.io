@@ -292,6 +292,8 @@ class PatientData {
                     i.type = item.type ;
                     i.title = item.hint ;
                     i.checked = doc[item.name] ;
+                    i.disabled = true ;
+                    l.appendChild(i) ;
                     break ;
                 case "textarea" :
                     if ( i == null ) {
@@ -426,6 +428,10 @@ class PatientData {
                     i.disabled = false ;
                 }) ;
                 break ;
+            case "checkbox":
+                parent.querySelector("input").disabled = false ;
+                parent.querySelector("input").readOnly = false ;
+                break ;
             case "date":
                 picker.attach({
                     element: parent.querySelector("input"),
@@ -535,6 +541,7 @@ class OperationData extends PatientData {
 
 class SettingData extends PatientData {
     savePatientData() {
+        const remote_now = remoteCouch ;
         this.loadDocData() ;
         userName = this.doc["User Name"] ;
         setCookie( "userName", userName ) ;
@@ -544,6 +551,9 @@ class SettingData extends PatientData {
             remoteCouch = this.doc["Remote Database"] ;
         }
         setCookie( "remoteCouch", remoteCouch ) ;
+        if ( remoteCouch != remote_now ) {
+            window.location.reload(false) ;
+        }
         displayStateChange() ;
     }
 }

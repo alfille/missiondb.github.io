@@ -15,10 +15,10 @@
                 <div id="buttonheader">
                     <div class="MainMenu pageOverlay">
                     </div>
-                    <div class="Settings pageOverlay">
+                    <div class="SettingMenu pageOverlay">
                         <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
                         <button type="button" class="divbutton discarddata return" onclick="displayStateChange()">Discard Changes</button>
-                        <button type="button" class="divbutton returndata return" onclick="showPatientPhoto()">Return</button>
+                        <button type="button" class="divbutton returndata return" onclick="showPatientList()">Return</button>
                     </div>
                     <div class="PatientList pageOverlay">
                         <button type="button" class="divbutton" onclick="showMainMenu()">Main Menu</button>
@@ -70,9 +70,6 @@
                     </div>
                 </div>
             </div>
-            <div class="SettingMenu pageOverlay">
-                <div id="SettingMenuContent" ></div>
-            </div>
             <div class="PatientList pageOverlay">
                 <div id="PatientListContent" >
                     <table id="PatientList"></table>
@@ -83,7 +80,7 @@
                     <table id="OperationsList"></table>
                 </div>
             </div>
-            <div class="PatientData PatientDemographics PatientMedical OperationEdit pageOverlay">
+            <div class="PatientData PatientDemographics PatientMedical OperationEdit SettingMenu pageOverlay">
                 <div id="PatientDataContent" ></div>
             </div>
             <div class="PatientPhoto pageOverlay">
