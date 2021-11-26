@@ -65,19 +65,13 @@
                 <div id="MainMenuContent" >
                     <div id="MainMenuContent">
                         <button type="button" class="divbutton" onclick="showPatientList()">Patient List</button>
-                        <button type="button" class="divbutton" onclick="showSettings">Settings</button>
+                        <button type="button" class="divbutton" onclick="showSettingMenu()">Settings</button>
                         <button type="button" class="divbutton" onclick="showPatientDemographics()">Help</button>
                     </div>
                 </div>
             </div>
-            <div class="Settings pageOverlay">
-                <div id="SettingsContent" >
-                    <div id="MainMenuContent">
-                        <button type="button" class="divbutton" onclick="showPatientList()">Patient List</button>
-                        <button type="button" class="divbutton" onclick="showSettings">Settings</button>
-                        <button type="button" class="divbutton" onclick="showPatientDemographics()">Help</button>
-                    </div>
-                </div>
+            <div class="SettingMenu pageOverlay">
+                <div id="SettingMenuContent" ></div>
             </div>
             <div class="PatientList pageOverlay">
                 <div id="PatientListContent" >
@@ -188,8 +182,6 @@
         </div>
         <footer class="screen">
             <p><a href="http://github.com/alfille/missiondb">Mission Database</a>
-                <button type="button" id="userbutton" onclick="setUser()">User:</button>
-                <button type="button" id="remotebutton" onclick="setRemote()">Remote:</button>
                 <div id="syncstatus">Sync Status</div>
             </p>
         </footer>

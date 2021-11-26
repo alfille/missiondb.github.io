@@ -10,7 +10,9 @@ var userName ;
 var db = new PouchDB('mdb') ;
 console.log(db.adapter); // prints 'idb'
 console.log(db); // prints 'idb'
-var remoteCouch = 'http://192.168.1.5:5984/mdb';
+
+var cloudantDb = 'https://apikey-v2-25dxl7of9pjx1f2rrl9l51y1uek4nanmo8ncyi4o4wox:c469ca137e11ea3cef6045ae1c80ccb0@bc3debc5-694c-4094-84b9-440fc5bf6964-bluemix.cloudantnosqldb.appdomain.cloud';
+var remoteCouch = cloudantDb ;
 
 // used for record keys ( see makePatientId, etc )
 const RecordFormat = {
@@ -131,6 +133,24 @@ const structOperation = [
         choices: ["?", "L", "R", "L+R", "N/A"],
     },
 ] ;
+const structSetting = [
+    {
+        name: "User Name",
+        hint: "Your user name",
+        type: "text",
+    },
+    {
+        name: "Remote Database",
+        hint: "Central database for replication",
+        type: "text",
+    },
+    {
+        name: "Reset Database",
+        hint: "Revert to IBM Cloudant server",
+        type: "checkbox",
+    },
+] ;
+        
 
 class PatientData {
     constructor( doc, struct ) {
@@ -266,6 +286,12 @@ class PatientData {
                     it.title = "Time length in format HH:MM" ;
                     
                     l.appendChild(it) ;
+                    break ;
+                case "checkbox":
+                    i = document.createElement("input");
+                    i.type = item.type ;
+                    i.title = item.hint ;
+                    i.checked = doc[item.name] ;
                     break ;
                 case "textarea" :
                     if ( i == null ) {
@@ -465,6 +491,9 @@ class PatientData {
                         v = "" ;
                     }
                     break ;
+                case "checkbox":
+                    v = li.querySelector("input").checked ;
+                    break ;
                 case "length":
                     v = this.HMtoMin( li.querySelector("input").value ) ;
                     break ;
@@ -507,6 +536,14 @@ class OperationData extends PatientData {
 class SettingData extends PatientData {
     savePatientData() {
         this.loadDocData() ;
+        userName = this.doc["User Name"] ;
+        setCookie( "userName", userName ) ;
+        if ( this.doc["Reset Database"] ) {
+            remoteCouch = cloudantDb ;
+        } else {
+            remoteCouch = this.doc["Remote Database"] ;
+        }
+        setCookie( "remoteCouch", remoteCouch ) ;
         displayStateChange() ;
     }
 }
@@ -713,9 +750,7 @@ class Pbar extends Tbar {
                 db.get(patientId)
                 .then(( function(doc) {
                     if ( this.working.upload == null ) {
-                        //console.log("No image change") ;
                     } else if ( this.working.upload === "remove") {
-                        //console.log("Remove image") ;
                         deleteImageFromDoc( doc ) ;
                     } else {
                         putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
@@ -739,6 +774,11 @@ var photoBar = new Pbar() ;
 
 function showMainMenu() {
     displayState = "MainMenu" ;
+    displayStateChange() ;
+}
+
+function showSettingMenu() {
+    displayState = "SettingMenu" ;
     displayStateChange() ;
 }
 
@@ -910,10 +950,17 @@ function displayStateChange() {
         case "MainMenu":
             break ;
             
+        case "SettingMenu":
+            objectPatientData = new SettingData( {
+                "User Name": userName,
+                "Remote Database": remoteCouch,
+                "Reset Database": false,
+                } , structSetting ) ;
+            break ;
+            
         case "PatientList":
             getPatients(true)
             .then( function(docs) {
-                console.log(docs);
                 objectPatientTable.fill(docs.rows) ;
                 if ( patientId ) {
                     selectPatient( patientId ) ;
@@ -928,7 +975,6 @@ function displayStateChange() {
         case "OperationList":
             getOperations(true)
             .then( function(docs) {
-                console.log("operationist",docs);
                 objectOperationTable.fill(docs.rows) ;
             }).catch( function(err) {
                     console.log(err);
@@ -938,7 +984,6 @@ function displayStateChange() {
         case "OperationEdit":
             if ( patientId ) {
                 if ( operationId ) {
-                    console.log("operationId",operationId);
                     db.get( operationId )
                     .then( function(doc) {
                         objectPatientData = new OperationData( doc, structOperation ) ;
@@ -965,7 +1010,6 @@ function displayStateChange() {
             
         case "PatientPhoto":
             if ( patientId ) {
-                console.log(patientId);
                 let srch = {
                     include_docs: true ,
                     binary: true ,
@@ -1193,7 +1237,6 @@ class PatientTable extends SortTable {
         tbody.innerHTML = "" ;
         let collist = this.collist ;
         doclist.forEach( function(doc) {
-            console.log(doc);
             let row = tbody.insertRow(-1) ;
             let record = doc.doc ;
             row.setAttribute("data-id",record._id) ;
@@ -1247,7 +1290,6 @@ class OperationTable extends SortTable {
         tbody.innerHTML = "" ;
         let collist = this.collist ;
         doclist.forEach( function(doc) {
-            console.log(doc);
             let row = tbody.insertRow(-1) ;
             let record = doc.doc ;
             row.setAttribute("data-id",record._id) ;
@@ -1507,7 +1549,6 @@ function PatientPhoto( doc ) {
 }
 
 function newImage() {
-    console.log("new image");
     unselectComment() ;
     showCommentImage() ;  
 }
@@ -1587,9 +1628,7 @@ function getPatients(attachments) {
         doc.binary = true ;
         doc.attachments = true ;
     }
-    //doc.descending = true ;
 
-    console.log(doc) ;
     return db.allDocs(doc) ;
 }
 
@@ -1598,15 +1637,12 @@ function getOperations(attachments) {
         startkey: makeOperationId("first"),
         endkey: makeOperationId("last"),
     } ;
-    console.log("f->l",doc.startkey,doc.endkey);
     if (attachments) {
         doc.include_docs = true ;
         doc.binary = true ;
         doc.attachments = true ;
     }
-    //doc.descending = true ;
 
-    console.log(doc) ;
     return db.allDocs(doc) ;
 }
 
@@ -1640,7 +1676,6 @@ class CommentList {
         // get comments
         getComments(true)
         .then(( function(docs) {
-            console.log("Commentlist",docs);
             docs.rows.forEach(( function(comment, i) {
 
                 let li1 = this.liLabel(comment) ;
@@ -1719,8 +1754,6 @@ class CommentList {
 }
 
 function getImageFromDoc( doc ) {
-    console.log("Get Image");
-    console.log(doc) ;
     if ( !("_attachments" in doc) ) {
         throw "No attachments" ;
     }
@@ -1830,34 +1863,7 @@ function saveImage() {
     document.getElementById('imageCheck').src = "" ;
 }
 
-function setUserButton() {
-    if ( userName ) {
-        document.getElementById("userbutton").innerText = "User: "+userName ;
-    } else {    
-        document.getElementById("userbutton").innerText = "User?" ;
-    }
-}
-
-function setUser() {
-    let un = prompt( "User name:",userName ) ;
-    if ( un ) {
-        userName = un ;
-        setCookie( "userName", un ) ;
-        setUserButton() ;
-    }
-}
-
-userName = getCookie( "userName" ) ;
-setUserButton() ;
-          
-
-function setRemoteButton() {
-    if ( remoteCouch ) {
-        document.getElementById("remotebutton").innerText = "Remote CouchDB: "+remoteCouch ;
-    } else {    
-        document.getElementById("remotebutton").innerText = "Remote CouchDB: http://host:5984" ;
-    }
-}
+userName = getCookie( "userName" ) ;          
 
 function showScreen( bool ) {
     Array.from(document.getElementsByClassName("screen")).forEach( (v)=> {
@@ -1891,18 +1897,6 @@ function printCard() {
     });
 }
 
-function setRemote() {
-    let un = prompt( "Remote CouchDB address:", remoteCouch ) ;
-    let rem = remoteCouch ;
-    if ( un ) {
-
-        setCookie( "remoteCouch", un ) ;
-        setRemoteButton() ;
-        // start page over with new remote
-        window.location.reload(false) ;
-    }
-}
-
 function parseQuery() {
     s = window.location.search ;
     if ( s.length < 1 ) {
@@ -1915,12 +1909,11 @@ function parseQuery() {
             r[decodeURIComponent(qq[0])] = decodeURIComponent(qq[1]) ;
         }
     }) ;
-    sindow.location.search = "" ;
+    window.location.search = "" ;
     return r ;
 };
 
 remoteCouch = getCookie( "remoteCouch" ) ;
-setRemoteButton() ;
 
 // Pouchdb routines
 (function() {
@@ -1945,8 +1938,8 @@ setRemoteButton() ;
     function sync() {
         let synctext = document.getElementById("syncstatus") ;
         synctext.innerText = "Sync status: syncing..." ;
-        console.log(remoteCouch+'/mdb') ;
-        db.sync( remoteCouch+'/mdb', {
+        console.log(remoteCouch) ;
+        db.sync( remoteCouch, {
             live: true,
             retry: true
         }).on('change', function(info) {
