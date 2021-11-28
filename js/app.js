@@ -878,7 +878,7 @@ function selectPatient( pid ) {
         }
         document.getElementById("editreviewpatient").disabled = false ;
         let spl = splitPatientId() ;
-        document.getElementById( "titlebox" ).innerHTML = "Name: <B>"+spl.last+"</B>, <B>"+spl.first+"</B>  DOB: <B>"+spl.dob+"/<B>" ;
+        document.getElementById( "titlebox" ).innerHTML = "Name: <B>"+spl.last+"</B>, <B>"+spl.first+"</B>  DOB: <B>"+spl.dob+"</B>" ;
     }).catch( function(err) {
         console.log(err) ;
         unselectPatient() ;
@@ -970,6 +970,7 @@ function displayStateChange() {
             break ;
             
         case "PatientList":
+            let objectPatientTable = new PatientTable( ["LastName", "FirstName", "DOB","Dx","Procedure" ] ) ;
             getPatients(true)
             .then( function(docs) {
                 objectPatientTable.fill(docs.rows) ;
@@ -984,6 +985,7 @@ function displayStateChange() {
             break ;
             
         case "OperationList":
+            let objectOperationTable = new OperationTable( [ "Procedure", "Surgeon", "Status", "Schedule", "Duration", "Equipment" ]  ) ;
             getOperations(true)
             .then( function(docs) {
                 objectOperationTable.fill(docs.rows) ;
@@ -1217,15 +1219,12 @@ class SortTable {
 
         tbody.append(...rowsArray);
     }
-
-    delete () {
-        this.tname.parentNode.removeChild(this.tname) ;
-    } 
 }
 
 class PatientTable extends SortTable {
     constructor( collist ) {
         let tbl = document.getElementById("PatientList") ;
+        tbl.innerHTML = "" ;
 
         // Table Head
         let header = tbl.createTHead() ;
@@ -1274,11 +1273,10 @@ class PatientTable extends SortTable {
   
 }
 
-var objectPatientTable = new PatientTable( ["LastName", "FirstName", "DOB","Dx","Procedure" ] ) ;
-
 class OperationTable extends SortTable {
     constructor( collist ) {
         let tbl = document.getElementById("OperationsList") ;
+        tbl.innerHTML = "" ;
           
         // Table Head
         let header = tbl.createTHead() ;
@@ -1326,8 +1324,6 @@ class OperationTable extends SortTable {
     }
   
 }
-
-var objectOperationTable = new OperationTable( [ "Procedure", "Surgeon", "Status", "Schedule", "Duration", "Equipment" ]  ) ;
 
 function makePatientId(doc, position=null) {
     switch (position) {
@@ -1937,6 +1933,7 @@ remoteCouch = getCookie( "remoteCouch" ) ;
     }).on('change', function(change) {
         switch (displayState) {
             case "PatientList":
+            case "OperationList":
             case "PatientPhoto":
                 displayStateChange();
                 break ;

@@ -203,7 +203,8 @@ var picker = {
     if (+month<10) { month = "0" + month; }
     if (+day<10) { day = "0" + day; }
     inst.target.value = `${year}-${month}-${day}`;
-
+    inst.target.dispatchEvent(new Event("input"));
+    
     // (C3) POPUP ONLY - CLOSE
     if (inst.container === undefined) {
       inst.hWrap.classList.remove("show");
