@@ -7,11 +7,12 @@ var objectPatientData  ;
 var objectCommentList ;
 var userName ;
   
-var db = new PouchDB('mdb') ;
+var cannonicalDBname = 'mdb' ;
+var db = new PouchDB( cannonicalDBname ) ;
 console.log(db.adapter); // prints 'idb'
 console.log(db); // prints 'idb'
 
-var cloudantDb = 'https://apikey-v2-25dxl7of9pjx1f2rrl9l51y1uek4nanmo8ncyi4o4wox:c469ca137e11ea3cef6045ae1c80ccb0@bc3debc5-694c-4094-84b9-440fc5bf6964-bluemix.cloudantnosqldb.appdomain.cloud';
+var cloudantDb = "https://apikey-v2-qx7a577tpow3c98mnl8lsy8ldwpzevtteatwbrl2611:d87aed426ff20ba3969ffa0a2b44c3d3@bc3debc5-694c-4094-84b9-440fc5bf6964-bluemix.cloudantnosqldb.appdomain.cloud" ;
 var remoteCouch = cloudantDb ;
 
 // used for record keys ( see makePatientId, etc )
@@ -133,6 +134,7 @@ const structOperation = [
         choices: ["?", "L", "R", "L+R", "N/A"],
     },
 ] ;
+
 const structSetting = [
     {
         name: "User Name",
@@ -141,8 +143,8 @@ const structSetting = [
     },
     {
         name: "Remote Database",
-        hint: "Central database for replication",
-        type: "text",
+        hint: "user:password@url of remote -- don't include database name",
+        type: "textarea",
     },
     {
         name: "Reset Database",
@@ -150,7 +152,6 @@ const structSetting = [
         type: "checkbox",
     },
 ] ;
-        
 
 class PatientData {
     constructor( doc, struct ) {
@@ -1948,20 +1949,19 @@ remoteCouch = getCookie( "remoteCouch" ) ;
     function sync() {
         let synctext = document.getElementById("syncstatus") ;
         synctext.innerText = "Sync status: syncing..." ;
-        console.log(remoteCouch) ;
-        db.sync( remoteCouch, {
+        db.sync( remoteCouch+"/"+cannonicalDBname , {
             live: true,
             retry: true
         }).on('change', function(info) {
-            synctext.innerText = "Sync status: changed";
+            synctext.innerText = "Sync status: changed -- " + info ;
         }).on('paused', function(err) {
-            synctext.innerText = "Sync status: paused";
+            synctext.innerText = "Sync status: paused --" + err ;
         }).on('active', function() {
             synctext.innerText = "Sync status: active";
         }).on('denied', function(err) {
-            synctext.innerText = "Sync status: denied "+err;
+            synctext.innerText = "Sync status: denied " + err ;
         }).on('complete', function(info) {
-            synctext.innerText = "Sync status: complete";
+            synctext.innerText = "Sync status: complete -- " + info ;
         }).on('error', function(err) {
             synctext.innerText = "Sync status: error "+err ;
         });
