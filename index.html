@@ -9,9 +9,9 @@
         <link rel="manifest" href="manifest.json">
     </head>
     <body>
-        <header class="screen">
+        <header class="work_screen">
             <div id="headerbox">
-                <h1>Mission<br>Database</h1>
+                <div id="headerboxlink"><a href="https://www.github.com/alfille/missiondb" target="_blank" title="Go to MissionDb program website"><h1>Mission<br>Database</h1></a></div>
                 <div id="buttonheader">
                     <div class="MainMenu pageOverlay">
                     </div>
@@ -60,7 +60,7 @@
             <div id="titlebox">
             </div>
         </header>
-        <div id="missiondbody" class="screen">
+        <div id="missiondbody" class="work_screen">
             <div class="MainMenu pageOverlay">
                 <div id="MainMenuContent" >
                     <div id="MainMenuContent">
@@ -177,12 +177,10 @@
                 </li>
             </ul>
         </div>
-        <footer class="screen">
-            <p><a href="http://github.com/alfille/missiondb">Mission Database</a>
-                <div id="syncstatus">Sync Status</div>
-            </p>
+        <footer class="work_screen">
+            <div id="syncstatus">Sync Status</div>
         </footer>
-        <div class="print_class">
+        <div class="print_screen">
             <div id="printCard">
                 <div class=rowCard>
                     <div><img class="photoCard" height=180 width=180></div>
@@ -209,6 +207,18 @@
                     </table></div>
                 </div>
             </div>
+        </div>
+        <div id="splash_screen">
+            <b><center>
+            <h1>Mission Database</h1>
+            <img src="images/missiondb512.png" alt="MissionDb Medical Mission patient database">
+            <div id="splash_screen_error">
+                <hr>
+                    Hmm... Looks like a programming problem.<br>
+                    <a href="mailto:palfille@partners.org?subject=missiondb error">Send a note so we can fix it</a>
+                <hr>
+            </div>
+            </center></b>
         </div>
         <!-- pouchdb -->
         <script src="js/pouchdb-7.2.1.min.js"></script>

@@ -1870,13 +1870,14 @@ function saveImage() {
     document.getElementById('imageCheck').src = "" ;
 }
 
-userName = getCookie( "userName" ) ;          
+userName = getCookie( "userName" ) ;   
 
-function showScreen( bool ) {
-    Array.from(document.getElementsByClassName("screen")).forEach( (v)=> {
+function show_screen( bool ) {
+    document.getElementById("splash_screen").style.display = "none" ;
+    Array.from(document.getElementsByClassName("work_screen")).forEach( (v)=> {
         v.style.display = bool ? "block" : "none" ;
     });
-    Array.from(document.getElementsByClassName("print_class")).forEach( (v)=> {
+    Array.from(document.getElementsByClassName("print_screen")).forEach( (v)=> {
         v.style.display = bool ? "none" : "block" ;
     });
 }    
@@ -1887,7 +1888,7 @@ function printCard() {
     }
     db.get( patientId )
     .then( function(doc) {
-        showScreen( false ) ;
+        show_screen( false ) ;
         var card = document.getElementById("printCard") ;
         var link = window.location.href + "?patientId=" + encodeURIComponent(patientId) ;
         var qr = new QR(
@@ -1896,7 +1897,7 @@ function printCard() {
             200,200,
             4) ;
         window.print() ;
-        showScreen( true ) ;
+        show_screen( true ) ;
         displayStateChange() ;
     }).catch( function(err) {
         console.log(err) ;
@@ -1921,6 +1922,9 @@ function parseQuery() {
 };
 
 remoteCouch = getCookie( "remoteCouch" ) ;
+
+// Compiles, suppress error
+document.getElementById("splash_screen_error").style.display = "none" ;
 
 // Pouchdb routines
 (function() {
@@ -1951,8 +1955,8 @@ remoteCouch = getCookie( "remoteCouch" ) ;
             retry: true
         }).on('change', function(info) {
             synctext.innerText = "Sync status: changed -- " + info ;
-        }).on('paused', function(err) {
-            synctext.innerText = "Sync status: paused --" + err ;
+        }).on('paused', function() {
+            synctext.innerText = "Sync status: pending" ;
         }).on('active', function() {
             synctext.innerText = "Sync status: active";
         }).on('denied', function(err) {
@@ -1969,7 +1973,7 @@ remoteCouch = getCookie( "remoteCouch" ) ;
     }
 
     // Initial start
-    showScreen(true) ;
+    show_screen(true) ;
     
     // first try the search field
     let q = parseQuery() ;
@@ -1990,4 +1994,4 @@ remoteCouch = getCookie( "remoteCouch" ) ;
     
 })();
 
-  
+

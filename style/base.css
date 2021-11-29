@@ -11,6 +11,37 @@ html, body {
   width: 100%;
   background: #lightblue;
 }
+#headerbox h1 {
+  display: block;
+  height: 70px;
+  font-size: 32px;
+  font-weight: bold;
+  text-align: center;
+  color: #b3b3b3;
+  color: rgba(255, 255, 255, 0.3);
+  margin-block-start: 10px;
+  margin-block-end: -.9em;
+  
+  text-shadow: -1px -1px rgba(0, 0, 0, 0.2);
+  -webkit-text-rendering: optimizeLegibility;
+  -moz-text-rendering: optimizeLegibility;
+  -ms-text-rendering: optimizeLegibility;
+  -o-text-rendering: optimizeLegibility;
+  text-rendering: optimizeLegibility;
+}
+
+#headerboxlink {
+  color: black ;
+  border-style: solid;
+  border-width: 1px;
+  border-color: black;
+}
+#headerboxlink a:link {
+  text-decoration: inherit;
+}
+#headerboxlink:hover {
+  background: #3366FF;
+}
 #titlebox {
   width: 100%;
   background: #D5CCFF;
@@ -129,25 +160,6 @@ body {
   border-top-right-radius: 2px;
   box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.2),
         0 25px 50px 0 rgba(0, 0, 0, 0.15);
-}
-
-#headerbox h1 {
-  display: block;
-  height: 70px;
-  font-size: 32px;
-  font-weight: bold;
-  text-align: center;
-  color: #b3b3b3;
-  color: rgba(255, 255, 255, 0.3);
-  margin-block-start: 10px;
-  margin-block-end: -.9em;
-  
-  text-shadow: -1px -1px rgba(0, 0, 0, 0.2);
-  -webkit-text-rendering: optimizeLegibility;
-  -moz-text-rendering: optimizeLegibility;
-  -ms-text-rendering: optimizeLegibility;
-  -o-text-rendering: optimizeLegibility;
-  text-rendering: optimizeLegibility;
 }
 
 .pageOverlay {
@@ -303,12 +315,11 @@ footer {
     font-weight: bold;
   }
 }
-.print_class {
-    display: none ;
+#splash_screen {
+  display: block ;
+  background: #3366CC;
 }
-.screen {
-    display: block ;
-}
+  
 #PatientPhotoContent, #MainMenuContent {
   display: flex ;
   background: #b3b3ff ;
@@ -342,6 +353,12 @@ footer {
     vertical-align: top;
     rows: 3;
     cols: 35;
+}
+.print_screen {
+    display: none ;
+}
+.work_screen {
+    display: none ;
 }
 /* Datepicker https://code-boxx.com/simple-datepicker-pure-javascript-css */
 /* (A) POPUP */
