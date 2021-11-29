@@ -1923,9 +1923,6 @@ function parseQuery() {
 
 remoteCouch = getCookie( "remoteCouch" ) ;
 
-// Compiles, suppress error
-document.getElementById("splash_screen_error").style.display = "none" ;
-
 // Pouchdb routines
 (function() {
 
@@ -1990,7 +1987,32 @@ document.getElementById("splash_screen_error").style.display = "none" ;
         selectPatient( patientId ) ;
     }
     displayState = getCookie( "displayState" ) ;
-    displayStateChange() ;
+    switch ( displayState ) {
+		case "PatientList":
+		case "MainMenu":
+		case "PatientPhoto":
+		case "CommentList":
+		case "OperationList":
+		case "SettingMenu":
+			displayStateChange() ;
+			break;
+		case "OperationEdit":
+			showOperationList() ;
+			break ;
+		case "CommentNew":
+		case "CommentImage":
+			showCommentList() ;
+			break ;
+		case "InvalidPatient":
+			showPatientList() ;
+			break ;
+		case "PatientNew":
+		case "PatientDemographics":
+		case "PatientMedical":
+		default:
+			showPatientPhoto() ;
+			break ;
+	}
     
 })();
 
