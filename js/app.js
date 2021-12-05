@@ -559,6 +559,30 @@ class SettingData extends PatientData {
     }
 }
 
+class Local {
+    constructor( user ) {
+        this.user = user ;
+        this.id = "[ _local", user ].join("/" ) ;
+        this.doc = {} ;
+        db.get( this.is )
+        .then( (doc) => {
+            this.doc = doc ;
+        })
+        .catch( (err) => {
+            this.doc = {
+                _id: this.id,
+                remoteCouch: cloudantDb ;
+            } ;
+            db.put(doc)
+            .catch( (err) => {
+                console.log(err) ;
+            });
+        }) ;
+    }
+}
+            
+            
+
 class Tbar {
     constructor() {
         this.is_active = false ;
