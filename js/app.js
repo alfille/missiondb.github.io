@@ -562,26 +562,56 @@ class SettingData extends PatientData {
 class Local {
     constructor( user ) {
         this.user = user ;
-        this.id = "[ _local", user ].join("/" ) ;
+        this.id = [" _local", user ].join("/" ) ;
         this.doc = {} ;
-        db.get( this.is )
-        .then( (doc) => {
+        this.read() ;
+    }
+    
+    setProperties() {
+        Object.entries(this.doc).forEach(( function (k,v) {
+            console.log(k,v);
+            Object.defineProperty( this, k, {
+                enumerable: true ,
+                configurable: true,
+                get() { 
+                    return this.doc[k];
+                },
+                set( newValue ) {
+                    doc[k] = newValue ;
+                    this.write() ;
+                },
+            }) ;
+        }).bind(this)) ;
+    }
+
+    read() {
+        return db.get( this.id )
+        .then(( function(doc) {
             this.doc = doc ;
-        })
-        .catch( (err) => {
-            this.doc = {
-                _id: this.id,
-                remoteCouch: cloudantDb ;
-            } ;
-            db.put(doc)
-            .catch( (err) => {
-                console.log(err) ;
-            });
+            this.setProperties() ;
+        }).bind(this))
+        .catch( function(err) {
+            console.log("Not local record (yet)") ;
+            this.doc._id = this.id ;
+            this.doc.remoteCouch = cloudantDb ;
+            this.doc.userName = user ;
+            this.setProperties() ;
+            this.write() ;
         }) ;
+    }
+    
+    write() {
+        db.put(this.doc)
+        .catch( (err) => {
+            console.log(err) ;
+        });
     }
 }
             
-            
+var paul = new Local("paul") ;
+console.log(paul) ;
+console.log(paul.remoteCouch);
+console.log(paul._rev);
 
 class Tbar {
     constructor() {
@@ -2012,31 +2042,31 @@ remoteCouch = getCookie( "remoteCouch" ) ;
     }
     displayState = getCookie( "displayState" ) ;
     switch ( displayState ) {
-		case "PatientList":
-		case "MainMenu":
-		case "PatientPhoto":
-		case "CommentList":
-		case "OperationList":
-		case "SettingMenu":
-			displayStateChange() ;
-			break;
-		case "OperationEdit":
-			showOperationList() ;
-			break ;
-		case "CommentNew":
-		case "CommentImage":
-			showCommentList() ;
-			break ;
-		case "InvalidPatient":
-			showPatientList() ;
-			break ;
-		case "PatientNew":
-		case "PatientDemographics":
-		case "PatientMedical":
-		default:
-			showPatientPhoto() ;
-			break ;
-	}
+        case "PatientList":
+        case "MainMenu":
+        case "PatientPhoto":
+        case "CommentList":
+        case "OperationList":
+        case "SettingMenu":
+            displayStateChange() ;
+            break;
+        case "OperationEdit":
+            showOperationList() ;
+            break ;
+        case "CommentNew":
+        case "CommentImage":
+            showCommentList() ;
+            break ;
+        case "InvalidPatient":
+            showPatientList() ;
+            break ;
+        case "PatientNew":
+        case "PatientDemographics":
+        case "PatientMedical":
+        default:
+            showPatientPhoto() ;
+            break ;
+    }
     
 })();
 
