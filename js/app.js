@@ -567,37 +567,39 @@ class Local {
         this.read() ;
     }
     
-    setProperties() {
-        Object.entries(this.doc).forEach(( function (k,v) {
-            console.log(k,v);
-            Object.defineProperty( this, k, {
-                enumerable: true ,
-                configurable: true,
-                get() { 
-                    return this.doc[k];
-                },
-                set( newValue ) {
-                    doc[k] = newValue ;
-                    this.write() ;
-                },
-            }) ;
-        }).bind(this)) ;
-    }
+	setValue( key, val ) {
+		this.doc[key] = val ;
+		this.write() ;
+	}
+	
+	getValue( key ) {
+		return this.doc[key] ;
+	}
+	
+	setDoc( doc ) {
+		Object.entries(doc).forEach(( function( k,v ) {
+			this.doc[k] = v ;
+		}).bind(this)) ;
+		this.write() ;
+	}
+		
+	getDoc() {
+		return this.doc ;
+	}
 
     read() {
         return db.get( this.id )
         .then(( function(doc) {
             this.doc = doc ;
-            this.setProperties() ;
+
         }).bind(this))
-        .catch( function(err) {
+        .catch(( function(err) {
             console.log("Not local record (yet)") ;
             this.doc._id = this.id ;
             this.doc.remoteCouch = cloudantDb ;
-            this.doc.userName = user ;
-            this.setProperties() ;
+            this.doc.userName = this.user ;
             this.write() ;
-        }) ;
+        }).bind(this)) ;
     }
     
     write() {
@@ -2069,5 +2071,3 @@ remoteCouch = getCookie( "remoteCouch" ) ;
     }
     
 })();
-
-
