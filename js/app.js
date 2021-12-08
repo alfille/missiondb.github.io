@@ -561,8 +561,9 @@ class SettingData extends PatientData {
 }
 
 class PreLocal {
-    setValue(k,v) {} 
-    getValue(k) {}
+    setValue( key, val ) {}
+    getValue( key ) {}
+    delValue( key ) {}
 }
 
 class Local extends PreLocal {
