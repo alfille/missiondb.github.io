@@ -1,18 +1,19 @@
-var displayState ;
-var patientId = null ;
-var commentId = null ;
-var operationId = null ;
-
 var objectPatientData  ;
 var objectCommentList ;
-var userName ;
-  
-var cannonicalDBname = 'mdb' ;
-var db = new PouchDB( cannonicalDBname ) ;
-console.log(db.adapter); // prints 'idb'
-console.log(db); // prints 'idb'
 
-var cloudantDb = "https://apikey-v2-qx7a577tpow3c98mnl8lsy8ldwpzevtteatwbrl2611:d87aed426ff20ba3969ffa0a2b44c3d3@bc3debc5-694c-4094-84b9-440fc5bf6964-bluemix.cloudantnosqldb.appdomain.cloud" ;
+var LocalRec ;
+
+var displayState ;
+var userName ;
+var patientId ;
+var commentId ;
+var operationId ;
+var remoteCouch ;
+  
+const cannonicalDBname = 'mdb' ;
+var db = new PouchDB( cannonicalDBname ) ;
+
+const cloudantDb = "https://apikey-v2-qx7a577tpow3c98mnl8lsy8ldwpzevtteatwbrl2611:d87aed426ff20ba3969ffa0a2b44c3d3@bc3debc5-694c-4094-84b9-440fc5bf6964-bluemix.cloudantnosqldb.appdomain.cloud" ;
 var remoteCouch = cloudantDb ;
 
 // used for record keys ( see makePatientId, etc )
@@ -545,13 +546,13 @@ class SettingData extends PatientData {
         const remote_now = remoteCouch ;
         this.loadDocData() ;
         userName = this.doc["User Name"] ;
-        setCookie( "userName", userName ) ;
+        LocalRec.setValue( "userName", userName ) ;
         if ( this.doc["Reset Database"] ) {
             remoteCouch = cloudantDb ;
         } else {
             remoteCouch = this.doc["Remote Database"] ;
         }
-        setCookie( "remoteCouch", remoteCouch ) ;
+        LocalRec.setValue( "remoteCouch", remoteCouch ) ;
         if ( remoteCouch != remote_now ) {
             window.location.reload(false) ;
         }
@@ -559,33 +560,47 @@ class SettingData extends PatientData {
     }
 }
 
-class Local {
+class PreLocal {
+    setValue(k,v) {} 
+    getValue(k) {}
+}
+
+class Local extends PreLocal {
     constructor( user ) {
-        this.user = user ;
+        userName = user ;
+        setCookie( "userName", userName ) ;
         this.id = [" _local", user ].join("/" ) ;
         this.doc = {} ;
         this.read() ;
     }
     
-	setValue( key, val ) {
-		this.doc[key] = val ;
-		this.write() ;
-	}
-	
-	getValue( key ) {
-		return this.doc[key] ;
-	}
-	
-	setDoc( doc ) {
-		Object.entries(doc).forEach(( function( k,v ) {
-			this.doc[k] = v ;
-		}).bind(this)) ;
-		this.write() ;
-	}
-		
-	getDoc() {
-		return this.doc ;
-	}
+    setValue( key, val ) {
+        this.doc[key] = val ;
+        this.write() ;
+    }
+    
+    getValue( key ) {
+        return this.doc[key] ;
+    }
+    
+    delValue( key ) {
+        console.log("delete",key);
+        if ( key in Doc ) {
+            delete this.doc[key] ;
+            this.write() ;
+        }
+    }
+    
+    setDoc( doc ) {
+        Object.entries(doc).forEach(( function( k,v ) {
+            this.doc[k] = v ;
+        }).bind(this)) ;
+        this.write() ;
+    }
+        
+    getDoc() {
+        return this.doc ;
+    }
 
     read() {
         return db.get( this.id )
@@ -597,7 +612,7 @@ class Local {
             console.log("Not local record (yet)") ;
             this.doc._id = this.id ;
             this.doc.remoteCouch = cloudantDb ;
-            this.doc.userName = this.user ;
+            this.doc.userName = userName ;
             this.write() ;
         }).bind(this)) ;
     }
@@ -609,12 +624,29 @@ class Local {
         });
     }
 }
+   
+function UserNameInput() {
+    const un = document.getElementById("UserNameText");
+    if ( un.value && un.value.length > 0 ) {
+        LocalRec = new Local( un.value ) ;
+        console.log("LocalRec",LocalRec);
+        displayState = LocalRec.getValue( "displayState" ) ;
+        userName     = LocalRec.getValue( "userName" ) ;
+        patientId    = LocalRec.getValue( "patientId" ) ;
+        commentId    = LocalRec.getValue( "commentId" ) ;
+        operationId  = LocalRec.getValue( "operationId" ) ;
+        remoteCouch  = LocalRec.getValue( "remoteCouch" ) ;
+        
+        if ( patientId ) {
+            selectPatient( patientId ) ;
+        } else {
+            unselectPatient() ;
+        }
+    } else {
+        showUserName() ;
+    }
+}
             
-var paul = new Local("paul") ;
-console.log(paul) ;
-console.log(paul.remoteCouch);
-console.log(paul._rev);
-
 class Tbar {
     constructor() {
         this.is_active = false ;
@@ -813,7 +845,7 @@ class Pbar extends Tbar {
     saveedit() {
         if ( this.active() ) {
             if ( patientId ) {
-                // existing comment
+                // existing commentLocalRec
                 db.get(patientId)
                 .then(( function(doc) {
                     if ( this.working.upload == null ) {
@@ -828,7 +860,7 @@ class Pbar extends Tbar {
                 }).finally(( function() {
                     this.leave() ;
                 }).bind(this)) ;
-            }
+            }unselectPatient
         }
     }
     
@@ -838,6 +870,13 @@ class Pbar extends Tbar {
 }
     
 var photoBar = new Pbar() ;        
+
+function showUserName() {
+    console.log("UserName") ;
+    displayState = "UserName" ;
+    displayStateChange() ;
+    console.log("UserName") ;
+}
 
 function showMainMenu() {
     displayState = "MainMenu" ;
@@ -920,7 +959,7 @@ function selectPatient( pid ) {
     // Check patient existence
     db.get(patientId)
     .then( function (doc) {
-        setCookie( "patientId", pid ) ;
+        LocalRec.setValue( "patientId", pid ) ;
         if ( displayState == "PatientList" ) {
             // highlight the list row
             let rows = document.getElementById("PatientList").rows ;
@@ -951,7 +990,7 @@ function selectOperation( oid ) {
     // Check patient existence
     db.get(operationId)
     .then( function (doc) {
-        setCookie( "operationId", oid ) ;
+        LocalRec.setValue( "operationId", oid ) ;
         if ( displayState == "OperationList" ) {
             // highlight the list row
             let rows = document.getElementById("OperationsList").rows ;
@@ -972,7 +1011,7 @@ function selectOperation( oid ) {
 
 function unselectPatient() {
     patientId = null ;
-    deleteCookie( "patientId" ) ;
+    LocalRec.delValue( "patientId" ) ;
     unselectComment() ;
     unselectOperation() ;
     if ( displayState == "PatientList" ) {
@@ -990,7 +1029,7 @@ function unselectPatient() {
 
 function unselectOperation() {
     operationId = null ;
-    deleteCookie( "operationId" ) ;
+    LocalRec.delValue( "operationId" ) ;
     if ( displayState == "OperationList" ) {
         let ot = document.getElementById("OperationsList") ;
         if ( ot ) {
@@ -1008,13 +1047,18 @@ function displayStateChange() {
         v.style.display = v.classList.contains(displayState) ? "block" : "none" ;
     });
 
-    setCookie("displayState",displayState) ;
+    console.log("displayStateChange",displayState,LocalRec);
+    console.trace();
+    if ( LocalRec ) {
+        LocalRec.setValue("displayState",displayState) ;
+    }
 
     objectPatientData = null ;
     objectCommentList = null ;
 
     switch( displayState ) {
         case "MainMenu":
+        case "UserName":
             break ;
             
         case "SettingMenu":
@@ -1036,7 +1080,7 @@ function displayStateChange() {
                     unselectPatient() ;
                 }
             }).catch( function(err) {
-                    console.log(err);
+                console.log(err);
             });
             break ;
             
@@ -1181,13 +1225,12 @@ function deleteCookie( cname ) {
 
 function getCookie( cname ) {
       const name = cname + "=";
-      const cDecoded = decodeURIComponent(document.cookie); //to be careful
-      const cArr = cDecoded .split('; ');
-      let res ;
-      cArr.forEach(val => {
-          if (val.indexOf(name) === 0) res = val.substring(name.length);
-      })
-      return res;
+      decodeURIComponent(document.cookie).split('; ').forEach( (val) => {
+          if (val.indexOf(name) === 0) {
+              return val.substring(name.length) ;
+          }
+      }) ;
+      return null;
 }
 
 function isAndroid() {
@@ -1641,7 +1684,7 @@ function deleteComment() {
     
 function selectComment( cid ) {
     commentId = cid ;
-    setCookie( "commentId", cid ) ;
+    LocalRec.setValue( "commentId", cid ) ;
     if ( displayState == "CommentList" ) {
         // highlight the list row
         let li = document.getElementById("CommentList").getElementsByTagName("LI");
@@ -1659,7 +1702,7 @@ function selectComment( cid ) {
 
 function unselectComment() {
     commentId = null ;
-    deleteCookie( "commentId" ) ;
+    LocalRec.delValue( "commentId" ) ;
     if ( displayState == "CommentList" ) {
         let li = document.getElementById("CommentList").li ;
         if ( li && (li.length > 0) ) {
@@ -1926,8 +1969,6 @@ function saveImage() {
     document.getElementById('imageCheck').src = "" ;
 }
 
-userName = getCookie( "userName" ) ;   
-
 function show_screen( bool ) {
     document.getElementById("splash_screen").style.display = "none" ;
     Array.from(document.getElementsByClassName("work_screen")).forEach( (v)=> {
@@ -1977,8 +2018,6 @@ function parseQuery() {
     return r ;
 };
 
-remoteCouch = getCookie( "remoteCouch" ) ;
-
 // Pouchdb routines
 (function() {
 
@@ -2025,49 +2064,56 @@ remoteCouch = getCookie( "remoteCouch" ) ;
         sync();
     }
 
+    LocalRec = new PreLocal() ;
+    
     // Initial start
     show_screen(true) ;
     
+    // No search, use cookies
+    userName = getCookie( "userName" ) ;
+    console.log( "userName", userName ) ;
+    if ( userName  && (userName.length > 0) ) {
+        LocalRec = new Local( userName ) ;
+        console.log(Local.Rec);
+    } else {
+        console.log("showUserName1") ;
+        showUserName() ;
+        console.log("showUserName1") ;
+    }
+        
     // first try the search field
     let q = parseQuery() ;
-    if (q) {
-        if ( patientId in q ) {
-            selectPatient( q.patientId ) ;
-            showPatientPhoto() ;
+    if ( q && ( patientId in q ) ) {
+        selectPatient( q.patientId ) ;
+        showPatientPhoto() ;
+    } else {
+        switch ( displayState ) {
+            case "PatientList":
+            case "MainMenu":
+            case "PatientPhoto":
+            case "CommentList":
+            case "OperationList":
+            case "SettingMenu":
+                displayStateChange() ;
+                break;
+            case "OperationEdit":
+                showOperationList() ;
+                break ;
+            case "CommentNew":
+            case "CommentImage":
+                showCommentList() ;
+                break ;
+            case "UserName":
+            case "InvalidPatient":
+                showPatientList() ;
+                break ;
+            case "PatientNew":
+            case "PatientDemographics":
+            case "PatientMedical":
+            default:
+                showPatientPhoto() ;
+                break ;
         }
-    }
-    
-    // No search, use cookies
-    patientId = getCookie( "patientId" ) ;
-    if ( patientId ) {
-        selectPatient( patientId ) ;
-    }
-    displayState = getCookie( "displayState" ) ;
-    switch ( displayState ) {
-        case "PatientList":
-        case "MainMenu":
-        case "PatientPhoto":
-        case "CommentList":
-        case "OperationList":
-        case "SettingMenu":
-            displayStateChange() ;
-            break;
-        case "OperationEdit":
-            showOperationList() ;
-            break ;
-        case "CommentNew":
-        case "CommentImage":
-            showCommentList() ;
-            break ;
-        case "InvalidPatient":
-            showPatientList() ;
-            break ;
-        case "PatientNew":
-        case "PatientDemographics":
-        case "PatientMedical":
-        default:
-            showPatientPhoto() ;
-            break ;
     }
     
 })();
