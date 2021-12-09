@@ -181,8 +181,8 @@ footer {
   font-size: 12px;
 }
 
-#syncstatus {
-  background: paleblue;
+#syncstatus, #userstatus {
+  background: lightblue;
   border: 4px;
 }
 

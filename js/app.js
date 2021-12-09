@@ -561,6 +561,10 @@ class SettingData extends PatientData {
 }
 
 class PreLocal {
+	constructor () {
+        document.getElementById("userstatus").value = "<not set yet>" ;
+	}
+		
     setValue( key, val ) {}
     getValue( key ) {}
     delValue( key ) {}
@@ -573,6 +577,7 @@ class Local extends PreLocal {
         this.id = [" _local", user ].join("/" ) ;
         this.doc = {} ;
         this.read() ;
+        document.getElementById("userstatus").value = user ;
     }
     
     setValue( key, val ) {
@@ -2042,22 +2047,22 @@ function parseQuery() {
     // Initialise a sync with the remote server
     function sync() {
         let synctext = document.getElementById("syncstatus") ;
-        synctext.innerText = "Sync status: syncing..." ;
+        synctext.value = "syncing..." ;
         db.sync( remoteCouch+"/"+cannonicalDBname , {
             live: true,
             retry: true
         }).on('change', function(info) {
-            synctext.innerText = "Sync status: changed -- " + info ;
+            synctext.value = "changed -- " + info ;
         }).on('paused', function() {
-            synctext.innerText = "Sync status: pending" ;
+            synctext.value = "pending" ;
         }).on('active', function() {
-            synctext.innerText = "Sync status: active";
+            synctext.value = "active";
         }).on('denied', function(err) {
-            synctext.innerText = "Sync status: denied " + err ;
+            synctext.value = "denied " + err ;
         }).on('complete', function(info) {
-            synctext.innerText = "Sync status: complete -- " + info ;
+            synctext.value = "complete -- " + info ;
         }).on('error', function(err) {
-            synctext.innerText = "Sync status: error "+err ;
+            synctext.value = "Sync status: error "+err ;
         });
     }
 
