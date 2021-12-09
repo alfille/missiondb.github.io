@@ -74,8 +74,12 @@
             <!-- body: UserName -->
             <div class="UserName pageOverlay">
                 <div id="UserNameContent" >
-                    <label for="UserNameText">User name:</label><input type="text" required="true" id="UserNameText" oninput="UserNameInput()" title="Enter your User Name">
-                    <button type="button" class="divbutton" onclick="UserNameInput()">Enter</button>
+					<div>
+						<hr>
+						<label for="UserNameText">User name:</label><input type="text" required="true" id="UserNameText" oninput="UserNameInput()" title="Enter your User Name">
+						<button type="button" class="divbutton" onclick="UserNameInput()">Enter</button>
+						<hr>
+                    </div>
                 </div>
             </div>
             <!-- body: MainMenu -->
@@ -197,8 +201,10 @@
         </div>
         <!-- Footer -->
         <footer class="work_screen">
-            <label for="userstatus">User:</label><input type="text" readonly id="userstatus"></div>
-            <label for="syncstatus">Sync status:</label><input type="text" readonly id="syncstatus"></div>
+			<div id="footerflex">
+				<div><label for="userstatus">User:</label><input type="text" readonly id="userstatus"></div>
+				<div><label for="syncstatus">Sync status:</label><input type="text" readonly id="syncstatus"></div>
+            </div>
         </footer>
         <!-- Card print -->
         <div class="print_screen">

@@ -334,6 +334,7 @@ footer {
 }
 #PatientPhotoButtons {
   display: flex;
+  color: white;
   flex-direction: row ;
   justify-content: space-around;
 }
@@ -359,6 +360,19 @@ footer {
 }
 .work_screen {
     display: none ;
+}
+#UserNameContent {
+	background: #5e6cc7;
+	color: white;
+	display: flex ;
+	justify-content: center;
+	align-items: center;
+}
+#footerflex {
+	display: flex;
+	color: white;
+	flex-flow: row wrap;
+	justify-content: space-around;
 }
 /* Datepicker https://code-boxx.com/simple-datepicker-pure-javascript-css */
 /* (A) POPUP */

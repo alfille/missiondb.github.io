@@ -648,6 +648,7 @@ function UserNameInput() {
         } else {
             unselectPatient() ;
         }
+        showPatientList() ;
     } else {
         showUserName() ;
     }
@@ -2075,51 +2076,47 @@ function parseQuery() {
     // Initial start
     show_screen(true) ;
     
+	// search field
     // No search, use cookies
     userName = getCookie( "userName" ) ;
-    console.log( "userName", userName ) ;
-    if ( userName  && (userName.length > 0) ) {
-        LocalRec = new Local( userName ) ;
-        console.log(Local.Rec);
-    } else {
-        console.log("showUserName1") ;
+    if ( userName==null  || (userName.length > 0) ) {
         showUserName() ;
-        console.log("showUserName1") ;
+    } else {
+        LocalRec = new Local( userName ) ;
+		// first try the search field
+		if ( q && ( patientId in q ) ) {
+			selectPatient( q.patientId ) ;
+			showPatientPhoto() ;
+		} else {
+			switch ( displayState ) {
+				case "PatientList":
+				case "MainMenu":
+				case "PatientPhoto":
+				case "CommentList":
+				case "OperationList":
+				case "SettingMenu":
+					displayStateChange() ;
+					break;
+				case "OperationEdit":
+					showOperationList() ;
+					break ;
+				case "CommentNew":
+				case "CommentImage":
+					showCommentList() ;
+					break ;
+				case "UserName":
+				case "InvalidPatient":
+					showPatientList() ;
+					break ;
+				case "PatientNew":
+				case "PatientDemographics":
+				case "PatientMedical":
+				default:
+					showPatientPhoto() ;
+					break ;
+			}
+		}
     }
         
-    // first try the search field
-    let q = parseQuery() ;
-    if ( q && ( patientId in q ) ) {
-        selectPatient( q.patientId ) ;
-        showPatientPhoto() ;
-    } else {
-        switch ( displayState ) {
-            case "PatientList":
-            case "MainMenu":
-            case "PatientPhoto":
-            case "CommentList":
-            case "OperationList":
-            case "SettingMenu":
-                displayStateChange() ;
-                break;
-            case "OperationEdit":
-                showOperationList() ;
-                break ;
-            case "CommentNew":
-            case "CommentImage":
-                showCommentList() ;
-                break ;
-            case "UserName":
-            case "InvalidPatient":
-                showPatientList() ;
-                break ;
-            case "PatientNew":
-            case "PatientDemographics":
-            case "PatientMedical":
-            default:
-                showPatientPhoto() ;
-                break ;
-        }
-    }
     
 })();
