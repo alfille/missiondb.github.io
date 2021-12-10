@@ -561,10 +561,9 @@ class SettingData extends PatientData {
 }
 
 class PreLocal {
-	constructor () {
-        document.getElementById("userstatus").value = "<not set yet>" ;
+	constructor ( user = "<not set yet>" ) {
+        document.getElementById("userstatus").value = user ;
 	}
-		
     setValue( key, val ) {}
     getValue( key ) {}
     delValue( key ) {}
@@ -572,12 +571,13 @@ class PreLocal {
 
 class Local extends PreLocal {
     constructor( user ) {
+		super( user ) ;
         userName = user ;
         setCookie( "userName", userName ) ;
         this.id = [" _local", user ].join("/" ) ;
         this.doc = {} ;
         this.read() ;
-        document.getElementById("userstatus").value = user ;
+        console.log("Local for ",user, this.id, this.doc ) ;
     }
     
     setValue( key, val ) {
@@ -590,11 +590,7 @@ class Local extends PreLocal {
     }
     
     delValue( key ) {
-        console.log("delete",key);
-        if ( key in Doc ) {
-            delete this.doc[key] ;
-            this.write() ;
-        }
+		delete this.doc[key] ;
     }
     
     setDoc( doc ) {
@@ -609,8 +605,11 @@ class Local extends PreLocal {
     }
 
     read() {
+		console.log("localread",this.doc,this.id);
+		console.trace();
         return db.get( this.id )
         .then(( function(doc) {
+			console.log("successful read",this.id, doc);
             this.doc = doc ;
 
         }).bind(this))
@@ -624,6 +623,9 @@ class Local extends PreLocal {
     }
     
     write() {
+		console.log("localwrite",this.doc);
+		console.trace();
+		
         db.put(this.doc)
         .catch( (err) => {
             console.log(err) ;
@@ -879,10 +881,8 @@ class Pbar extends Tbar {
 var photoBar = new Pbar() ;        
 
 function showUserName() {
-    console.log("UserName") ;
     displayState = "UserName" ;
     displayStateChange() ;
-    console.log("UserName") ;
 }
 
 function showMainMenu() {
@@ -1064,8 +1064,14 @@ function displayStateChange() {
     objectCommentList = null ;
 
     switch( displayState ) {
-        case "MainMenu":
         case "UserName":
+			document.getElementById("UserNameText").addEventListener( "keyup", (event)=> {
+				if ( event.key === "Enter" ) {
+					UserNameInput() ;
+				}
+			});
+           
+       case "MainMenu":
             break ;
             
         case "SettingMenu":
@@ -1232,8 +1238,12 @@ function deleteCookie( cname ) {
 
 function getCookie( cname ) {
       const name = cname + "=";
+      console.log(name);
+      console.log(decodeURIComponent(document.cookie));
+      console.log(decodeURIComponent(document.cookie).split("; "));
       decodeURIComponent(document.cookie).split('; ').forEach( (val) => {
           if (val.indexOf(name) === 0) {
+			  console.log(name);
               return val.substring(name.length) ;
           }
       }) ;
@@ -2079,6 +2089,7 @@ function parseQuery() {
 	// search field
     // No search, use cookies
     userName = getCookie( "userName" ) ;
+    console.log("cookie",userName);
     if ( userName==null  || (userName.length > 0) ) {
         showUserName() ;
     } else {
