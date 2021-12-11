@@ -561,9 +561,9 @@ class SettingData extends PatientData {
 }
 
 class PreLocal {
-	constructor ( user = "<not set yet>" ) {
+    constructor ( user = "<not set yet>" ) {
         document.getElementById("userstatus").value = user ;
-	}
+    }
     setValue( key, val ) {}
     getValue( key ) {}
     delValue( key ) {}
@@ -571,7 +571,7 @@ class PreLocal {
 
 class Local extends PreLocal {
     constructor( user ) {
-		super( user ) ;
+        super( user ) ;
         userName = user ;
         setCookie( "userName", userName ) ;
         this.id = [" _local", user ].join("/" ) ;
@@ -590,7 +590,7 @@ class Local extends PreLocal {
     }
     
     delValue( key ) {
-		delete this.doc[key] ;
+        delete this.doc[key] ;
     }
     
     setDoc( doc ) {
@@ -605,11 +605,11 @@ class Local extends PreLocal {
     }
 
     read() {
-		console.log("localread",this.doc,this.id);
-		console.trace();
+        console.log("localread",this.doc,this.id);
+        console.trace();
         return db.get( this.id )
         .then(( function(doc) {
-			console.log("successful read",this.id, doc);
+            console.log("successful read",this.id, doc);
             this.doc = doc ;
 
         }).bind(this))
@@ -623,9 +623,9 @@ class Local extends PreLocal {
     }
     
     write() {
-		console.log("localwrite",this.doc);
-		console.trace();
-		
+        console.log("localwrite",this.doc);
+        console.trace();
+        
         db.put(this.doc)
         .catch( (err) => {
             console.log(err) ;
@@ -1065,11 +1065,11 @@ function displayStateChange() {
 
     switch( displayState ) {
         case "UserName":
-			document.getElementById("UserNameText").addEventListener( "keyup", (event)=> {
-				if ( event.key === "Enter" ) {
-					UserNameInput() ;
-				}
-			});
+            document.getElementById("UserNameText").addEventListener( "keyup", (event)=> {
+                if ( event.key === "Enter" ) {
+                    UserNameInput() ;
+                }
+            });
            
        case "MainMenu":
             break ;
@@ -1238,16 +1238,13 @@ function deleteCookie( cname ) {
 
 function getCookie( cname ) {
       const name = cname + "=";
-      console.log(name);
-      console.log(decodeURIComponent(document.cookie));
-      console.log(decodeURIComponent(document.cookie).split("; "));
+      var ret = null ;
       decodeURIComponent(document.cookie).split('; ').forEach( (val) => {
           if (val.indexOf(name) === 0) {
-			  console.log(name);
-              return val.substring(name.length) ;
+              ret =  val.substring(name.length) ;
           }
       }) ;
-      return null;
+      return ret;
 }
 
 function isAndroid() {
@@ -2086,47 +2083,48 @@ function parseQuery() {
     // Initial start
     show_screen(true) ;
     
-	// search field
+    // search field
     // No search, use cookies
     userName = getCookie( "userName" ) ;
-    console.log("cookie",userName);
-    if ( userName==null  || (userName.length > 0) ) {
+    if ( userName==null  || (userName.length === 0) ) {
         showUserName() ;
     } else {
         LocalRec = new Local( userName ) ;
-		// first try the search field
-		if ( q && ( patientId in q ) ) {
-			selectPatient( q.patientId ) ;
-			showPatientPhoto() ;
-		} else {
-			switch ( displayState ) {
-				case "PatientList":
-				case "MainMenu":
-				case "PatientPhoto":
-				case "CommentList":
-				case "OperationList":
-				case "SettingMenu":
-					displayStateChange() ;
-					break;
-				case "OperationEdit":
-					showOperationList() ;
-					break ;
-				case "CommentNew":
-				case "CommentImage":
-					showCommentList() ;
-					break ;
-				case "UserName":
-				case "InvalidPatient":
-					showPatientList() ;
-					break ;
-				case "PatientNew":
-				case "PatientDemographics":
-				case "PatientMedical":
-				default:
-					showPatientPhoto() ;
-					break ;
-			}
-		}
+        
+        // first try the search field
+        let q = parseQuery() ;
+        if ( q && ( patientId in q ) ) {
+            selectPatient( q.patientId ) ;
+            showPatientPhoto() ;
+        } else {
+            switch ( displayState ) {
+                case "PatientList":
+                case "MainMenu":
+                case "PatientPhoto":
+                case "CommentList":
+                case "OperationList":
+                case "SettingMenu":
+                    displayStateChange() ;
+                    break;
+                case "OperationEdit":
+                    showOperationList() ;
+                    break ;
+                case "CommentNew":
+                case "CommentImage":
+                    showCommentList() ;
+                    break ;
+                case "UserName":
+                case "InvalidPatient":
+                    showPatientList() ;
+                    break ;
+                case "PatientNew":
+                case "PatientDemographics":
+                case "PatientMedical":
+                default:
+                    showPatientPhoto() ;
+                    break ;
+            }
+        }
     }
         
     
