@@ -161,19 +161,17 @@ const structOperation = [
 
 const structSetting = [
     {
-        name: "User Name",
+        name: "userName",
+        alias: "User Name",
         hint: "Your user name",
         type: "text",
     },
     {
-        name: "Remote Database",
+        name: "remoteCouch",
+        alias: "Remote Database",
         hint: "user:password@url of remote -- don't include database name",
-        type: "textarea",
-    },
-    {
-        name: "Reset Database",
-        hint: "Revert to IBM Cloudant server",
-        type: "checkbox",
+        type: "list",
+        choices: [ cloudantDb, ],
     },
 ] ;
 
@@ -197,14 +195,18 @@ class PatientData {
             li.setAttribute("data-index",idx) ;
             
             let l = li.querySelector("label") ;
-            l.appendChild( document.createTextNode(item.name + ": ") );
+            if ( "alias" in item ) {
+				l.appendChild( document.createTextNode(item.alias + ": ") );
+			} else {
+				l.appendChild( document.createTextNode(item.name + ": ") );
+			}
             l.title = item.hint ;
 
             let i = null;
             switch( item.type ) {
                 case "radio":
                     var v  = "" ;
-                    let any_choices = item.choices.length > 0 ;
+                    var any_choices = item.choices.length > 0 ;
                     if ( item.name in doc ) { 
                         v = doc[item.name] ;
                         if ( !item.choices.includes(v) && any_choices ) {
@@ -229,6 +231,31 @@ class PatientData {
                         l.appendChild(i) ;
                         l.appendChild( document.createTextNode(c) ) ;
                     }) ;
+                    break ;
+                case "list":
+                    var v  = "" ;
+                    var any_choices = item.choices.length > 0 ;
+                    if ( item.name in doc ) {
+                        v = doc[item.name] ;
+                    } else if ( any_choices ) {
+                        v = item.choices[0] ;
+                    }
+                    var dlist = document.createElement("datalist") ;
+                    dlist.id = 'datalist'+idx ;
+                        
+                    item.choices.forEach( function(c) {
+                        var op = document.createElement("option") ;
+                        op.value = c ;
+                        dlist.appendChild(op) ;
+                    }) ;
+                    var id = document.createElement("input") ;
+                    id.type = "list" ;
+                    id.setAttribute( "list", dlist.id );
+                    id.value = v ;
+                    id.readonly = true ;
+                    id.disabled = true ;
+                    l.appendChild( dlist ) ;
+                    l.appendChild( id ) ;                    
                     break ;
                 case "datetime":
                 case "datetime-local":
@@ -478,6 +505,10 @@ class PatientData {
                 case "textarea":
                     li.querySelector("textarea").readOnly = false ;
                     break ;
+                case "list":
+                    li.querySelector("input").readOnly = false ;
+                    li.querySelector("input").disabled = false ;
+                    break ;
                 default:
                     li.querySelector("input").readOnly = false ;
                     break ;
@@ -563,20 +594,32 @@ class OperationData extends PatientData {
 
 class SettingData extends PatientData {
     savePatientData() {
-        const remote_now = remoteCouch ;
         this.loadDocData() ;
         userName = this.doc["User Name"] ;
-        LocalRec.setValue( "userName", userName ) ;
-        if ( this.doc["Reset Database"] ) {
-            remoteCouch = cloudantDb ;
-        } else {
-            remoteCouch = this.doc["Remote Database"] ;
-        }
-        LocalRec.setValue( "remoteCouch", remoteCouch ) ;
-        if ( remoteCouch != remote_now ) {
-            window.location.reload(false) ;
-        }
-        displayStateChange() ;
+        if ( userName != this.doc.userName ) {
+			// username changed
+			LocalRec = new Local( this.doc.userName ) ;
+			LocalRec.init()
+			.then(( function() {
+				return LocalRec.setDoc( this.doc ) ;
+			}).bind(this))
+			.then( () => {
+				showMainMenu() ;
+				window.location.reload(false) ;
+			})
+			.catch( (err) => {
+				console.log(err) ;
+			}) ;
+		} else {
+			LocalRec.setDoc( this.doc )
+			.then( () => {
+				showMainMenu() ;
+				window.location.reload(false) ;
+			})
+			.catch( (err) => {
+				console.log(err) ;
+			}) ;
+		}
     }
 }
 
@@ -608,31 +651,6 @@ class NewPatientData extends PatientData {
         }
     }
 }
-
-function addPatient() {
-    doc = {
-        FirstName: document.getElementById("newFirst").value,
-        LastName: document.getElementById("newLast").value,
-        DOB: document.getElementById("newDOB").value,
-    } ;
-    doc._id = makePatientId(doc) ;
-
-    db.put( doc )
-    .then( function( d ) {
-        selectPatient( doc._id ) ;
-        showPatientPhoto() ;
-    }).catch( function(e) {
-        console.log(e) ;
-        showPatientList() ;
-    });
-}
-
-function checkNew() {
-    document.getElementById("addPatient").disabled =
-        ( document.getElementById("newLast").value == "" ) || 
-        ( document.getElementById("newFirst").value == "" ) || 
-        ( document.getElementById("newDOB").value == "" ) ;
-} 
 
 class PreLocal {
     constructor ( user = "<not set yet>" ) {
@@ -1152,7 +1170,6 @@ function displayStateChange() {
     console.log("displayStateChange",displayState,LocalRec);
     console.trace();
     if ( LocalRec ) {
-        console.log("displayStateChange");
         LocalRec.setValue("displayState",displayState) ;
     }
 
@@ -1172,18 +1189,13 @@ function displayStateChange() {
             break ;
             
         case "SettingMenu":
-            objectPatientData = new SettingData( {
-                "User Name": userName,
-                "Remote Database": remoteCouch,
-                "Reset Database": false,
-                } , structSetting ) ;
+            objectPatientData = new SettingData( LocalRec.getDoc() , structSetting ) ;
             break ;
             
         case "PatientList":
             let objectPatientTable = new PatientTable( ["LastName", "FirstName", "DOB","Dx","Procedure" ] ) ;
             getPatients(true)
             .then( function(docs) {
-                console.log("PATIENT FILL");
                 objectPatientTable.fill(docs.rows) ;
                 if ( patientId ) {
                     selectPatient( patientId ) ;
