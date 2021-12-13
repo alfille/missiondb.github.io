@@ -28,7 +28,30 @@ const RecordFormat = {
     version: 0,
 } ;
 
+const structNewPatient = [
+    {
+        name: "LastName",
+        hint: "Late name of patient",
+        type: "text",
+    },
+    {
+        name: "FirstName",
+        hint: "First name of patient",
+        type: "text",
+    },
+    {
+        name: "DOB",
+        hint: "Date of birst (as close as possible)",
+        type: "date",
+    },
+] ;
+    
 const structDemographics = [
+    {
+        name: "DOB",
+        hint: "Date of Birth",
+        type: "date",
+    },
     {
         name: "email",
         hint: "email address",
@@ -172,9 +195,6 @@ class PatientData {
         struct.forEach(( function( item, idx ) {
             let li = li_base.cloneNode(true);
             li.setAttribute("data-index",idx) ;
-            li.addEventListener( 'dblclick', (e) => {
-                objectPatientData.Click(e.target.firstChild) ;
-            }) ;
             
             let l = li.querySelector("label") ;
             l.appendChild( document.createTextNode(item.name + ": ") );
@@ -319,6 +339,9 @@ class PatientData {
             
             this.ul.appendChild( li ) ;
         }).bind(this));
+        [...document.getElementsByClassName("editthecomment")].forEach( (e) => {
+            e.disabled = false ;
+        }) ;
     }
 
     HMtoMin ( inp ) {
@@ -413,59 +436,56 @@ class PatientData {
     }
         
 
-    Click( e ) {
-        if ( e == null ) {
-            return ;
-        }
+    clickEdit() {
         this.ButtonStatus( false ) ;
-        let parent = e.parentElement ;
-        let idx = parent.getAttribute("data-index") ;
-        let b = parent.querySelector("button") ;
-        if (b ) {
-            b.style.display = "none" ;
-        }
-        switch ( this.struct[idx].type ) {
-            case "radio":
-                document.getElementsByName(this.struct[idx].name).forEach( function (i) {
-                    i.disabled = false ;
-                }) ;
-                break ;
-            case "checkbox":
-                parent.querySelector("input").disabled = false ;
-                parent.querySelector("input").readOnly = false ;
-                break ;
-            case "date":
-                picker.attach({
-                    element: parent.querySelector("input"),
-                }) ;
-                break ;
-            case "time":
-                tp.attach({
-                    element: parent.querySelector("input"),
-                }) ;
-                break ;
-            case "length":
-                lp.attach({
-                    element: parent.querySelector("input"),
-                }) ;
-                break ;
-            case "datetime":
-            case "datetime-local":
-                var i = parent.querySelectorAll("input") ;
-                picker.attach({
-                    element: i[0],
-                }) ;
-                tp.attach({
-                    element: i[1],
-                }) ;
-                break ;
-            case "textarea":
-                parent.querySelector("textarea").readOnly = false ;
-                break ;
-            default:
-                parent.querySelector("input").readOnly = false ;
-                break ;
-        }
+        this.ul.querySelectorAll("li").forEach(( function(li) {
+            let idx = li.getAttribute("data-index") ;
+            switch ( this.struct[idx].type ) {
+                case "radio":
+                    document.getElementsByName(this.struct[idx].name).forEach( function (i) {
+                        i.disabled = false ;
+                    }) ;
+                    break ;
+                case "checkbox":
+                    li.querySelector("input").disabled = false ;
+                    parent.querySelector("input").readOnly = false ;
+                    break ;
+                case "date":
+                    picker.attach({
+                        element: li.querySelector("input"),
+                    }) ;
+                    break ;
+                case "time":
+                    tp.attach({
+                        element: li.querySelector("input"),
+                    }) ;
+                    break ;
+                case "length":
+                    lp.attach({
+                        element: li.querySelector("input"),
+                    }) ;
+                    break ;
+                case "datetime":
+                case "datetime-local":
+                    var i = li.querySelectorAll("input") ;
+                    picker.attach({
+                        element: i[0],
+                    }) ;
+                    tp.attach({
+                        element: i[1],
+                    }) ;
+                    break ;
+                case "textarea":
+                    li.querySelector("textarea").readOnly = false ;
+                    break ;
+                default:
+                    li.querySelector("input").readOnly = false ;
+                    break ;
+            }
+        }).bind(this)) ;
+        [...document.getElementsByClassName("editthecomment")].forEach( (e) => {
+            e.disabled = true ;
+        }) ;
     }
     
     loadDocData() {
@@ -560,6 +580,60 @@ class SettingData extends PatientData {
     }
 }
 
+class NewPatientData extends PatientData {
+    constructor( doc, struct ) {
+        super( doc, struct ) ;
+        this.clickEdit() ;
+    }
+    
+    savePatientData() {
+        this.loadDocData() ;
+        if ( this.doc.FirstName == "" ) {
+            alert("Need a First Name") ;
+        } else if ( this.doc.LastName == "" ) {
+            alert("Need a Last Name") ;
+        } else if ( this.doc.DOB == "" ) {
+            alert("Enter some Date Of Birth") ;
+        } else {
+            this.doc._id = makePatientId( this.doc ) ;
+            db.put( this.doc )
+            .then( (doc) => {
+                console.log(doc) ;
+                selectPatient() ;
+                showPatientPhoto() ;
+            }).catch( (err) => {
+                console.log(err) ;
+                alert(err) ;
+            }) ;
+        }
+    }
+}
+
+function addPatient() {
+    doc = {
+        FirstName: document.getElementById("newFirst").value,
+        LastName: document.getElementById("newLast").value,
+        DOB: document.getElementById("newDOB").value,
+    } ;
+    doc._id = makePatientId(doc) ;
+
+    db.put( doc )
+    .then( function( d ) {
+        selectPatient( doc._id ) ;
+        showPatientPhoto() ;
+    }).catch( function(e) {
+        console.log(e) ;
+        showPatientList() ;
+    });
+}
+
+function checkNew() {
+    document.getElementById("addPatient").disabled =
+        ( document.getElementById("newLast").value == "" ) || 
+        ( document.getElementById("newFirst").value == "" ) || 
+        ( document.getElementById("newDOB").value == "" ) ;
+} 
+
 class PreLocal {
     constructor ( user = "<not set yet>" ) {
         document.getElementById("userstatus").value = user ;
@@ -575,18 +649,37 @@ class Local extends PreLocal {
         userName = user ;
         setCookie( "userName", userName ) ;
         this.id = [" _local", user ].join("/" ) ;
-        this.doc = {} ;
-        this.read() ;
+        this.readIn = false;
+        // default 
+        this.doc = {
+            userName: user ,
+            remoteCouch: cloudantDb ,
+            _id: this.id,
+            
+        } ;
         console.log("Local for ",user, this.id, this.doc ) ;
     }
     
+    init() {
+        return this._read() ;
+    }
+
     setValue( key, val ) {
-        this.doc[key] = val ;
-        this.write() ;
+        console.log("SET VALUE",key,val);
+        this._read()
+        .then((function(doc) {
+                if ( this.doc[key] != val ) {
+                    this.doc[key] = val ;
+                    this._write() ;
+                }
+        }).bind(this)) ;
     }
     
     getValue( key ) {
-        return this.doc[key] ;
+        this._read()
+        .then((function(doc) {
+            return this.doc[key] ;
+        }).bind(this)) ;
     }
     
     delValue( key ) {
@@ -597,39 +690,41 @@ class Local extends PreLocal {
         Object.entries(doc).forEach(( function( k,v ) {
             this.doc[k] = v ;
         }).bind(this)) ;
-        this.write() ;
+        return this._write() ;
     }
         
     getDoc() {
         return this.doc ;
     }
 
-    read() {
+    _read() {
         console.log("localread",this.doc,this.id);
-        console.trace();
-        return db.get( this.id )
+        if ( this.readIn ) {
+            console.log("PROMISE");
+            return Promise.resolve(this.doc) ;
+        }
+        console.log("POST PROMISE");
+        return db.get( this.id, { include_docs: true, } )
         .then(( function(doc) {
             console.log("successful read",this.id, doc);
             this.doc = doc ;
-
+            this.readIn = true ;
         }).bind(this))
         .catch(( function(err) {
-            console.log("Not local record (yet)") ;
-            this.doc._id = this.id ;
-            this.doc.remoteCouch = cloudantDb ;
-            this.doc.userName = userName ;
-            this.write() ;
+            console.log("No local record (yet)") ;
+            return this._write() ;
         }).bind(this)) ;
     }
     
-    write() {
+    _write() {
         console.log("localwrite",this.doc);
-        console.trace();
-        
-        db.put(this.doc)
-        .catch( (err) => {
+        return db.put(this.doc)
+        .then(( function(response) {
+            this.doc._rev = response.rev ;
+        }).bind(this))
+        .catch(( (err) => {
             console.log(err) ;
-        });
+        }).bind(this));
     }
 }
    
@@ -1057,6 +1152,7 @@ function displayStateChange() {
     console.log("displayStateChange",displayState,LocalRec);
     console.trace();
     if ( LocalRec ) {
+        console.log("displayStateChange");
         LocalRec.setValue("displayState",displayState) ;
     }
 
@@ -1070,6 +1166,7 @@ function displayStateChange() {
                     UserNameInput() ;
                 }
             });
+            break ;
            
        case "MainMenu":
             break ;
@@ -1086,6 +1183,7 @@ function displayStateChange() {
             let objectPatientTable = new PatientTable( ["LastName", "FirstName", "DOB","Dx","Procedure" ] ) ;
             getPatients(true)
             .then( function(docs) {
+                console.log("PATIENT FILL");
                 objectPatientTable.fill(docs.rows) ;
                 if ( patientId ) {
                     selectPatient( patientId ) ;
@@ -1131,7 +1229,8 @@ function displayStateChange() {
             break ;
             
         case "PatientNew":
-            newPatient() ;
+            unselectPatient() ;
+            objectPatientData = new NewPatientData( { author: userName, }, structNewPatient ) ;
             break ;
             
         case "PatientPhoto":
@@ -1575,47 +1674,6 @@ function splitOperationId() {
     return null ;
 }
 
-function checkNew() {
-    document.getElementById("addPatient").disabled =
-        ( document.getElementById("newLast").value == "" ) || 
-        ( document.getElementById("newFirst").value == "" ) || 
-        ( document.getElementById("newDOB").value == "" ) ;
-} 
-
-function newPatient() {
-    unselectPatient() ;
-    picker.detach() ;
-    picker.attach({
-        target: "newDOB",
-    });
-    document.getElementById("newLast").value = "" ; 
-    document.getElementById("newFirst").value = "" ; 
-    document.getElementById("newDOB").value = "" ;
-    checkNew() ;
-}
-
-function addPatient() {
-    doc = {
-        FirstName: document.getElementById("newFirst").value,
-        LastName: document.getElementById("newLast").value,
-        DOB: document.getElementById("newDOB").value,
-    } ;
-    doc._id = makePatientId(doc) ;
-
-    db.put( doc )
-    .then( function( d ) {
-        selectPatient( doc._id ) ;
-        showPatientPhoto() ;
-    }).catch( function(e) {
-        console.log(e) ;
-        showPatientList() ;
-    });
-}
-
-function savePatient() {
-    objectPatientEdit.add() ;
-}
-  
 function deletePatient() {
     let indexdoc ;
     if ( patientId ) {        
@@ -2086,45 +2144,48 @@ function parseQuery() {
     // search field
     // No search, use cookies
     userName = getCookie( "userName" ) ;
-    if ( userName==null  || (userName.length === 0) ) {
+    if ( !userName ) {
         showUserName() ;
     } else {
         LocalRec = new Local( userName ) ;
+        LocalRec.init()
+        .then( (doc) => {
         
-        // first try the search field
-        let q = parseQuery() ;
-        if ( q && ( patientId in q ) ) {
-            selectPatient( q.patientId ) ;
-            showPatientPhoto() ;
-        } else {
-            switch ( displayState ) {
-                case "PatientList":
-                case "MainMenu":
-                case "PatientPhoto":
-                case "CommentList":
-                case "OperationList":
-                case "SettingMenu":
-                    displayStateChange() ;
-                    break;
-                case "OperationEdit":
-                    showOperationList() ;
-                    break ;
-                case "CommentNew":
-                case "CommentImage":
-                    showCommentList() ;
-                    break ;
-                case "UserName":
-                case "InvalidPatient":
-                    showPatientList() ;
-                    break ;
-                case "PatientNew":
-                case "PatientDemographics":
-                case "PatientMedical":
-                default:
-                    showPatientPhoto() ;
-                    break ;
+            // first try the search field
+            let q = parseQuery() ;
+            if ( q && ( patientId in q ) ) {
+                selectPatient( q.patientId ) ;
+                showPatientPhoto() ;
+            } else {
+                switch ( displayState ) {
+                    case "PatientList":
+                    case "MainMenu":
+                    case "PatientPhoto":
+                    case "CommentList":
+                    case "OperationList":
+                    case "SettingMenu":
+                        displayStateChange() ;
+                        break;
+                    case "OperationEdit":
+                        showOperationList() ;
+                        break ;
+                    case "CommentNew":
+                    case "CommentImage":
+                        showCommentList() ;
+                        break ;
+                    case "UserName":
+                    case "InvalidPatient":
+                        showPatientList() ;
+                        break ;
+                    case "PatientNew":
+                    case "PatientDemographics":
+                    case "PatientMedical":
+                    default:
+                        showPatientPhoto() ;
+                        break ;
+                }
             }
-        }
+        });
     }
         
     

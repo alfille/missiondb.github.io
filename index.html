@@ -34,23 +34,26 @@
                         <button type="button" class="divbutton" onclick="showOperationEdit()" id="editreviewoperation">Review/Edit Operation</button>
                         <button type="button" class="divbutton return" onclick="showPatientPhoto()">Return</button>
                     </div>
-                    <!-- top: PatientNew -->
-                    <div class="PatientNew pageOverlay">
-                        <button type="button" class="divbutton" id="addPatient" onclick="addPatient()">Create</button>
-                        <button type="button" class="divbutton" onclick="showPatientList()">Cancel</button>
-                    </div>
                     <!-- top: PatientPhoto -->
                     <div class="PatientPhoto pageOverlay">
                         <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
                     </div>
+                    <!-- top: PatientNew -->
+                    <div class="PatientData PatientNew pageOverlay">
+                        <button type="button" class="divbutton editthecomment" onclick="objectPatientData.clickEdit()">Edit</button>
+                        <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Add Patient</button>
+                        <button type="button" class="divbutton discarddata return" onclick="showPatientList()">Cancel</button>
+                    </div>
                     <!-- top: PatientDemographics PatientMedical -->
                     <div class="PatientData PatientDemographics PatientMedical pageOverlay">
+                        <button type="button" class="divbutton editthecomment" onclick="objectPatientData.clickEdit()">Edit</button>
                         <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
                         <button type="button" class="divbutton discarddata return" onclick="displayStateChange()">Discard Changes</button>
                         <button type="button" class="divbutton returndata return" onclick="showPatientPhoto()">Return</button>
                     </div>
                     <!-- top: OperationEdit -->
                     <div class="PatientData OperationEdit pageOverlay">
+                        <button type="button" class="divbutton editthecomment" onclick="objectPatientData.clickEdit()">Edit</button>
                         <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
                         <button type="button" class="divbutton discarddata return" onclick="displayStateChange()">Discard Changes</button>
                         <button type="button" class="divbutton returndata return" onclick="showOperationList()">Return</button>
@@ -74,11 +77,11 @@
             <!-- body: UserName -->
             <div class="UserName pageOverlay">
                 <div id="UserNameContent" >
-					<div>
-						<hr>
-						<label for="UserNameText">User name:</label><input type="text" required="true" id="UserNameText" title="Enter your User Name">
-						<button type="button" class="divbutton" onclick="UserNameInput()">Enter</button>
-						<hr>
+                    <div>
+                        <hr>
+                        <label for="UserNameText">User name:</label><input type="text" required="true" id="UserNameText" title="Enter your User Name">
+                        <button type="button" class="divbutton" onclick="UserNameInput()">Enter</button>
+                        <hr>
                     </div>
                 </div>
             </div>
@@ -102,8 +105,8 @@
                     <table id="OperationsList"></table>
                 </div>
             </div>
-            <!-- body: PatientDemographics PatientMedical OperationEdit SettingMenu -->
-            <div class="PatientData PatientDemographics PatientMedical OperationEdit SettingMenu pageOverlay">
+            <!-- body: PatientNew PatientDemographics PatientMedical OperationEdit SettingMenu -->
+            <div class="PatientData PatientNew PatientDemographics PatientMedical OperationEdit SettingMenu pageOverlay">
                 <div id="PatientDataContent" ></div>
             </div>
             <!-- body: PatientPhoto -->
@@ -194,16 +197,15 @@
             </div>
             <ul>
                 <li class="litemplate">
-                    <button class="editthecomment libutton" type="button" onClick="objectPatientData.Click(this)">Edit</button>
                     <label> </label>
                 </li>
             </ul>
         </div>
         <!-- Footer -->
         <footer class="work_screen">
-			<div id="footerflex">
-				<div><label for="userstatus">User:</label><input type="text" readonly id="userstatus"></div>
-				<div><label for="syncstatus">Sync status:</label><input type="text" readonly id="syncstatus"></div>
+            <div id="footerflex">
+                <div><label for="userstatus">User:</label><input type="text" readonly id="userstatus"></div>
+                <div><label for="syncstatus">Sync status:</label><input type="text" readonly id="syncstatus"></div>
             </div>
         </footer>
         <!-- Card print -->
