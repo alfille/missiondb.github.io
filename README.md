@@ -69,12 +69,25 @@ So there is a light relational database on top of the data
 # Schema as implemented
 * Patient record
 
-|key|name|comment|
-|:-|:-|:-|
-|_id|Patient Id|p;0;Last;First;DOB|
-|LastName|Last name||
-|FirstName|First Name||
-|DOB|Date of Birth||
+|key|name|type|comment|
+|:-|:-|:-|:-|
+|_id|Patient Id|automatic|p;0;Last;First;DOB "p",version,...|
+|LastName|Last name|text|required|
+|FirstName|First Name|text|required|
+|DOB|Date of Birth|YYYY-MM-DD|required|
+|email|e-mail address|email format|in Demographics|
+|phone|phone number|phone format|in Demographics|
+|Address|address |free text|in Demographics|
+|Contact|contact info|free text|in Demographics|
+|Dx|Diagnosis| free text|in Medical|
+|Complaint|Patient presenting complaint|free text|in Medical|
+|Sex|Sex| multiple choice|in Medical|
+|Weight|Patient weight (kg)|number|in Medical|
+|Height|Patient height (cm)|number|in Medical|
+|ASA|ASA class|multiple choice|in Medical|
+|Allergies|Allergies|free text|in Medical|
+|Meds|Medications|free text|in Medical|
+
 * Comment Record
 
 
