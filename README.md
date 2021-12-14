@@ -68,6 +68,7 @@ So there is a light relational database on top of the data
 
 # Schema as implemented
 * Patient record
+
 |key|name|comment|
 |:-|:-|:-|
 |_id|Patient Id|p;0;Last;First;DOB|
