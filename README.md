@@ -88,6 +88,8 @@ So there is a light relational database on top of the data
 |ASA|ASA class|multiple choice|in Medical|
 |Allergies|Allergies|free text|in Medical|
 |Meds|Medications|free text|in Medical|
+|_attachments:image:data|Image|automatic|binary image data|
+|_attachments:image:content_type|Image type|automatic|e.g. png||
 
 * Operation record
 
