@@ -72,6 +72,7 @@ So there is a light relational database on top of the data
 |key|name|type|comment|
 |:-|:-|:-|:-|
 |_id|Patient Id|automatic|p;0;Last;First;DOB "p",version,...|
+|author|user name|automatic|username of record creator|
 |LastName|Last name|text|required|
 |FirstName|First Name|text|required|
 |DOB|Date of Birth|YYYY-MM-DD|required|
@@ -87,6 +88,21 @@ So there is a light relational database on top of the data
 |ASA|ASA class|multiple choice|in Medical|
 |Allergies|Allergies|free text|in Medical|
 |Meds|Medications|free text|in Medical|
+
+* Operation record
+
+|key|name|type|comment|
+|:-|:-|:-|:-|
+|_id|Operation Id|automatic|o;0;Last;First;DOB;timestamp patient + creation timestamp |
+|author|user name|automatic|username of record creator|
+|patient_id|Patient Id|automatic|link back to patient|
+|Procedure|Type of operation|text||
+|Surgeon|Surgeon|text||
+|Equipment|Needed equipment|free text||
+|Status|Scheduling status|multiple choice||
+|Date-Time|Time of operation|date time|if known|
+|Duration|Expected length (hours)|number|without turnover|
+|Laterality|Left / Right|multiple choice||
 
 * Comment Record
 
