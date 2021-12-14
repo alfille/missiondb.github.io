@@ -95,7 +95,7 @@ So there is a light relational database on top of the data
 
 |key|name|type|comment|
 |:-|:-|:-|:-|
-|_id|Operation Id|automatic|o;0;Last;First;DOB;timestamp patient_id + creation timestamp |
+|_id|Operation Id|automatic|o;0;Last;First;DOB;timestamp modified patient_id + creation timestamp |
 |author|user name|automatic|username of record creator|
 |patient_id|Patient Id|automatic|link back to patient|
 |Procedure|Type of operation|text||
@@ -110,12 +110,24 @@ So there is a light relational database on top of the data
 
 |key|name|type|comment|
 |:-|:-|:-|:-|
-|_id|Operation Id|automatic|c;0;Last;First;DOB;timestamp patient + creation timestamp |
+|_id|Operation Id|automatic|c;0;Last;First;DOB;timestamp modified patient_id + creation timestamp |
 |author|user name|automatic|username of record creator|
 |patient_id|Patient Id|automatic|link back to patient|
 |text|Comment text|free text||
 |_attachments:image:data|Image|automatic|binary image data|
 |_attachments:image:content_type|Image type|automatic|e.g. png||
+
+* Local record (does not replicate to other places)
+
+|key|name|type|comment|
+|:-|:-|:-|:-|
+|_id|_local/username|automatic|in MainMenu -> Settings |
+|userName|user name|text|your user name|
+|remoteCouch|Remote database|list +|link to remote replication databases|
+|displayState|internal state|automatic|resume place in program|
+|patientId|Patient Id|automatic|Last patient selected|
+|commentId|Comment Id|automatic|Last comment selected|
+|operationId|Operation Id|automatic|Last operation selected|
 
 # Installation
 * Instructions from [pouchdb](https://pouchdb.com/guides/setup-couchdb.html):
