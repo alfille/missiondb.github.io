@@ -32,7 +32,7 @@ A spreadsheet was not adequate -- poor phone interface, poor support for images,
 * Consider IBMs [Cloudant](https://www.ibm.com/cloud/cloudant) for cloud storage with a free account for small projects
 * All components are open source, as is this project
 
-## Schema
+## Schema (preliminary)
 * Mission
   * Location/Name
   * Year
@@ -65,6 +65,17 @@ A spreadsheet was not adequate -- poor phone interface, poor support for images,
   * pictures
   
 So there is a light relational database on top of the data
+
+# Schema as implemented
+* Patient record
+|key|name|comment|
+|:-|:-|:-|
+|_id|Patient Id|p;0;Last;First;DOB|
+|LastName|Last name||
+|FirstName|First Name||
+|DOB|Date of Birth||
+* Comment Record
+
 
 # Installation
 * Instructions from [pouchdb](https://pouchdb.com/guides/setup-couchdb.html):

@@ -9,6 +9,7 @@ var patientId ;
 var commentId ;
 var operationId ;
 var remoteCouch ;
+var NoPhoto = "style/NoPhoto.png"
   
 const cannonicalDBname = 'mdb' ;
 var db = new PouchDB( cannonicalDBname ) ;
@@ -196,10 +197,10 @@ class PatientData {
             
             let l = li.querySelector("label") ;
             if ( "alias" in item ) {
-				l.appendChild( document.createTextNode(item.alias + ": ") );
-			} else {
-				l.appendChild( document.createTextNode(item.name + ": ") );
-			}
+                l.appendChild( document.createTextNode(item.alias + ": ") );
+            } else {
+                l.appendChild( document.createTextNode(item.name + ": ") );
+            }
             l.title = item.hint ;
 
             let i = null;
@@ -597,29 +598,29 @@ class SettingData extends PatientData {
         this.loadDocData() ;
         userName = this.doc["User Name"] ;
         if ( userName != this.doc.userName ) {
-			// username changed
-			LocalRec = new Local( this.doc.userName ) ;
-			LocalRec.init()
-			.then(( function() {
-				return LocalRec.setDoc( this.doc ) ;
-			}).bind(this))
-			.then( () => {
-				showMainMenu() ;
-				window.location.reload(false) ;
-			})
-			.catch( (err) => {
-				console.log(err) ;
-			}) ;
-		} else {
-			LocalRec.setDoc( this.doc )
-			.then( () => {
-				showMainMenu() ;
-				window.location.reload(false) ;
-			})
-			.catch( (err) => {
-				console.log(err) ;
-			}) ;
-		}
+            // username changed
+            LocalRec = new Local( this.doc.userName ) ;
+            LocalRec.init()
+            .then(( function() {
+                return LocalRec.setDoc( this.doc ) ;
+            }).bind(this))
+            .then( () => {
+                showMainMenu() ;
+                window.location.reload(false) ;
+            })
+            .catch( (err) => {
+                console.log(err) ;
+            }) ;
+        } else {
+            LocalRec.setDoc( this.doc )
+            .then( () => {
+                showMainMenu() ;
+                window.location.reload(false) ;
+            })
+            .catch( (err) => {
+                console.log(err) ;
+            }) ;
+        }
     }
 }
 
@@ -722,7 +723,7 @@ class Local extends PreLocal {
             return Promise.resolve(this.doc) ;
         }
         console.log("POST PROMISE");
-        return db.get( this.id, { include_docs: true, } )
+        return db.get( this.id )
         .then(( function(doc) {
             console.log("successful read",this.id, doc);
             this.doc = doc ;
@@ -961,7 +962,7 @@ class Pbar extends Tbar {
 
     removeImage() {
         this.working.upload = "remove" ;
-        this.working.img.src = "/style/NoPhoto.png" ;
+        this.working.img.src = NoPhoto ;
     }
 
     saveedit() {
@@ -1734,7 +1735,7 @@ function PatientPhoto( doc ) {
         p.src = getImageFromDoc( doc ) ;
     }
     catch( err ) {
-        p.src = "/style/NoPhoto.png" ;
+        p.src = NoPhoto ;
     }
 }
 
@@ -2067,7 +2068,7 @@ function printCard() {
     if ( patientId == null ) {
         return showInvalidPatient() ;
     }
-    db.get( patientId )
+    db.get( patientId , { attachments: true, binary: true, } )
     .then( function(doc) {
         show_screen( false ) ;
         var card = document.getElementById("printCard") ;
