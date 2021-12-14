@@ -95,7 +95,7 @@ So there is a light relational database on top of the data
 
 |key|name|type|comment|
 |:-|:-|:-|:-|
-|_id|Operation Id|automatic|o;0;Last;First;DOB;timestamp patient + creation timestamp |
+|_id|Operation Id|automatic|o;0;Last;First;DOB;timestamp patient_id + creation timestamp |
 |author|user name|automatic|username of record creator|
 |patient_id|Patient Id|automatic|link back to patient|
 |Procedure|Type of operation|text||
@@ -108,6 +108,14 @@ So there is a light relational database on top of the data
 
 * Comment Record
 
+|key|name|type|comment|
+|:-|:-|:-|:-|
+|_id|Operation Id|automatic|c;0;Last;First;DOB;timestamp patient + creation timestamp |
+|author|user name|automatic|username of record creator|
+|patient_id|Patient Id|automatic|link back to patient|
+|text|Comment text|free text||
+|_attachments:image:data|Image|automatic|binary image data|
+|_attachments:image:content_type|Image type|automatic|e.g. png||
 
 # Installation
 * Instructions from [pouchdb](https://pouchdb.com/guides/setup-couchdb.html):
