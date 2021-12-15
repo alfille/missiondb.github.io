@@ -1212,6 +1212,7 @@ function displayStateChange() {
             let objectOperationTable = new OperationTable( [ "Procedure", "Surgeon", "Status", "Schedule", "Duration", "Equipment" ]  ) ;
             getOperations(true)
             .then( function(docs) {
+                console.log("ops",docs);
                 objectOperationTable.fill(docs.rows) ;
             }).catch( function(err) {
                     console.log(err);
@@ -1945,6 +1946,7 @@ class CommentList {
 }
 
 function getImageFromDoc( doc ) {
+    console.log("getImageFrmDoc",doc);
     if ( !("_attachments" in doc) ) {
         throw "No attachments" ;
     }
@@ -2068,16 +2070,57 @@ function printCard() {
     if ( patientId == null ) {
         return showInvalidPatient() ;
     }
-    db.get( patientId , { attachments: true, binary: true, } )
+    var card = document.getElementById("printCard") ;
+    var t = card.getElementsByTagName("table") ;
+    db.get( patientId , { 
+        include_docs: true ,
+        attachments: true, 
+        binary: true, } 
+        )
     .then( function(doc) {
         show_screen( false ) ;
-        var card = document.getElementById("printCard") ;
+        console.log( "print",doc) ;
+        var photo = document.getElementById("photoCard") ;
         var link = window.location.href + "?patientId=" + encodeURIComponent(patientId) ;
         var qr = new QR(
             card.querySelector(".qrCard"),
             link,
             200,200,
             4) ;
+        try {
+            photo.src = getImageFromDoc( doc ) ;
+            console.log("Image gotten".doc)
+        } 
+        catch(err) {
+            photo.src = "style/NoPhoto.png" ;
+            console.log("No image",doc) ;
+        }
+        console.log(photo) ;
+        t[0].rows[0].cells[1].innerText = doc.LastName+"' "+doc.FirstName ;
+        t[0].rows[1].cells[1].innerText = doc.Complaint ;
+        t[0].rows[2].cells[1].innerText = "" ;
+        t[0].rows[3].cells[1].innerText = "" ;
+        t[0].rows[4].cells[1].innerText = "" ;
+        t[0].rows[5].cells[1].innerText = doc.ASA ;
+
+        t[1].rows[0].cells[1].innerText = doc.Age+"" ;
+        t[1].rows[1].cells[1].innerText = doc.Sex ;
+        t[1].rows[2].cells[1].innerText = doc.Weight+" kg" ;
+        t[1].rows[3].cells[1].innerText = doc.Allergies ;
+        t[1].rows[4].cells[1].innerText = doc.Meds ;
+        t[1].rows[5].cells[1].innerText = "" ;
+        return getOperations(true) ;
+        })
+    .then( function(docs) {
+        var oleng = docs.rows.length ;
+        console.log("rows",oleng);
+        if ( oleng > 0 ) {
+            console.log("ops",docs);
+            t[0].rows[2].cells[1].innerText = docs.rows[oleng-1].doc.Procedure ;
+            t[0].rows[3].cells[1].innerText = docs.rows[oleng-1].doc.Duration + " hr" ;
+            t[0].rows[4].cells[1].innerText = docs.rows[oleng-1].doc.Surgeon ;
+            t[1].rows[5].cells[1].innerText = docs.rows[oleng-1].doc.Equipment ;
+        }
         window.print() ;
         show_screen( true ) ;
         displayStateChange() ;
