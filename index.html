@@ -62,7 +62,7 @@
                     </div>
                     <!-- top: CommentList -->
                     <div class="CommentList pageOverlay">
-                        <button class="createthecomment libutton divbutton" type="button" onclick="showCommentNew()">New Comment</button>
+                        <button class="createthecomment libutton divbutton" type="button" onclick="showCommentNew()">New Note</button>
                         <button class="createtheimage libutton divbutton" type="button" onclick="quickImage()" title="Quick picture">&#128247;</button>
                         <button class="returnfromcomment libutton divbutton return" type="button" onclick="showPatientPhoto()">Return</button>
                     </div>
@@ -122,7 +122,7 @@
                         <button type="button" class="divbutton" onclick="showPatientMedical()">Medical</button>
                     </div>
                     <div class="PatientProcButtons" id="ProcList">
-                        <button type="button" class="divbutton" onclick="showCommentList()">Comments</button>
+                        <button type="button" class="divbutton" onclick="showCommentList()">Notes</button>
                         <button type="button" class="divbutton" onclick="showOperationList()">Operations</button>
                     </div>
                     <div class="PatientProcButtons">
@@ -162,7 +162,7 @@
             <div class="CommentImage2 pageOverlay">
                 <div id="CommentImage2Content" ></div>
                 <img id="imageCheck" class="entryfield_image">
-                <label for="annotation">Image comments (optional)</label>
+                <label for="annotation">Image notes (optional)</label>
                 <div id="annotation" class="editable"></div>
                 <button type="button" class="divbutton" onclick="saveImage()">Save</button>
                 <button type="button" class="divbutton" onclick="showCommentList()">Cancel</button>
@@ -175,7 +175,7 @@
                 <button type="button" onclick="editBar.leave()"><span><B>Cancel</B></span></button>
                 <button type="button" onclick="editBar.getImage()" title="Get image"><span><B>&#128247;</B></span></button>            
                 <button type="button" onclick="editBar.removeImage()" class="tbarxpic" title="Remove image"><span><B>&#128473;&#128247;</B></span></button>
-                <button type="button" onclick="editBar.deleteedit()" class="tbardel delete" title="Delete comment"><span><B>Delete</B></span></button>
+                <button type="button" onclick="editBar.deleteedit()" class="tbardel delete" title="Delete note"><span><B>Delete</B></span></button>
                 <input type="file" accept="image/*" class="imageBar" onchange="editBar.handleImage()" capture="environment">
             </div>
             <div class="photoToolbar">

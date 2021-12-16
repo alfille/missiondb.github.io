@@ -1698,9 +1698,9 @@ function deletePatient() {
         }).then( function(docs) {
             let c = "Delete patient \n   " + indexdoc.FirstName + " " + indexdoc.LastName + "\n    " ;
             if (docs.rows.length == 0 ) {
-                c += "(no comment records on this patient) \n   " ;
+                c += "(no associated notes on this patient) \n   " ;
             } else {
-                c += "also delete "+docs.rows.length+" comment records\n   " ;
+                c += "also delete "+docs.rows.length+" associated notes\n   " ;
             }
             c += "Are you sure?" ;
             if ( confirm(c) ) {
@@ -1750,7 +1750,7 @@ function deleteComment() {
         db.get( commentId )
         .then( function(doc) {
             let spl = splitCommentId() ;
-            if ( confirm("Delete comment on patient" + spl.first + " " + spl.last + " from " +  + spl.date + ".\n -- Are you sure?") ) {
+            if ( confirm("Delete note on patient" + spl.first + " " + spl.last + " from " +  + spl.date + ".\n -- Are you sure?") ) {
                 return doc ;
             } else {
                 throw "No delete" ;
