@@ -1,12 +1,12 @@
 var objectPatientData  ;
-var objectCommentList ;
+var objectNoteList ;
 
 var LocalRec ;
 
 var displayState ;
 var userName ;
 var patientId ;
-var commentId ;
+var noteId ;
 var operationId ;
 var remoteCouch ;
 var NoPhoto = "style/NoPhoto.png"
@@ -22,7 +22,7 @@ const RecordFormat = {
     type: {
         patient: "p" ,
         operation: "o" ,
-        comment: "c" ,
+        note: "c" ,
         staff: "s" ,
         list: "l" ,
         } ,
@@ -367,7 +367,7 @@ class PatientData {
             
             this.ul.appendChild( li ) ;
         }).bind(this));
-        [...document.getElementsByClassName("editthecomment")].forEach( (e) => {
+        [...document.getElementsByClassName("edit_note")].forEach( (e) => {
             e.disabled = false ;
         }) ;
     }
@@ -515,7 +515,7 @@ class PatientData {
                     break ;
             }
         }).bind(this)) ;
-        [...document.getElementsByClassName("editthecomment")].forEach( (e) => {
+        [...document.getElementsByClassName("edit_note")].forEach( (e) => {
             e.disabled = true ;
         }) ;
     }
@@ -755,7 +755,7 @@ function UserNameInput() {
         displayState = LocalRec.getValue( "displayState" ) ;
         userName     = LocalRec.getValue( "userName" ) ;
         patientId    = LocalRec.getValue( "patientId" ) ;
-        commentId    = LocalRec.getValue( "commentId" ) ;
+        noteId    = LocalRec.getValue( "noteId" ) ;
         operationId  = LocalRec.getValue( "operationId" ) ;
         remoteCouch  = LocalRec.getValue( "remoteCouch" ) ;
         
@@ -851,18 +851,18 @@ class Tbar {
 }
 
 class Cbar extends Tbar {
-    // for comments
+    // for notes
     startedit( existingdiv ) {
         if ( this.active() ) {
             return false ;
         }
         this.enter()
-        if ( commentId ) {
-            selectComment(existingdiv.getAttribute("data-id")) ;
+        if ( noteId ) {
+            selectNote(existingdiv.getAttribute("data-id")) ;
             this.buttonsdisabled( true ) ;
-            this.deletefunc = deleteComment ;
+            this.deletefunc = deleteNote ;
         } else {
-            unselectComment() ;
+            unselectNote() ;
             this.deletefunc = null ;
         }
         this.fieldset( existingdiv, ".editToolbar" ) ;
@@ -892,9 +892,9 @@ class Cbar extends Tbar {
 
     saveedit() {
         if ( this.active() ) {
-            if ( commentId ) {
-                // existing comment
-                db.get(commentId)
+            if ( noteId ) {
+                // existing note
+                db.get(noteId)
                 .then(( function(doc) {
                     doc.text = this.working.textDiv.innerText ;
                     doc.patient_id = patientId ;
@@ -910,9 +910,9 @@ class Cbar extends Tbar {
                     this.leave() ;
                 }).bind(this)) ;
             } else {
-                // new comment
+                // new note
                 let doc = {
-                    _id: makeCommentId(),
+                    _id: makeNoteId(),
                     author: userName,
                     text: this.working.textDiv.innerText,
                     patient_id: patientId,
@@ -930,7 +930,7 @@ class Cbar extends Tbar {
     }
 
     leave() {
-        super.leave(showCommentList) ;
+        super.leave(showNoteList) ;
     }
 }
     
@@ -968,7 +968,7 @@ class Pbar extends Tbar {
     saveedit() {
         if ( this.active() ) {
             if ( patientId ) {
-                // existing commentLocalRec
+                // existing LocalRec
                 db.get(patientId)
                 .then(( function(doc) {
                     if ( this.working.upload == null ) {
@@ -1044,13 +1044,13 @@ function showPatientPhoto() {
     displayStateChange() ;
 }
 
-function showCommentList() {
-    displayState = "CommentList" ;
+function showNoteList() {
+    displayState = "NoteList" ;
     displayStateChange() ;
 }
 
-function showCommentNew() {
-    displayState = "CommentNew" ;
+function showNoteNew() {
+    displayState = "NoteNew" ;
     displayStateChange() ;
 }
 
@@ -1065,15 +1065,15 @@ function showOperationEdit() {
     displayStateChange() ;
 }
 
-function showCommentImage() {
-    displayState = "CommentImage" ;
+function shoeNoteImage() {
+    displayState = "NoteImage" ;
     displayStateChange() ;
 }
 
 function selectPatient( pid ) {
     if ( patientId != pid ) {
-        // change patient -- comments dont apply
-        unselectComment() ;
+        // change patient -- notes dont apply
+        unselectNote() ;
     }
         
     patientId = pid ;
@@ -1103,7 +1103,7 @@ function selectPatient( pid ) {
 
 function selectOperation( oid ) {
     if ( operationId != oid ) {
-        // change patient -- comments dont apply
+        // change patient -- notes dont apply
         unselectOperation() ;
     }
         
@@ -1133,7 +1133,7 @@ function selectOperation( oid ) {
 function unselectPatient() {
     patientId = null ;
     LocalRec.delValue( "patientId" ) ;
-    unselectComment() ;
+    unselectNote() ;
     unselectOperation() ;
     if ( displayState == "PatientList" ) {
         let pt = document.getElementById("PatientTable") ;
@@ -1175,7 +1175,7 @@ function displayStateChange() {
     }
 
     objectPatientData = null ;
-    objectCommentList = null ;
+    objectNoteList = null ;
 
     switch( displayState ) {
         case "UserName":
@@ -1299,11 +1299,11 @@ function displayStateChange() {
             unselectPatient() ;
             break ;
 
-        case "CommentList":            
+        case "NoteList":            
             if ( patientId ) {
                 db.get( patientId )
                 .then( function(doc) {
-                    objectCommentList = new CommentList( CommentListContent ) ;
+                    objectNoteList = new NoteList( NoteListContent ) ;
                 }).catch( function(err) {
                     console.log(err) ;
                     showInvalidPatient() ;
@@ -1313,19 +1313,19 @@ function displayStateChange() {
             }
             break ;
             
-         case "CommentNew":
+         case "NoteNew":
             if ( patientId ) {
-                // New comment only
-                unselectComment() ;
-                CommentNew() ;
+                // New note only
+                unselectNote() ;
+                NoteNew() ;
             } else {
                 showPatientList() ;
             }
             break ;
             
-       case "CommentImage":
+       case "NoteImage":
             if ( patientId ) {
-                CommentImage() ;
+                NoteImage() ;
             } else {
                 showPatientList() ;
             }
@@ -1602,7 +1602,7 @@ function splitPatientId( pid = patientId ) {
     return null ;
 }
 
-function makeCommentId(position=null) {
+function makeNoteId(position=null) {
     let d ;
     switch (position) {
         case "first":
@@ -1618,7 +1618,7 @@ function makeCommentId(position=null) {
     let spl = splitPatientId() ;
     
     return [ 
-        RecordFormat.type.comment,
+        RecordFormat.type.note,
         RecordFormat.version,
         spl.last,
         doc.first,
@@ -1652,9 +1652,9 @@ function makeOperationId(position=null) {
         ].join(";") ;
 }
 
-function splitCommentId() {
-    if ( commentId ) {
-        var spl = commentId.split(";") ;
+function splitNoteId() {
+    if ( noteId ) {
+        var spl = noteId.split(";") ;
         if ( spl.length !== 6 ) {
             return null ;
         }
@@ -1694,7 +1694,7 @@ function deletePatient() {
         db.get(patientId)
         .then( function(doc) {
             indexdoc = doc ;
-            return getComments(false) ;
+            return getNotes(false) ;
         }).then( function(docs) {
             let c = "Delete patient \n   " + indexdoc.FirstName + " " + indexdoc.LastName + "\n    " ;
             if (docs.rows.length == 0 ) {
@@ -1741,15 +1741,15 @@ function PatientPhoto( doc ) {
 }
 
 function newImage() {
-    unselectComment() ;
-    showCommentImage() ;  
+    unselectNote() ;
+    shoeNoteImage() ;  
 }
 
-function deleteComment() {
-    if ( commentId ) {
-        db.get( commentId )
+function deleteNote() {
+    if ( noteId ) {
+        db.get( noteId )
         .then( function(doc) {
-            let spl = splitCommentId() ;
+            let spl = splitNoteId() ;
             if ( confirm("Delete note on patient" + spl.first + " " + spl.last + " from " +  + spl.date + ".\n -- Are you sure?") ) {
                 return doc ;
             } else {
@@ -1758,25 +1758,25 @@ function deleteComment() {
         }).then( function(doc) { 
             return db.remove(doc) ;
         }).then( function() {
-            unselectComment() ;
+            unselectNote() ;
         }).catch( function(err) {
             console.log(err) ;
         }).finally( function () {
-            showCommentList() ;
+            showNoteList() ;
         }) ;
     }
     return true ;
 }    
     
-function selectComment( cid ) {
-    commentId = cid ;
-    LocalRec.setValue( "commentId", cid ) ;
-    if ( displayState == "CommentList" ) {
+function selectNote( cid ) {
+    noteId = cid ;
+    LocalRec.setValue( "noteId", cid ) ;
+    if ( displayState == "NoteList" ) {
         // highlight the list row
-        let li = document.getElementById("CommentList").getElementsByTagName("LI");
+        let li = document.getElementById("NoteList").getElementsByTagName("LI");
         if ( li && (li.length > 0) ) {
             for ( let l of li ) {
-                if ( l.getAttribute("data-id") == commentId ) {
+                if ( l.getAttribute("data-id") == noteId ) {
                     l.classList.add('choice') ;
                 } else {
                     l.classList.remove('choice') ;
@@ -1786,11 +1786,11 @@ function selectComment( cid ) {
     }
 }
 
-function unselectComment() {
-    commentId = null ;
-    LocalRec.delValue( "commentId" ) ;
-    if ( displayState == "CommentList" ) {
-        let li = document.getElementById("CommentList").li ;
+function unselectNote() {
+    noteId = null ;
+    LocalRec.delValue( "noteId" ) ;
+    if ( displayState == "NoteList" ) {
+        let li = document.getElementById("NoteList").li ;
         if ( li && (li.length > 0) ) {
             for ( let l of li ) {
                 l.classList.remove('choice') ;
@@ -1799,7 +1799,7 @@ function unselectComment() {
     }
 }
 
-function commentTitle( doc ) {
+function noteTitle( doc ) {
     if ( doc ) {
         let d = doc ;
         if ( "doc" in doc ) {
@@ -1807,7 +1807,7 @@ function commentTitle( doc ) {
         }
         return d._id.split(';').pop()+"  by <b>"+(d.author||"anonymous")+"</b>" ;
     }
-    return "New comment" ;
+    return "New note" ;
 }
 
 function getPatients(attachments) {
@@ -1838,10 +1838,10 @@ function getOperations(attachments) {
     return db.allDocs(doc) ;
 }
 
-function getComments(attachments) {
+function getNotes(attachments) {
     doc = {
-        startkey: makeCommentId("first"),
-        endkey: makeCommentId("last"),
+        startkey: makeNoteId("first"),
+        endkey: makeNoteId("last"),
     }
     if (attachments) {
         doc.include_docs = true ;
@@ -1851,7 +1851,7 @@ function getComments(attachments) {
     return db.allDocs(doc) ;
 }
 
-class CommentList {
+class NoteList {
     constructor( parent ) {
         if ( parent == null ) {
             parent = document.body ;
@@ -1862,17 +1862,17 @@ class CommentList {
         }
 
         this.ul = document.createElement('ul') ;
-        this.ul.setAttribute( "id", "CommentList" ) ;
+        this.ul.setAttribute( "id", "NoteList" ) ;
         parent.appendChild(this.ul) ;
 
-        // get comments
-        getComments(true)
+        // get notes
+        getNotes(true)
         .then(( function(docs) {
-            docs.rows.forEach(( function(comment, i) {
+            docs.rows.forEach(( function(note, i) {
 
-                let li1 = this.liLabel(comment) ;
+                let li1 = this.liLabel(note) ;
                 this.ul.appendChild( li1 ) ;
-                let li2 = this.liComment(comment,li1) ;
+                let li2 = this.liNote(note,li1) ;
                 this.ul.appendChild( li2 ) ;
 
             }).bind(this)) ;
@@ -1884,32 +1884,32 @@ class CommentList {
         }); 
     }
 
-    liLabel( comment ) {
+    liLabel( note ) {
         let li = document.createElement("li") ;
-        li.setAttribute("data-id", comment.id ) ;
+        li.setAttribute("data-id", note.id ) ;
 
-        li.appendChild( document.getElementById("templates").getElementsByClassName("editthecomment")[0].cloneNode(true) );
+        li.appendChild( document.getElementById("templates").getElementsByClassName("edit_note")[0].cloneNode(true) );
 
         let cdiv = document.createElement("div");
-        cdiv.innerHTML = commentTitle(comment) ;
+        cdiv.innerHTML = noteTitle(note) ;
         cdiv.classList.add("inly") ;
         li.appendChild(cdiv) ;
         li.addEventListener( 'click', (e) => {
-            selectComment( comment.id ) ;
+            selectNote( note.id ) ;
         }) ;
 
         return li ;
     }
 
-    liComment( comment, label ) {
+    liNote( note, label ) {
         let li = document.createElement("li") ;
-        li.setAttribute("data-id", comment.id ) ;
-        if ( commentId == comment.id ) {
+        li.setAttribute("data-id", note.id ) ;
+        if ( noteId == note.id ) {
             li.classList.add("choice") ;
         }
-        if ( "doc" in comment ) {
+        if ( "doc" in note ) {
             try {
-                let imagedata = getImageFromDoc( comment.doc ) ;
+                let imagedata = getImageFromDoc( note.doc ) ;
                 let img = document.createElement("img") ;
                 img.classList.add("entryfield_image") ;
                 img.src = imagedata ;
@@ -1920,7 +1920,7 @@ class CommentList {
             }
 
             let textdiv = document.createElement("div") ;
-            textdiv.innerText = ("text" in comment.doc) ? comment.doc.text : "" ;
+            textdiv.innerText = ("text" in note.doc) ? note.doc.text : "" ;
             li.addEventListener( 'dblclick', (e) => {
                 editBar.startedit( li ) ;
             }) ;
@@ -1929,11 +1929,11 @@ class CommentList {
         }    
         
         li.addEventListener( 'click', (e) => {
-            selectComment( comment.id ) ;
+            selectNote( note.id ) ;
         }) ;
-        label.getElementsByClassName("editthecomment")[0].onclick =
+        label.getElementsByClassName("edit_note")[0].onclick =
             (e) => {
-            selectComment( comment.id ) ;
+            selectNote( note.id ) ;
             editBar.startedit( li ) ;
         } ;
         label.addEventListener( 'dblclick', (e) => {
@@ -1974,14 +1974,14 @@ function putImageInDoc( doc, itype, idata ) {
     }
 }
 
-function CommentNew() {
-    document.getElementById("CommentNewLabel").innerHTML = commentTitle(null)  ;
-    let d = document.getElementById("CommentNewText") ;
+function NoteNew() {
+    document.getElementById("NoteNewLabel").innerHTML = noteTitle(null)  ;
+    let d = document.getElementById("NoteNewText") ;
     d.innerHTML = "" ;
     editBar.startedit( d ) ;
 }
 
-function CommentImage() {
+function NoteImage() {
     let inp = document.getElementById("imageInput") ;
     if ( isAndroid() ) {
         inp.removeAttribute("capture") ;
@@ -1999,7 +1999,7 @@ function quickImage2() {
     const image = files.files[0] ;
 
     let doc = {
-        _id: makeCommentId(),
+        _id: makeNoteId(),
         text: "",
         author: userName,
     } ;
@@ -2007,10 +2007,10 @@ function quickImage2() {
 
     db.put( doc )
     .then( function(doc) {
-        showCommentList() ;
+        showNoteList() ;
     }).catch( function(err) {
         console.log(err) ;
-        showCommentList() ;
+        showNoteList() ;
     }) ;
 }
 
@@ -2026,8 +2026,8 @@ function handleImage() {
     const image = files.files[0];
 
     // change display
-    document.getElementsByClassName("CommentImage")[0].style.display = "none" ;
-    document.getElementsByClassName("CommentImage2")[0].style.display = "block" ;
+    document.getElementsByClassName("NoteImage")[0].style.display = "none" ;
+    document.getElementsByClassName("NoteImage2")[0].style.display = "block" ;
 
      // see https://www.geeksforgeeks.org/html-dom-createobjecturl-method/
     document.getElementById('imageCheck').src = URL.createObjectURL(image) ;
@@ -2039,7 +2039,7 @@ function saveImage() {
     const text = document.getElementById("annotation").innerText ;
 
     let doc = {
-        _id: makeCommentId(),
+        _id: makeNoteId(),
         text: text.value,
         author: userName,
     } ;
@@ -2048,10 +2048,10 @@ function saveImage() {
     db.put( doc )
     .then( function(doc) {
         console.log(doc) ;
-        showCommentList() ;
+        showNoteList() ;
     }).catch( function(err) {
         console.log(err) ;
-        showCommentList() ;
+        showNoteList() ;
     }) ;
     document.getElementById('imageCheck').src = "" ;
 }
@@ -2217,7 +2217,7 @@ function parseQuery() {
                     case "PatientList":
                     case "MainMenu":
                     case "PatientPhoto":
-                    case "CommentList":
+                    case "NoteList":
                     case "OperationList":
                     case "SettingMenu":
                         displayStateChange() ;
@@ -2225,9 +2225,9 @@ function parseQuery() {
                     case "OperationEdit":
                         showOperationList() ;
                         break ;
-                    case "CommentNew":
-                    case "CommentImage":
-                        showCommentList() ;
+                    case "NoteNew":
+                    case "NoteImage":
+                        showNoteList() ;
                         break ;
                     case "UserName":
                     case "InvalidPatient":

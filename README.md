@@ -45,7 +45,7 @@ A spreadsheet was not adequate -- poor phone interface, poor support for images,
 * Trip
   * Link to Mission
   * Link to Provider
-  * Comments / Images
+  * Notes / Images
   * Travel data
 * Schedule
   * Link to Mission
@@ -69,7 +69,7 @@ So there is a light relational database on top of the data
 # Schema as implemented
 * Patient record
 
-|key|name|type|comment|
+|key|name|type|note|
 |:-|:-|:-|:-|
 |_id|Patient Id|automatic|p;0;Last;First;DOB "p",version,...|
 |author|user name|automatic|username of record creator|
@@ -93,7 +93,7 @@ So there is a light relational database on top of the data
 
 * Operation record
 
-|key|name|type|comment|
+|key|name|type|note|
 |:-|:-|:-|:-|
 |_id|Operation Id|automatic|o;0;Last;First;DOB;timestamp modified patient_id + creation timestamp |
 |author|user name|automatic|username of record creator|
@@ -106,27 +106,27 @@ So there is a light relational database on top of the data
 |Duration|Expected length (hours)|number|without turnover|
 |Laterality|Left / Right|multiple choice||
 
-* Comment Record
+* Note Record
 
-|key|name|type|comment|
+|key|name|type|note|
 |:-|:-|:-|:-|
 |_id|Operation Id|automatic|c;0;Last;First;DOB;timestamp modified patient_id + creation timestamp |
 |author|user name|automatic|username of record creator|
 |patient_id|Patient Id|automatic|link back to patient|
-|text|Comment text|free text||
+|text|Note text|free text||
 |_attachments:image:data|Image|automatic|binary image data|
 |_attachments:image:content_type|Image type|automatic|e.g. png||
 
 * Local record (does not replicate to other places)
 
-|key|name|type|comment|
+|key|name|type|note|
 |:-|:-|:-|:-|
 |_id|_local/username|automatic|in MainMenu -> Settings |
 |userName|user name|text|your user name|
 |remoteCouch|Remote database|list +|link to remote replication databases|
 |displayState|internal state|automatic|resume place in program|
 |patientId|Patient Id|automatic|Last patient selected|
-|commentId|Comment Id|automatic|Last comment selected|
+|noteId|Note Id|automatic|Last note selected|
 |operationId|Operation Id|automatic|Last operation selected|
 
 # Installation

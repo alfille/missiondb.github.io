@@ -18,7 +18,7 @@
                     </div>
                     <!-- top: SettingMenu -->
                     <div class="SettingMenu pageOverlay">
-                        <button type="button" class="divbutton editthecomment" onclick="objectPatientData.clickEdit()">Edit</button>
+                        <button type="button" class="divbutton edit_note" onclick="objectPatientData.clickEdit()">Edit</button>
                         <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
                         <button type="button" class="divbutton returndata return" onclick="showPatientList()">Cancel</button>
                     </div>
@@ -40,19 +40,19 @@
                     </div>
                     <!-- top: PatientNew -->
                     <div class="PatientData PatientNew pageOverlay">
-                        <button type="button" class="divbutton editthecomment" onclick="objectPatientData.clickEdit()">Edit</button>
+                        <button type="button" class="divbutton edit_note" onclick="objectPatientData.clickEdit()">Edit</button>
                         <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Add Patient</button>
                         <button type="button" class="divbutton discarddata return" onclick="showPatientList()">Cancel</button>
                     </div>
                     <!-- top: PatientDemographics PatientMedical -->
                     <div class="PatientData PatientDemographics PatientMedical pageOverlay">
-                        <button type="button" class="divbutton editthecomment" onclick="objectPatientData.clickEdit()">Edit</button>
+                        <button type="button" class="divbutton edit_note" onclick="objectPatientData.clickEdit()">Edit</button>
                         <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
                         <button type="button" class="divbutton returndata return" onclick="showPatientPhoto()">Cancel</button>
                     </div>
                     <!-- top: OperationEdit -->
                     <div class="PatientData OperationEdit pageOverlay">
-                        <button type="button" class="divbutton editthecomment" onclick="objectPatientData.clickEdit()">Edit</button>
+                        <button type="button" class="divbutton edit_note" onclick="objectPatientData.clickEdit()">Edit</button>
                         <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
                         <button type="button" class="divbutton returndata return" onclick="showOperationList()">Cancel</button>
                     </div>
@@ -60,11 +60,11 @@
                     <div class="InvalidPatient pageOverlay">
                         <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
                     </div>
-                    <!-- top: CommentList -->
-                    <div class="CommentList pageOverlay">
-                        <button class="createthecomment libutton divbutton" type="button" onclick="showCommentNew()">New Note</button>
+                    <!-- top: NoteList -->
+                    <div class="NoteList pageOverlay">
+                        <button class="create_note libutton divbutton" type="button" onclick="showNoteNew()">New Note</button>
                         <button class="createtheimage libutton divbutton" type="button" onclick="quickImage()" title="Quick picture">&#128247;</button>
-                        <button class="returnfromcomment libutton divbutton return" type="button" onclick="showPatientPhoto()">Return</button>
+                        <button class="returnfromnote libutton divbutton return" type="button" onclick="showPatientPhoto()">Return</button>
                     </div>
                 </div>
             </div>
@@ -112,7 +112,7 @@
                 <div id="PatientPhotoContent" >
                     <img class="entryfield_image">
                     <div class="entryfield_text">
-                        <button class="editthecomment libutton" type="button" onClick="photoBar.startedit()">Edit</button>
+                        <button class="edit_note libutton" type="button" onClick="photoBar.startedit()">Edit</button>
                         Patient Photo
                     </div>
                 </div>
@@ -122,7 +122,7 @@
                         <button type="button" class="divbutton" onclick="showPatientMedical()">Medical</button>
                     </div>
                     <div class="PatientProcButtons" id="ProcList">
-                        <button type="button" class="divbutton" onclick="showCommentList()">Notes</button>
+                        <button type="button" class="divbutton" onclick="showNoteList()">Notes</button>
                         <button type="button" class="divbutton" onclick="showOperationList()">Operations</button>
                     </div>
                     <div class="PatientProcButtons">
@@ -138,34 +138,34 @@
                     <p>Possble causes include your data not yet synced, or changes since this patient was selected</p>
                 </div>
             </div>
-            <!-- body: CommentList -->
-            <div class="CommentList pageOverlay">
-                <div id="CommentListContent" ></div>
+            <!-- body: NoteList -->
+            <div class="NoteList pageOverlay">
+                <div id="NoteListContent" ></div>
             </div>
-            <!-- body: CommentNew (quick comment) -->
-            <div class="CommentNew pageOverlay">
-                <div id="CommentNewContent">
-                    <img id="CommentNewImage" class="entryfield_image">
-                    <label for="CommentNewText" id="CommentNewLabel"></label>
-                    <div id="CommentNewText" class="editable"></div>
+            <!-- body: NoteNew (quick note) -->
+            <div class="NoteNew pageOverlay">
+                <div id="NoteNewContent">
+                    <img id="NoteNewImage" class="entryfield_image">
+                    <label for="NoteNewText" id="NoteNewLabel"></label>
+                    <div id="NoteNewText" class="editable"></div>
                 </div>
             </div>
-            <!-- body: CommentImage (quick photo) -->
-            <div class="CommentImage pageOverlay">
+            <!-- body: NoteImage (quick photo) -->
+            <div class="NoteImage pageOverlay">
                 <input type="file" accept="image/*" id="imageInput" onchange="handleImage()" capture="environment">
                 <input type="file" accept="image/*" id="imageQ" onchange="quickImage2()" capture="environment">
                 <button type="button" class="divbutton" onclick="getImage()">&#128247; or &#119809;
                 u&#818; Gallery</button>
-                <button type="button" class="divbutton" onclick="showCommentList()">Cancel</button>
+                <button type="button" class="divbutton" onclick="showNoteList()">Cancel</button>
             </div>
-            <!-- body: CommentImage2 (quick photo) -->
-            <div class="CommentImage2 pageOverlay">
-                <div id="CommentImage2Content" ></div>
+            <!-- body: NoteImage2 (quick photo) -->
+            <div class="NoteImage2 pageOverlay">
+                <div id="NoteImage2Content" ></div>
                 <img id="imageCheck" class="entryfield_image">
                 <label for="annotation">Image notes (optional)</label>
                 <div id="annotation" class="editable"></div>
                 <button type="button" class="divbutton" onclick="saveImage()">Save</button>
-                <button type="button" class="divbutton" onclick="showCommentList()">Cancel</button>
+                <button type="button" class="divbutton" onclick="showNoteList()">Cancel</button>
             </div>
         </div>
         <!-- copyable parts -->
@@ -185,11 +185,11 @@
                 <button type="button" onclick="photoBar.removeImage()" class="tbarxpic" title="Remove image"><span><B>&#128473;&#128247;</B></span></button>
                 <input type="file" accept="image/*" class="imageBar" onchange="photoBar.handleImage()" capture="environment">
             </div>
-           <button class="editthecomment libutton" type="button">Edit</button>
+           <button class="edit_note libutton" type="button">Edit</button>
             <div id="phototemplate">
                 <img class="entryfield_image">
                 <div class="entryfield_text">
-                    <button class="editthecomment libutton" type="button" onClick="photoBar.startedit()">Edit</button>
+                    <button class="edit_note libutton" type="button" onClick="photoBar.startedit()">Edit</button>
                     Patient Photo
                 </div>
             </div>

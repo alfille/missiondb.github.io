@@ -166,7 +166,7 @@ body {
   display: none ;
 }
 
-#CommentList li:nth-child(odd) {
+#NoteList li:nth-child(odd) {
   font-style: italic;
   display: flex;
   width: 100%;
@@ -228,7 +228,7 @@ footer {
 .editToolbar span:hover {
     color: yellow;
 }
-.editthecomment {
+.edit_note {
   display: inline-block;
   background: yellow;
   color: black;
@@ -238,11 +238,11 @@ footer {
 .inly {
   display : inline-block;
 }
-.editthecomment:disabled {
+.edit_note:disabled {
   background: #ffffcc;
   color: grey;
 }
-#textdiv, #CommentNewText div:nth-child(3) {
+#textdiv, #NoteNewText div:nth-child(3) {
   background: gold;
   min-height: 1em;
   border: 2px solid black;
