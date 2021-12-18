@@ -631,10 +631,9 @@ class OperationData extends PatientData {
 class SettingData extends PatientData {
     savePatientData() {
         this.loadDocData() ;
-        userName = this.doc["User Name"] ;
-        if ( userName != this.doc.userName ) {
+        if ( userName != this.doc[0].userName ) {
             // username changed
-            LocalRec = new Local( this.doc.userName ) ;
+            LocalRec = new Local( this.doc[0].userName ) ;
             LocalRec.init()
             .then(( function() {
                 return LocalRec.setDoc( this.doc ) ;
@@ -647,7 +646,7 @@ class SettingData extends PatientData {
                 console.log(err) ;
             }) ;
         } else {
-            LocalRec.setDoc( this.doc )
+            LocalRec.setDoc( this.doc[0] )
             .then( () => {
                 showMainMenu() ;
                 window.location.reload(false) ;
@@ -667,17 +666,17 @@ class NewPatientData extends PatientData {
     
     savePatientData() {
         this.loadDocData() ;
-        if ( this.doc.FirstName == "" ) {
+        if ( this.doc[0].FirstName == "" ) {
             alert("Need a First Name") ;
-        } else if ( this.doc.LastName == "" ) {
+        } else if ( this.doc[0].LastName == "" ) {
             alert("Need a Last Name") ;
-        } else if ( this.doc.DOB == "" ) {
+        } else if ( this.doc[0].DOB == "" ) {
             alert("Enter some Date Of Birth") ;
         } else {
-            this.doc._id = makePatientId( this.doc ) ;
-            db.put( this.doc )
-            .then( (doc) => {
-                console.log(doc) ;
+            this.doc[0]._id = makePatientId( this.doc[0] ) ;
+            db.put( this.doc[0] )
+            .then( (response) => {
+                console.log(response) ;
                 selectPatient() ;
                 showPatientPhoto() ;
             }).catch( (err) => {
@@ -711,15 +710,13 @@ class Local extends PreLocal {
             _id: this.id,
             
         } ;
-        console.log("Local for ",user, this.id, this.doc ) ;
     }
     
     init() {
-        return this._read() ;
+        this._read() ;
     }
 
     setValue( key, val ) {
-        console.log("SET VALUE",key,val);
         this._read()
         .then((function(doc) {
                 if ( this.doc[key] != val ) {
@@ -733,6 +730,14 @@ class Local extends PreLocal {
         this._read()
         .then((function(doc) {
             return this.doc[key] ;
+        }).bind(this)) ;
+    }
+    
+    getGlobal( key ) {
+        this._read()
+        .then((function(doc) {
+            window[key] = this.doc[key] ;
+            return true ;
         }).bind(this)) ;
     }
     
@@ -752,32 +757,27 @@ class Local extends PreLocal {
     }
 
     _read() {
-        console.log("localread",this.doc,this.id);
         if ( this.readIn ) {
-            console.log("PROMISE");
             return Promise.resolve(this.doc) ;
         }
-        console.log("POST PROMISE");
         return db.get( this.id )
         .then(( function(doc) {
-            console.log("successful read",this.id, doc);
             this.doc = doc ;
             this.readIn = true ;
         }).bind(this))
         .catch(( function(err) {
-            console.log("No local record (yet)") ;
             return this._write() ;
         }).bind(this)) ;
     }
     
     _write() {
-        console.log("localwrite",this.doc);
         return db.put(this.doc)
         .then(( function(response) {
             this.doc._rev = response.rev ;
         }).bind(this))
         .catch(( (err) => {
             console.log(err) ;
+            return null ;
         }).bind(this));
     }
 }
@@ -786,7 +786,6 @@ function UserNameInput() {
     const un = document.getElementById("UserNameText");
     if ( un.value && un.value.length > 0 ) {
         LocalRec = new Local( un.value ) ;
-        console.log("LocalRec",LocalRec);
         displayState = LocalRec.getValue( "displayState" ) ;
         userName     = LocalRec.getValue( "userName" ) ;
         patientId    = LocalRec.getValue( "patientId" ) ;
@@ -2041,7 +2040,7 @@ function quickImage2() {
     putImageInDoc( doc, image.type, image ) ;
 
     db.put( doc )
-    .then( function(doc) {
+    .then( function(response) {
         showNoteList() ;
     }).catch( function(err) {
         console.log(err) ;
@@ -2081,8 +2080,8 @@ function saveImage() {
     putImageInDoc( doc, image.type, image ) ;
 
     db.put( doc )
-    .then( function(doc) {
-        console.log(doc) ;
+    .then( function(response) {
+        console.log(response) ;
         showNoteList() ;
     }).catch( function(err) {
         console.log(err) ;
@@ -2239,8 +2238,10 @@ function parseQuery() {
         showUserName() ;
     } else {
         LocalRec = new Local( userName ) ;
-        LocalRec.init()
-        .then( (doc) => {
+        Promise.all( [ "patientId", "commentId", "remoteCouch", "displayState" ].map( function(key) {
+            return LocalRec.getGlobal(key) ;
+        }))
+        .then( () => {
         
             // first try the search field
             let q = parseQuery() ;
