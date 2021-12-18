@@ -177,17 +177,42 @@ const structSetting = [
 ] ;
 
 class PatientData {
-    constructor( doc, struct ) {
+    constructor(...args) {
         this.parent = document.getElementById("PatientDataContent") ;
-        this.doc = doc ;
-        this.struct = struct ;
+        
+        this.doc = [] ;
+        this.struct = [] ;
+        this.ul = [] ;
+        this.pairs = 0 ;
+
+        for ( let iarg = 0 ; iarg<args.length ; ++iarg ) {
+            this.doc[this.pairs] = args[iarg] ;
+            ++ iarg ;
+            if ( iarg == args.length ) {
+                break ;
+            }
+            this.struct[this.pairs] = args[iarg] ;
+            ++ this.pairs ;
+        } 
         
         this.ButtonStatus( true ) ;
+        [...document.getElementsByClassName("edit_note")].forEach( (e) => {
+            e.disabled = false ;
+        }) ;
         picker.detach() ;
-        
         this.parent.innerHTML = "" ;
-        this.ul = document.createElement('ul') ;
-        this.parent.appendChild(this.ul) ;
+        
+        for ( let ipair = 0 ; ipair < this.pairs ; ++ ipair ) {
+            this.ul[ipair] = this.fill(ipair) ;
+        }
+    }
+    
+    fill( ipair ) {
+        var doc = this.doc[ipair] ;
+        var struct = this.struct[ipair] ;
+
+        var ul = document.createElement('ul') ;
+        this.parent.appendChild(ul) ;
 
         let li_base = document.querySelector(".litemplate") ;
         
@@ -365,11 +390,10 @@ class PatientData {
                     break ;
             }                
             
-            this.ul.appendChild( li ) ;
+            ul.appendChild( li ) ;
         }).bind(this));
-        [...document.getElementsByClassName("edit_note")].forEach( (e) => {
-            e.disabled = false ;
-        }) ;
+        
+        return ul ;
     }
 
     HMtoMin ( inp ) {
@@ -466,115 +490,127 @@ class PatientData {
 
     clickEdit() {
         this.ButtonStatus( false ) ;
-        this.ul.querySelectorAll("li").forEach(( function(li) {
-            let idx = li.getAttribute("data-index") ;
-            switch ( this.struct[idx].type ) {
-                case "radio":
-                    document.getElementsByName(this.struct[idx].name).forEach( function (i) {
-                        i.disabled = false ;
-                    }) ;
-                    break ;
-                case "checkbox":
-                    li.querySelector("input").disabled = false ;
-                    parent.querySelector("input").readOnly = false ;
-                    break ;
-                case "date":
-                    picker.attach({
-                        element: li.querySelector("input"),
-                    }) ;
-                    break ;
-                case "time":
-                    tp.attach({
-                        element: li.querySelector("input"),
-                    }) ;
-                    break ;
-                case "length":
-                    lp.attach({
-                        element: li.querySelector("input"),
-                    }) ;
-                    break ;
-                case "datetime":
-                case "datetime-local":
-                    var i = li.querySelectorAll("input") ;
-                    picker.attach({
-                        element: i[0],
-                    }) ;
-                    tp.attach({
-                        element: i[1],
-                    }) ;
-                    break ;
-                case "textarea":
-                    li.querySelector("textarea").readOnly = false ;
-                    break ;
-                case "list":
-                    li.querySelector("input").readOnly = false ;
-                    li.querySelector("input").disabled = false ;
-                    break ;
-                default:
-                    li.querySelector("input").readOnly = false ;
-                    break ;
-            }
-        }).bind(this)) ;
+        for ( let ipair=0 ; ipair<this.pairs ; ++ipair ) {
+            let doc    = this.doc[ipair] ;
+            let struct = this.struct[ipair] ;
+            let ul     = this.ul[ipair] ;
+            ul.querySelectorAll("li").forEach(( function(li) {
+                let idx = li.getAttribute("data-index") ;
+                switch ( struct[idx].type ) {
+                    case "radio":
+                        document.getElementsByName(struct[idx].name).forEach( function (i) {
+                            i.disabled = false ;
+                        }) ;
+                        break ;
+                    case "checkbox":
+                        li.querySelector("input").disabled = false ;
+                        parent.querySelector("input").readOnly = false ;
+                        break ;
+                    case "date":
+                        picker.attach({
+                            element: li.querySelector("input"),
+                        }) ;
+                        break ;
+                    case "time":
+                        tp.attach({
+                            element: li.querySelector("input"),
+                        }) ;
+                        break ;
+                    case "length":
+                        lp.attach({
+                            element: li.querySelector("input"),
+                        }) ;
+                        break ;
+                    case "datetime":
+                    case "datetime-local":
+                        var i = li.querySelectorAll("input") ;
+                        picker.attach({
+                            element: i[0],
+                        }) ;
+                        tp.attach({
+                            element: i[1],
+                        }) ;
+                        break ;
+                    case "textarea":
+                        li.querySelector("textarea").readOnly = false ;
+                        break ;
+                    case "list":
+                        li.querySelector("input").readOnly = false ;
+                        li.querySelector("input").disabled = false ;
+                        break ;
+                    default:
+                        li.querySelector("input").readOnly = false ;
+                        break ;
+                }
+            }).bind(this)) ;
+        }
         [...document.getElementsByClassName("edit_note")].forEach( (e) => {
             e.disabled = true ;
         }) ;
     }
     
     loadDocData() {
-        this.ul.querySelectorAll("li").forEach(( function(li) {
-            let idx = li.getAttribute("data-index") ;
-            let v = "" ;
-            switch ( this.struct[idx].type ) {
-                case "radio":
-                    document.getElementsByName(this.struct[idx].name).forEach( function (i) {
-                        if ( i.checked == true ) {
-                            v = i.value ;
-                        }
-                    }) ;
-                    break ;
-                case "datetime":
-                case "datetime-local":
-                    var i = li.querySelectorAll("input") ;
-                    try {
-                        var d =  this.YYYYMMDDtoDate( i[0].value ) ; // date
-                        
+        for ( let ipair=0 ; ipair<this.pairs ; ++ipair ) {
+            let doc    = this.doc[ipair] ;
+            let struct = this.struct[ipair] ;
+            let ul     = this.ul[ipair] ;
+            console.log(doc,struct,ul);
+            ul.querySelectorAll("li").forEach(( function(li) {
+                let idx = li.getAttribute("data-index") ;
+                let v = "" ;
+                switch ( struct[idx].type ) {
+                    case "radio":
+                        document.getElementsByName(struct[idx].name).forEach( function (i) {
+                            if ( i.checked == true ) {
+                                v = i.value ;
+                            }
+                        }) ;
+                        break ;
+                    case "datetime":
+                    case "datetime-local":
+                        var i = li.querySelectorAll("input") ;
                         try {
-                            var t = this.AMto24( i[1].value ) ; // time
-                            d.setHours( t.hr ) ;
-                            d.setMinutes( t.min ) ;
-                        } catch( err ) {
+                            var d =  this.YYYYMMDDtoDate( i[0].value ) ; // date
+                            
+                            try {
+                                var t = this.AMto24( i[1].value ) ; // time
+                                d.setHours( t.hr ) ;
+                                d.setMinutes( t.min ) ;
+                            } catch( err ) {
+                            }
+                            // convert to local time
+                            v = d.toISOString() ;
                         }
-                        // convert to local time
-                        v = d.toISOString() ;
-                    }
-                    catch( err ) {
-                        v = "" ;
-                    }
-                    break ;
-                case "checkbox":
-                    v = li.querySelector("input").checked ;
-                    break ;
-                case "length":
-                    v = this.HMtoMin( li.querySelector("input").value ) ;
-                    break ;
-                case "textarea":
-                    v = li.querySelector("textarea").value ;
-                    break ;
-                default:
-                    v = li.querySelector("input").value ;
-                    break ;
-            }
-            this.doc[this.struct[idx].name] = v ;
-        }).bind(this)) ;
+                        catch( err ) {
+                            v = "" ;
+                        }
+                        break ;
+                    case "checkbox":
+                        v = li.querySelector("input").checked ;
+                        break ;
+                    case "length":
+                        v = this.HMtoMin( li.querySelector("input").value ) ;
+                        break ;
+                    case "textarea":
+                        v = li.querySelector("textarea").value ;
+                        break ;
+                    default:
+                        v = li.querySelector("input").value ;
+                        break ;
+                }
+                doc[struct[idx].name] = v ;
+            }).bind(this)) ;
+        }
     }
     
     savePatientData() {
         this.loadDocData() ;
-        db.put(this.doc)
-        .catch( function( err ) {
+        Promise.all( this.doc.map( function( doc ) {
+            return db.put(doc) ;
+        })).catch( function( err ) {
             console.log(err) ;
         }).finally ( function() {
-            displayStateChange() ;
+            showPatientPhoto() ;
         });
     }
 }
@@ -582,13 +618,12 @@ class PatientData {
 class OperationData extends PatientData {
     savePatientData() {
         this.loadDocData() ;
-        db.put(this.doc)
-        .then( function(doc) {
-            selectOperation( doc.id ) ;
-        }).catch( function( err ) {
+        Promise.all( this.doc.map( function( doc ) {
+            return db.put(doc) ;
+        })).catch( function( err ) {
             console.log(err) ;
         }).finally ( function() {
-            displayStateChange() ;
+            showPatientPhoto() ;
         });
     }
 }
@@ -625,8 +660,8 @@ class SettingData extends PatientData {
 }
 
 class NewPatientData extends PatientData {
-    constructor( doc, struct ) {
-        super( doc, struct ) ;
+    constructor(...args) {
+        super(...args) ;
         this.clickEdit() ;
     }
     
