@@ -54,6 +54,7 @@
                     <div class="PatientData OperationEdit pageOverlay">
                         <button type="button" class="divbutton edit_note" onclick="objectPatientData.clickEdit()">Edit</button>
                         <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
+                        <button type="button" class="divbutton delete" onclick="deleteOperation()">Delete Operation</button>
                         <button type="button" class="divbutton returndata return" onclick="showOperationList()">Cancel</button>
                     </div>
                     <!-- top: InvalidPatient -->
@@ -127,7 +128,7 @@
                     </div>
                     <div class="PatientProcButtons">
                         <button type="button" class="divbutton" onclick="printCard()">Print Card</button>
-                        <button type="button" class="divbutton delete" onclick="deletePatient()" id="deletepatient">Delete Patient</button>
+                        <button type="button" class="divbutton delete" onclick="deletePatient()">Delete Patient</button>
                     </div>
                 </div>
             </div>
@@ -198,6 +199,7 @@
                     <label> </label>
                 </li>
             </ul>
+            <fieldset><legend><button type="button" value="show" onclick="objectPatientData.fsclick(this)">&#10134;</button></legend></fieldset>
         </div>
         <!-- Footer -->
         <footer class="work_screen">

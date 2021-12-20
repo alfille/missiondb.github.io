@@ -140,7 +140,7 @@ const structOperation = [
         name: "Status",
         hint: "Status of operation planning",
         type: "radio",
-        choices: ["unscheduled", "scheduled", "finished", "postponed", "cancelled"],
+        choices: ["none","unscheduled", "scheduled", "finished", "postponed", "cancelled"],
     },
     {
         name: "Date-Time",
@@ -176,14 +176,52 @@ const structSetting = [
     },
 ] ;
 
+function createScheduleIndex() {
+    let id = "_design/scheduling" ;
+    let ddoc = {
+        _id: id ,
+        views: {
+            bySurgeon: {
+                map: function( doc ) {
+                    if ( doc._id.split(';')[0] == RecordFormat.type.operation ) {
+                        emit( doc.Surgeon, doc.Status ) ;
+                    }
+                }
+            },
+            scheduled: {
+                map: function( doc ) {
+                    if ( doc._id.split(';')[0] == RecordFormat.type.operation ) {
+                        if ( doc.Status == "scheduled" ) {
+                            emit( doc["Date-Time"], doc.Duration ) ;
+                        }
+                    }
+                }
+            },
+            status: {
+                map: function(doc) {
+                    if ( doc._id.split(';')[0] == RecordFormat.type.operation ) {
+                        emit( doc.status, null ) ;
+                    }
+                }
+            },
+        },
+    } ;
+    db.get( id )
+    .catch( (e) => {
+        db.put( doc ) ;
+    });
+}
+
 class PatientData {
     constructor(...args) {
         this.parent = document.getElementById("PatientDataContent") ;
+        let fieldset = document.getElementById("templates").querySelector("fieldset") ;
         
         this.doc = [] ;
         this.struct = [] ;
         this.ul = [] ;
         this.pairs = 0 ;
+        this.li_base = document.querySelector(".litemplate") ;
 
         for ( let iarg = 0 ; iarg<args.length ; ++iarg ) {
             this.doc[this.pairs] = args[iarg] ;
@@ -203,7 +241,10 @@ class PatientData {
         this.parent.innerHTML = "" ;
         
         for ( let ipair = 0 ; ipair < this.pairs ; ++ ipair ) {
+            let fs = fieldset.cloneNode( true ) ;
             this.ul[ipair] = this.fill(ipair) ;
+            fs.appendChild( this.ul[ipair] ) ;
+            this.parent.appendChild( fs ) ;
         }
     }
     
@@ -212,12 +253,9 @@ class PatientData {
         var struct = this.struct[ipair] ;
 
         var ul = document.createElement('ul') ;
-        this.parent.appendChild(ul) ;
-
-        let li_base = document.querySelector(".litemplate") ;
         
         struct.forEach(( function( item, idx ) {
-            let li = li_base.cloneNode(true);
+            let li = this.li_base.cloneNode(true);
             li.setAttribute("data-index",idx) ;
             
             let l = li.querySelector("label") ;
@@ -486,7 +524,23 @@ class PatientData {
             e.disabled = !bool ;
         });
     }
-        
+    
+    fsclick( target ) {
+        if ( this.pairs > 1 ) {
+            let ul = target.parentNode.parentNode.querySelector("ul") ;
+            if ( target.value === "show" ) {
+                // hide
+                target.innerHTML = "&#10133;" ;
+                ul.style.display = "none" ;
+                target.value = "hide" ;
+            } else {
+                // show
+                target.innerHTML = "&#10134;" ;
+                ul.style.display = "" ;
+                target.value = "show" ;
+            }
+        }
+    }                
 
     clickEdit() {
         this.ButtonStatus( false ) ;
@@ -554,7 +608,6 @@ class PatientData {
             let doc    = this.doc[ipair] ;
             let struct = this.struct[ipair] ;
             let ul     = this.ul[ipair] ;
-            console.log(doc,struct,ul);
             ul.querySelectorAll("li").forEach(( function(li) {
                 let idx = li.getAttribute("data-index") ;
                 let v = "" ;
@@ -676,7 +729,6 @@ class NewPatientData extends PatientData {
             this.doc[0]._id = makePatientId( this.doc[0] ) ;
             db.put( this.doc[0] )
             .then( (response) => {
-                console.log(response) ;
                 selectPatient() ;
                 showPatientPhoto() ;
             }).catch( (err) => {
@@ -1202,11 +1254,7 @@ function displayStateChange() {
         v.style.display = v.classList.contains(displayState) ? "block" : "none" ;
     });
 
-    console.log("displayStateChange",displayState,LocalRec);
-    console.trace();
-    if ( LocalRec ) {
-        LocalRec.setValue("displayState",displayState) ;
-    }
+    LocalRec.setValue("displayState",displayState) ;
 
     objectPatientData = null ;
     objectNoteList = null ;
@@ -1246,7 +1294,6 @@ function displayStateChange() {
             let objectOperationTable = new OperationTable( [ "Procedure", "Surgeon", "Status", "Schedule", "Duration", "Equipment" ]  ) ;
             getOperations(true)
             .then( function(docs) {
-                console.log("ops",docs);
                 objectOperationTable.fill(docs.rows) ;
             }).catch( function(err) {
                     console.log(err);
@@ -1317,9 +1364,18 @@ function displayStateChange() {
             
         case "PatientMedical":
             if ( patientId ) {
+                var args ;
                 db.get( patientId )
                 .then( function(doc) {
-                    objectPatientData = new PatientData( doc, structMedical ) ;
+                    args = [doc,structMedical] ;
+                    return getOperations(true) ;
+                })
+                .then( function( olist ) {
+                    olist.rows.forEach( (r) => {
+                        args.push( r.doc, structOperation ) ;
+                    }) ;
+                    //objectPatientData = new PatientData( doc, structMedical ) ;
+                    objectPatientData = new PatientData( ...args ) ;
                 }).catch( function(err) {
                     console.log(err) ;
                     showInvalidPatient() ;
@@ -1531,6 +1587,22 @@ class PatientTable extends SortTable {
         });
     }
   
+}
+
+function makeNewOperation() {
+    let doc = {
+        _id: makeOperationId(),
+        author: userName,
+        Procedure: "Enter new procedure",
+        Surgeon: "",
+        "Date-Time": "",
+        Duration: "",
+        Laterality: "?",
+        Status: "none",
+        Equipment: "",
+        patient_id: patientId,
+    } ;
+    return db.put( doc ) ;
 }
 
 class OperationTable extends SortTable {
@@ -1802,6 +1874,29 @@ function deleteNote() {
     return true ;
 }    
     
+function deleteOperation() {
+    if ( operationId ) {
+        db.get( operationId )
+        .then( function(doc) {
+            let spl = splitOperationId() ;
+            if ( confirm("Delete operation <"+doc.Procedure+">\n on patient" + spl.first + " " + spl.last + " from " +  + spl.date + ".\n -- Are you sure?") ) {
+                return doc ;
+            } else {
+                throw "No delete" ;
+            }           
+        }).then( function(doc) { 
+            return db.remove(doc) ;
+        }).then( function() {
+            unselectOperation() ;
+        }).catch( function(err) {
+            console.log(err) ;
+        }).finally( function () {
+            showOperationList() ;
+        }) ;
+    }
+    return true ;
+}    
+    
 function selectNote( cid ) {
     noteId = cid ;
     LocalRec.setValue( "noteId", cid ) ;
@@ -1869,7 +1964,22 @@ function getOperations(attachments) {
         doc.attachments = true ;
     }
 
-    return db.allDocs(doc) ;
+    return db.allDocs(doc)
+    .then( (doclist) => {
+        let new_exists = false ;
+        let no_empty = doclist.rows.every( (row) => { 
+                return (row.doc.Status !== "none") || ( row.doc.Procedure !== "Enter new procedure" ) ;
+            });
+        if ( no_empty ) {
+            throw "No Empty" ;
+        }
+        return Promise.resolve(doclist) ;
+    })
+    .catch( (err) => {
+        return makeNewOperation().then( () => {
+            return getOperations( attachments ) ;
+        }) ;
+    });
 }
 
 function getNotes(attachments) {
@@ -1980,7 +2090,6 @@ class NoteList {
 }
 
 function getImageFromDoc( doc ) {
-    console.log("getImageFrmDoc",doc);
     if ( !("_attachments" in doc) ) {
         throw "No attachments" ;
     }
@@ -2081,7 +2190,6 @@ function saveImage() {
 
     db.put( doc )
     .then( function(response) {
-        console.log(response) ;
         showNoteList() ;
     }).catch( function(err) {
         console.log(err) ;
@@ -2129,7 +2237,6 @@ function printCard() {
             photo.src = "style/NoPhoto.png" ;
             console.log("No image",doc) ;
         }
-        console.log(photo) ;
         t[0].rows[0].cells[1].innerText = doc.LastName+"' "+doc.FirstName ;
         t[0].rows[1].cells[1].innerText = doc.Complaint ;
         t[0].rows[2].cells[1].innerText = "" ;
@@ -2147,9 +2254,7 @@ function printCard() {
         })
     .then( function(docs) {
         var oleng = docs.rows.length ;
-        console.log("rows",oleng);
         if ( oleng > 0 ) {
-            console.log("ops",docs);
             t[0].rows[2].cells[1].innerText = docs.rows[oleng-1].doc.Procedure ;
             t[0].rows[3].cells[1].innerText = docs.rows[oleng-1].doc.Duration + " hr" ;
             t[0].rows[4].cells[1].innerText = docs.rows[oleng-1].doc.Surgeon ;
