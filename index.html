@@ -20,52 +20,52 @@
                     <div class="SettingMenu pageOverlay">
                         <button type="button" class="divbutton edit_note" onclick="objectPatientData.clickEdit()">Edit</button>
                         <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
-                        <button type="button" class="divbutton returndata return" onclick="showPatientList()">Cancel</button>
+                        <button type="button" class="divbutton returndata return" onclick="showPage( 'PatientList' )">Cancel</button>
                     </div>
                     <!-- top: PatientList -->
                     <div class="PatientList pageOverlay">
-                        <button type="button" class="divbutton" onclick="showMainMenu()">Main Menu</button>
-                        <button type="button" class="divbutton" onclick="showPatientNew()">Add Patient</button>
-                        <button type="button" class="divbutton" onclick="showPatientPhoto()" id="editreviewpatient">Review/Edit Patient</button>
+                        <button type="button" class="divbutton" onclick="showPage( 'MainMenu' )">Main Menu</button>
+                        <button type="button" class="divbutton" onclick="showPage( 'PatientNew' )">Add Patient</button>
+                        <button type="button" class="divbutton" onclick="showPage( 'PatientPhoto' )" id="editreviewpatient">Review/Edit Patient</button>
                     </div>
                     <!-- top: OperationList -->
                     <div class="OperationList pageOverlay">
-                        <button type="button" class="divbutton" onclick="showOperationNew()">Add Operation</button>
-                        <button type="button" class="divbutton" onclick="showOperationEdit()" id="editreviewoperation">Review/Edit Operation</button>
-                        <button type="button" class="divbutton return" onclick="showPatientPhoto()">Return</button>
+                        <button type="button" class="divbutton" onclick="showPage( 'OperationNew' )">Add Operation</button>
+                        <button type="button" class="divbutton" onclick="showPage( 'OperationEdit' )" id="editreviewoperation">Review/Edit Operation</button>
+                        <button type="button" class="divbutton return" onclick="showPage( 'PatientPhoto' )">Return</button>
                     </div>
                     <!-- top: PatientPhoto -->
                     <div class="PatientPhoto pageOverlay">
-                        <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
+                        <button type="button" class="divbutton return" onclick="showPage( 'PatientList' )">Return</button>
                     </div>
                     <!-- top: PatientNew -->
                     <div class="PatientData PatientNew pageOverlay">
                         <button type="button" class="divbutton edit_note" onclick="objectPatientData.clickEdit()">Edit</button>
                         <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Add Patient</button>
-                        <button type="button" class="divbutton discarddata return" onclick="showPatientList()">Cancel</button>
+                        <button type="button" class="divbutton discarddata return" onclick="showPage( 'PatientList' )">Cancel</button>
                     </div>
                     <!-- top: PatientDemographics PatientMedical -->
                     <div class="PatientData PatientDemographics PatientMedical pageOverlay">
                         <button type="button" class="divbutton edit_note" onclick="objectPatientData.clickEdit()">Edit</button>
                         <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
-                        <button type="button" class="divbutton returndata return" onclick="showPatientPhoto()">Cancel</button>
+                        <button type="button" class="divbutton returndata return" onclick="showPage( 'PatientPhoto' )">Cancel</button>
                     </div>
                     <!-- top: OperationEdit -->
                     <div class="PatientData OperationEdit pageOverlay">
                         <button type="button" class="divbutton edit_note" onclick="objectPatientData.clickEdit()">Edit</button>
                         <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
                         <button type="button" class="divbutton delete" onclick="deleteOperation()">Delete Operation</button>
-                        <button type="button" class="divbutton returndata return" onclick="showOperationList()">Cancel</button>
+                        <button type="button" class="divbutton returndata return" onclick="showPage( 'OperationList' )">Cancel</button>
                     </div>
                     <!-- top: InvalidPatient -->
                     <div class="InvalidPatient pageOverlay">
-                        <button type="button" class="divbutton return" onclick="showPatientList()">Return</button>
+                        <button type="button" class="divbutton return" onclick="showPage( 'PatientList' )">Return</button>
                     </div>
                     <!-- top: NoteList -->
                     <div class="NoteList pageOverlay">
-                        <button class="create_note libutton divbutton" type="button" onclick="showNoteNew()">New Note</button>
+                        <button class="create_note libutton divbutton" type="button" onclick="showPage( 'NoteNew' )">New Note</button>
                         <button class="createtheimage libutton divbutton" type="button" onclick="quickImage()" title="Quick picture">&#128247;</button>
-                        <button class="returnfromnote libutton divbutton return" type="button" onclick="showPatientPhoto()">Return</button>
+                        <button class="returnfromnote libutton divbutton return" type="button" onclick="showPage( 'PatientPhoto' )">Return</button>
                     </div>
                 </div>
             </div>
@@ -87,9 +87,9 @@
             <!-- body: MainMenu -->
             <div class="MainMenu pageOverlay">
                 <div id="MainMenuContent" >
-                    <button type="button" class="divbutton" onclick="showPatientList()">Patient List</button>
-                    <button type="button" class="divbutton" onclick="showSettingMenu()">Settings</button>
-                    <button type="button" class="divbutton" onclick="showPatientDemographics()">Help</button>
+                    <button type="button" class="divbutton" onclick="showPage( 'PatientList' )">Patient List</button>
+                    <button type="button" class="divbutton" onclick="showPage( 'SettingMenu' )">Settings</button>
+                    <button type="button" class="divbutton" onclick="showPage( 'PatientDemographics' )">Help</button>
                 </div>
             </div>
             <!-- body: PatientList -->
@@ -119,12 +119,12 @@
                 </div>
                 <div id="PatientPhotoButtons">
                     <div class="PatientProcButtons">
-                        <button type="button" class="divbutton" onclick="showPatientDemographics()">Demographics</button>
-                        <button type="button" class="divbutton" onclick="showPatientMedical()">Medical</button>
+                        <button type="button" class="divbutton" onclick="showPage( 'PatientDemographics' )">Demographics</button>
+                        <button type="button" class="divbutton" onclick="showPage( 'PatientMedical' )">Medical</button>
                     </div>
                     <div class="PatientProcButtons" id="ProcList">
-                        <button type="button" class="divbutton" onclick="showNoteList()">Notes</button>
-                        <button type="button" class="divbutton" onclick="showOperationList()">Operations</button>
+                        <button type="button" class="divbutton" onclick="showPage( 'NoteList' )">Notes</button>
+                        <button type="button" class="divbutton" onclick="showPage( 'OperationList' )">Operations</button>
                     </div>
                     <div class="PatientProcButtons">
                         <button type="button" class="divbutton" onclick="printCard()">Print Card</button>
@@ -157,7 +157,7 @@
                 <input type="file" accept="image/*" id="imageQ" onchange="quickImage2()" capture="environment">
                 <button type="button" class="divbutton" onclick="getImage()">&#128247; or &#119809;
                 u&#818; Gallery</button>
-                <button type="button" class="divbutton" onclick="showNoteList()">Cancel</button>
+                <button type="button" class="divbutton" onclick="showPage( 'NoteList' )">Cancel</button>
             </div>
             <!-- body: NoteImage2 (quick photo) -->
             <div class="NoteImage2 pageOverlay">
@@ -166,7 +166,7 @@
                 <label for="annotation">Image notes (optional)</label>
                 <div id="annotation" class="editable"></div>
                 <button type="button" class="divbutton" onclick="saveImage()">Save</button>
-                <button type="button" class="divbutton" onclick="showNoteList()">Cancel</button>
+                <button type="button" class="divbutton" onclick="showPage( 'NoteList' )">Cancel</button>
             </div>
         </div>
         <!-- copyable parts -->

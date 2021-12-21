@@ -663,7 +663,7 @@ class PatientData {
         })).catch( function( err ) {
             console.log(err) ;
         }).finally ( function() {
-            showPatientPhoto() ;
+            showPage( "PatientPhoto" ) ;
         });
     }
 }
@@ -676,7 +676,7 @@ class OperationData extends PatientData {
         })).catch( function( err ) {
             console.log(err) ;
         }).finally ( function() {
-            showPatientPhoto() ;
+            showPage( "PatientPhoto" ) ;
         });
     }
 }
@@ -692,7 +692,7 @@ class SettingData extends PatientData {
                 return LocalRec.setDoc( this.doc ) ;
             }).bind(this))
             .then( () => {
-                showMainMenu() ;
+                showPage( "MainMenu" ) ;
                 window.location.reload(false) ;
             })
             .catch( (err) => {
@@ -701,7 +701,7 @@ class SettingData extends PatientData {
         } else {
             LocalRec.setDoc( this.doc[0] )
             .then( () => {
-                showMainMenu() ;
+                showPage( "MainMenu" ) ;
                 window.location.reload(false) ;
             })
             .catch( (err) => {
@@ -730,7 +730,7 @@ class NewPatientData extends PatientData {
             db.put( this.doc[0] )
             .then( (response) => {
                 selectPatient() ;
-                showPatientPhoto() ;
+                showPage( "PatientPhoto" ) ;
             }).catch( (err) => {
                 console.log(err) ;
                 alert(err) ;
@@ -850,9 +850,9 @@ function UserNameInput() {
         } else {
             unselectPatient() ;
         }
-        showPatientList() ;
+        showPage( "PatientList" ) ;
     } else {
-        showUserName() ;
+        showPage( "UserName" ) ;
     }
 }
             
@@ -1080,82 +1080,6 @@ class Pbar extends Tbar {
     
 var photoBar = new Pbar() ;        
 
-function showUserName() {
-    displayState = "UserName" ;
-    displayStateChange() ;
-}
-
-function showMainMenu() {
-    displayState = "MainMenu" ;
-    displayStateChange() ;
-}
-
-function showSettingMenu() {
-    displayState = "SettingMenu" ;
-    displayStateChange() ;
-}
-
-function showPatientList() {
-    displayState = "PatientList" ;
-    displayStateChange() ;
-}
-
-function showPatientDemographics() {
-    displayState = "PatientDemographics" ;
-    displayStateChange() ;
-}
-    
-function showPatientMedical() {
-    displayState = "PatientMedical" ;
-    displayStateChange() ;
-}
-
-function showOperationList() {
-    displayState = "OperationList" ;
-    displayStateChange() ;
-}
-    
-function showPatientNew() {
-    displayState = "PatientNew" ;
-    displayStateChange() ;
-}
-
-function showInvalidPatient() {
-    displayState = "InvalidPatient" ;
-    displayStateChange() ;
-}
-    
-function showPatientPhoto() {
-    displayState = "PatientPhoto" ;
-    displayStateChange() ;
-}
-
-function showNoteList() {
-    displayState = "NoteList" ;
-    displayStateChange() ;
-}
-
-function showNoteNew() {
-    displayState = "NoteNew" ;
-    displayStateChange() ;
-}
-
-function showOperationNew() {
-    unselectOperation() ;
-    displayState = "OperationEdit" ;
-    displayStateChange() ;
-}
-
-function showOperationEdit() {
-    displayState = "OperationEdit" ;
-    displayStateChange() ;
-}
-
-function shoeNoteImage() {
-    displayState = "NoteImage" ;
-    displayStateChange() ;
-}
-
 function selectPatient( pid ) {
     if ( patientId != pid ) {
         // change patient -- notes dont apply
@@ -1249,7 +1173,9 @@ function unselectOperation() {
     document.getElementById("editreviewoperation").disabled = true ;
 }
 
-function displayStateChange() {
+function showPage( state = "PatientList" ) {
+    displayState = state ;
+
     Array.from(document.getElementsByClassName("pageOverlay")).forEach( (v)=> {
         v.style.display = v.classList.contains(displayState) ? "block" : "none" ;
     });
@@ -1301,6 +1227,11 @@ function displayStateChange() {
             break ;
             
         case "OperationEdit":
+            unselectOperation() ;
+            showPage( "OperationEdit" ) ;
+            break ;
+        
+        case "OperationEdit":
             if ( patientId ) {
                 if ( operationId ) {
                     db.get( operationId )
@@ -1308,7 +1239,7 @@ function displayStateChange() {
                         objectPatientData = new OperationData( doc, structOperation ) ;
                     }).catch( function(err) {
                         console.log(err) ;
-                        showInvalidPatient() ;
+                        showPage( "InvalidPatient" ) ;
                     }) ;
                 } else {
                     objectPatientData = new OperationData(
@@ -1319,7 +1250,7 @@ function displayStateChange() {
                     } , structOperation ) ;
                 }
             } else {
-                showPatientList() ;
+                showPage( "PatientList" ) ;
             }
             break ;
             
@@ -1341,10 +1272,10 @@ function displayStateChange() {
                     PatientPhoto( doc ) ;
                 }).catch( function(err) {
                     console.log(err) ;
-                    showInvalidPatient() ;
+                    showPage( "InvalidPatient" ) ;
                 }) ;
             } else {
-                showPatientList() ;
+                showPage( "PatientList" ) ;
             }
             break ;
             
@@ -1355,10 +1286,10 @@ function displayStateChange() {
                     objectPatientData = new PatientData( doc, structDemographics ) ;
                 }).catch( function(err) {
                     console.log(err) ;
-                    showInvalidPatient() ;
+                    showPage( "InvalidPatient" ) ;
                 }) ;
             } else {
-                showPatientList() ;
+                showPage( "PatientList" ) ;
             }
             break ;
             
@@ -1378,10 +1309,10 @@ function displayStateChange() {
                     objectPatientData = new PatientData( ...args ) ;
                 }).catch( function(err) {
                     console.log(err) ;
-                    showInvalidPatient() ;
+                    showPage( "InvalidPatient" ) ;
                 }) ;
             } else {
-                showPatientList() ;
+                showPage( "PatientList" ) ;
             }
             break ;
             
@@ -1396,10 +1327,10 @@ function displayStateChange() {
                     objectNoteList = new NoteList( NoteListContent ) ;
                 }).catch( function(err) {
                     console.log(err) ;
-                    showInvalidPatient() ;
+                    showPage( "InvalidPatient" ) ;
                 }) ;
             } else {
-                showPatientList() ;
+                showPage( "PatientList" ) ;
             }
             break ;
             
@@ -1409,7 +1340,7 @@ function displayStateChange() {
                 unselectNote() ;
                 NoteNew() ;
             } else {
-                showPatientList() ;
+                showPage( "PatientList" ) ;
             }
             break ;
             
@@ -1417,12 +1348,12 @@ function displayStateChange() {
             if ( patientId ) {
                 NoteImage() ;
             } else {
-                showPatientList() ;
+                showPage( "PatientList" ) ;
             }
             break ;
             
         default:
-            showPatientList() ;
+            showPage( "PatientList" ) ;
             break ;
     }
 }
@@ -1574,7 +1505,7 @@ class PatientTable extends SortTable {
             }) ;
             row.addEventListener( 'dblclick', (e) => {
                 selectPatient( record._id ) ;
-                showPatientPhoto() ;
+                showPage( "PatientPhoto" ) ;
             }) ;
             collist.forEach( function(colname,i) {
                 let c = row.insertCell(i) ;
@@ -1642,7 +1573,7 @@ class OperationTable extends SortTable {
             }) ;
             row.addEventListener( 'dblclick', (e) => {
                 selectOperation( record._id ) ;
-                showOperationEdit() ;
+                showPage( "OperationEdit" ) ;
             }) ;
             collist.forEach( function(colname,i) {
                 let c = row.insertCell(i) ;
@@ -1822,7 +1753,7 @@ function deletePatient() {
             return db.remove(indexdoc) ;
         }).then( function() {
             unselectPatient() ;
-            showPatientList() ;
+            showPage( "PatientList" ) ;
         }).catch( function(err) {
             console.log(err) ;
         });
@@ -1848,7 +1779,7 @@ function PatientPhoto( doc ) {
 
 function newImage() {
     unselectNote() ;
-    shoeNoteImage() ;  
+    showPage( "NoteImage" ) ;  
 }
 
 function deleteNote() {
@@ -1868,7 +1799,7 @@ function deleteNote() {
         }).catch( function(err) {
             console.log(err) ;
         }).finally( function () {
-            showNoteList() ;
+            showPage( "NoteList" ) ;
         }) ;
     }
     return true ;
@@ -1891,7 +1822,7 @@ function deleteOperation() {
         }).catch( function(err) {
             console.log(err) ;
         }).finally( function () {
-            showOperationList() ;
+            showPage( "OperationList" ) ;
         }) ;
     }
     return true ;
@@ -2150,10 +2081,10 @@ function quickImage2() {
 
     db.put( doc )
     .then( function(response) {
-        showNoteList() ;
+        showPage( "NoteList" ) ;
     }).catch( function(err) {
         console.log(err) ;
-        showNoteList() ;
+        showPage( "NoteList" ) ;
     }) ;
 }
 
@@ -2190,10 +2121,10 @@ function saveImage() {
 
     db.put( doc )
     .then( function(response) {
-        showNoteList() ;
+        showPage( "NoteList" ) ;
     }).catch( function(err) {
         console.log(err) ;
-        showNoteList() ;
+        showPage( "NoteList" ) ;
     }) ;
     document.getElementById('imageCheck').src = "" ;
 }
@@ -2210,7 +2141,7 @@ function show_screen( bool ) {
 
 function printCard() {
     if ( patientId == null ) {
-        return showInvalidPatient() ;
+        return showPage( "InvalidPatient" ) ;
     }
     var card = document.getElementById("printCard") ;
     var t = card.getElementsByTagName("table") ;
@@ -2262,10 +2193,10 @@ function printCard() {
         }
         window.print() ;
         show_screen( true ) ;
-        displayStateChange() ;
+        showPage( "PatientPhoto" ) ;
     }).catch( function(err) {
         console.log(err) ;
-        showInvalidPatient() ;
+        showPage( "InvalidPatient" ) ;
     });
 }
 
@@ -2298,7 +2229,7 @@ function parseQuery() {
             case "PatientList":
             case "OperationList":
             case "PatientPhoto":
-                displayStateChange();
+                showPage( displayState );
                 break ;
             default:
                 break ;
@@ -2340,7 +2271,7 @@ function parseQuery() {
     // No search, use cookies
     userName = getCookie( "userName" ) ;
     if ( !userName ) {
-        showUserName() ;
+        showPage( "UserName" ) ;
     } else {
         LocalRec = new Local( userName ) ;
         Promise.all( [ "patientId", "commentId", "remoteCouch", "displayState" ].map( function(key) {
@@ -2352,7 +2283,7 @@ function parseQuery() {
             let q = parseQuery() ;
             if ( q && ( patientId in q ) ) {
                 selectPatient( q.patientId ) ;
-                showPatientPhoto() ;
+                showPage( "PatientPhoto" ) ;
             } else {
                 switch ( displayState ) {
                     case "PatientList":
@@ -2361,24 +2292,24 @@ function parseQuery() {
                     case "NoteList":
                     case "OperationList":
                     case "SettingMenu":
-                        displayStateChange() ;
+                        showPage( displayState ) ;
                         break;
                     case "OperationEdit":
-                        showOperationList() ;
+                        showPage( "OperationList" ) ;
                         break ;
                     case "NoteNew":
                     case "NoteImage":
-                        showNoteList() ;
+                        showPage( "NoteList" ) ;
                         break ;
                     case "UserName":
                     case "InvalidPatient":
-                        showPatientList() ;
+                        showPage( "PatientList" ) ;
                         break ;
                     case "PatientNew":
                     case "PatientDemographics":
                     case "PatientMedical":
                     default:
-                        showPatientPhoto() ;
+                        showPage( "PatientPhoto" ) ;
                         break ;
                 }
             }
