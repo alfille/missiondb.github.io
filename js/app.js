@@ -1893,24 +1893,28 @@ function getOperations(attachments) {
         doc.include_docs = true ;
         doc.binary = true ;
         doc.attachments = true ;
-    }
 
-    return db.allDocs(doc)
-    .then( (doclist) => {
-        let new_exists = false ;
-        let no_empty = doclist.rows.every( (row) => { 
-                return (row.doc.Status !== "none") || ( row.doc.Procedure !== "Enter new procedure" ) ;
-            });
-        if ( no_empty ) {
-            throw "No Empty" ;
-        }
-        return Promise.resolve(doclist) ;
-    })
-    .catch( (err) => {
-        return makeNewOperation().then( () => {
-            return getOperations( attachments ) ;
-        }) ;
-    });
+        // Adds a single "blank"
+        // also purges excess "blanks"
+        return db.allDocs(doc)
+        .then( (doclist) => {
+            let new_exists = false ;
+            let no_empty = doclist.rows.every( (row) => { 
+                    return (row.doc.Status !== "none") || ( row.doc.Procedure !== "Enter new procedure" ) ;
+                });
+            if ( no_empty ) {
+                throw "No Empty" ;
+            }
+            return Promise.resolve(doclist) ;
+        })
+        .catch( (err) => {
+            return makeNewOperation().then( () => {
+                return getOperations( attachments ) ;
+            }) ;
+        });
+    } else {
+        return db.allDocs(doc) ;
+    }
 }
 
 function getNotes(attachments) {
