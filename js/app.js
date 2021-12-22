@@ -1898,16 +1898,36 @@ function getOperations(attachments) {
         // also purges excess "blanks"
         return db.allDocs(doc)
         .then( (doclist) => {
-            let new_exists = false ;
-            let no_empty = doclist.rows.every( (row) => { 
-                    return (row.doc.Status !== "none") || ( row.doc.Procedure !== "Enter new procedure" ) ;
-                });
-            if ( no_empty ) {
-                throw "No Empty" ;
-            }
-            return Promise.resolve(doclist) ;
+            let newlist = doclist.rows.filter( (row) => {
+                return ( row.doc.Status === "none" ) && ( row.doc.Procedure === "Enter new procedure" ) ; 
+                }).map( row => row.doc ) ;
+            switch ( newlist.length ) {
+                case 0 :
+                    throw null ;
+                case 1 :
+                console.log( "Just perfect");
+                    return Promise.resolve( doclist ) ;
+                    break ;
+                default:
+                    throw newlist.slice(1) ;
+                    break ;
+                }
         })
-        .catch( (err) => {
+        .catch( (dlist) => {
+            if ( dlist == null ) {
+                // needs an empty
+                throw null ;
+            }
+            // too many empties
+            console.log("Remove", dlist.length,"entries");
+            return Promise.all(dlist.map( function (doc) {
+                return db.remove(doc) ;
+            })).then( ()=> {
+                return getOperations( attachments )
+            }) ;
+        })
+        .catch( () => {
+            console.log("Add a record") ;
             return makeNewOperation().then( () => {
                 return getOperations( attachments ) ;
             }) ;
