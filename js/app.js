@@ -604,16 +604,20 @@ class PatientData {
     }
     
     loadDocData() {
+		//return true if any real change
+		let changed = [] ; 
         for ( let ipair=0 ; ipair<this.pairs ; ++ipair ) {
             let doc    = this.doc[ipair] ;
             let struct = this.struct[ipair] ;
             let ul     = this.ul[ipair] ;
+            changed[ipair] = false ;
             ul.querySelectorAll("li").forEach(( function(li) {
                 let idx = li.getAttribute("data-index") ;
                 let v = "" ;
+                let name = struct[idx].name ;
                 switch ( struct[idx].type ) {
                     case "radio":
-                        document.getElementsByName(struct[idx].name).forEach( function (i) {
+                        document.getElementsByName(name).forEach( function (i) {
                             if ( i.checked == true ) {
                                 v = i.value ;
                             }
@@ -651,63 +655,59 @@ class PatientData {
                         v = li.querySelector("input").value ;
                         break ;
                 }
-                doc[struct[idx].name] = v ;
+                if ( doc[name]==undefined || doc[name] != v ) {
+					changed[ipair] = true ;
+					doc[name] = v ;
+				}
             }).bind(this)) ;
         }
+        return changed ;
     }
     
+    saveChanged ( state ) {
+		let changed = this.loadDocData() ;
+		Promise.all( this.doc.filter( (doc, idx) => changed[idx] ).map( (doc) => db.put( doc ) ) )
+			.catch( (err) => console.log(err) )
+			.finally( () => showPage( state )
+		) ;
+	}
+    
     savePatientData() {
-        this.loadDocData() ;
-        Promise.all( this.doc.map( function( doc ) {
-            return db.put(doc) ;
-        })).catch( function( err ) {
-            console.log(err) ;
-        }).finally ( function() {
-            showPage( "PatientPhoto" ) ;
-        });
+		this.saveChanged( "PatientPhoto" ) ;
     }
 }
 
 class OperationData extends PatientData {
     savePatientData() {
-        this.loadDocData() ;
-        Promise.all( this.doc.map( function( doc ) {
-            return db.put(doc) ;
-        })).catch( function( err ) {
-            console.log(err) ;
-        }).finally ( function() {
-            showPage( "PatientPhoto" ) ;
-        });
+		this.saveChanged( "OperationList" ) ;
     }
 }
 
 class SettingData extends PatientData {
     savePatientData() {
         this.loadDocData() ;
-        if ( userName != this.doc[0].userName ) {
-            // username changed
-            LocalRec = new Local( this.doc[0].userName ) ;
-            LocalRec.init()
-            .then(( function() {
-                return LocalRec.setDoc( this.doc ) ;
-            }).bind(this))
-            .then( () => {
-                showPage( "MainMenu" ) ;
-                window.location.reload(false) ;
-            })
-            .catch( (err) => {
-                console.log(err) ;
-            }) ;
-        } else {
-            LocalRec.setDoc( this.doc[0] )
-            .then( () => {
-                showPage( "MainMenu" ) ;
-                window.location.reload(false) ;
-            })
-            .catch( (err) => {
-                console.log(err) ;
-            }) ;
-        }
+		if ( userName != this.doc[0].userName ) {
+			if ( userName != this.doc[0].userName ) {
+				// username changed
+				LocalRec = new Local( this.doc[0].userName ) ;
+				LocalRec.init()
+				.then(( function() {
+					return LocalRec.setDoc( this.doc ) ;
+				}).bind(this))
+				.then( () => {
+					showPage( "MainMenu" ) ;
+					window.location.reload(false) ;
+				})
+				.catch( (err) => {
+					console.log(err) ;
+					showPage( "MainMenu" ) ;
+				}) ;
+			} else {
+				this.saveChanged( "MainMenu" ) ;
+			}
+		} else {
+			showPage( "MainMenu" ) ;
+		}
     }
 }
 
@@ -733,7 +733,6 @@ class NewPatientData extends PatientData {
                 showPage( "PatientPhoto" ) ;
             }).catch( (err) => {
                 console.log(err) ;
-                alert(err) ;
             }) ;
         }
     }
