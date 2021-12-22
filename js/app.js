@@ -221,7 +221,6 @@ class PatientData {
         this.struct = [] ;
         this.ul = [] ;
         this.pairs = 0 ;
-        this.li_base = document.querySelector(".litemplate") ;
 
         for ( let iarg = 0 ; iarg<args.length ; ++iarg ) {
             this.doc[this.pairs] = args[iarg] ;
@@ -255,10 +254,11 @@ class PatientData {
         var ul = document.createElement('ul') ;
         
         struct.forEach(( function( item, idx ) {
-            let li = this.li_base.cloneNode(true);
+            var li = document.createElement("li");
             li.setAttribute("data-index",idx) ;
+            var l = document.createElement("label");
+            li.appendChild(l) ;
             
-            let l = li.querySelector("label") ;
             if ( "alias" in item ) {
                 l.appendChild( document.createTextNode(item.alias + ": ") );
             } else {
@@ -1727,31 +1727,58 @@ function splitOperationId() {
 
 function deletePatient() {
     let indexdoc ;
+    let notelist ;
+    let oplist ;
     if ( patientId ) {        
         db.get(patientId)
+            // get patient
         .then( function(doc) {
             indexdoc = doc ;
             return getNotes(false) ;
         }).then( function(docs) {
+            // get notes
+            notelist = docs.rows ;
+            console.log("notelist",docs,notelist);
+            return getOperations (false) ;
+        }).then( function(docs) {
+            // get operations
+            oplist = docs.rows ;
+            console.log("oplist",docs,oplist);
+            // Confirm question
             let c = "Delete patient \n   " + indexdoc.FirstName + " " + indexdoc.LastName + "\n    " ;
-            if (docs.rows.length == 0 ) {
+            if (notelist.length == 0 ) {
                 c += "(no associated notes on this patient) \n   " ;
             } else {
-                c += "also delete "+docs.rows.length+" associated notes\n   " ;
+                c += "also delete "+notelist.length+" associated notes\n   " ;
+            }
+            if (oplist.length == 0 ) {
+                c += "(no associated operations on this patient) \n   " ;
+            } else {
+                c += "also delete "+oplist.length+" associated operations\n   " ;
             }
             c += "Are you sure?" ;
             if ( confirm(c) ) {
-                return docs ;
+                return true ;
             } else {
                 throw "No delete" ;
             }           
         }).then( function(docs) {
-            return Promise.all(docs.rows.map( function (doc) {
+            // remove notes
+            return Promise.all(notelist.map( function (doc) {
+                console.log("n",doc);
+                return db.remove(doc.id,doc.value.rev) ;
+            })) ;
+        }).then( function(docs) {
+            // remove operations
+            return Promise.all(oplist.map( function (doc) {
+                console.log("o",doc);
                 return db.remove(doc.id,doc.value.rev) ;
             })) ;
         }).then( function() {
+            // remove patient
             return db.remove(indexdoc) ;
         }).then( function() {
+            // unselect
             unselectPatient() ;
             showPage( "PatientList" ) ;
         }).catch( function(err) {
