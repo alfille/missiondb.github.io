@@ -617,7 +617,7 @@ class PatientData {
                 let name = struct[idx].name ;
                 switch ( struct[idx].type ) {
                     case "radio":
-                        document.getElementsByName(name).forEach( function (i) {
+                        document.getElementsByName(name).forEach( (i) => {
                             if ( i.checked == true ) {
                                 v = i.value ;
                             }
@@ -1133,7 +1133,7 @@ function selectOperation( oid ) {
             }
         }
         document.getElementById("editreviewoperation").disabled = false ;
-    }).catch( function(err) {
+    }).catch( (err) => {
         console.log(err) ;
         unselectOperation() ;
     }) ;
@@ -1203,26 +1203,23 @@ function showPage( state = "PatientList" ) {
         case "PatientList":
             let objectPatientTable = new PatientTable( ["LastName", "FirstName", "DOB","Dx","Procedure" ] ) ;
             getPatients(true)
-            .then( function(docs) {
+            .then( (docs) => {
                 objectPatientTable.fill(docs.rows) ;
                 if ( patientId ) {
                     selectPatient( patientId ) ;
                 } else {
                     unselectPatient() ;
                 }
-            }).catch( function(err) {
-                console.log(err);
-            });
+            }).catch( (err) => console.log(err)
+            );
             break ;
             
         case "OperationList":
             let objectOperationTable = new OperationTable( [ "Procedure", "Surgeon", "Status", "Schedule", "Duration", "Equipment" ]  ) ;
             getOperations(true)
-            .then( function(docs) {
-                objectOperationTable.fill(docs.rows) ;
-            }).catch( function(err) {
-                    console.log(err);
-            });
+            .then( (docs) => objectOperationTable.fill(docs.rows)
+            ).catch( (err) => console.log(err)
+            );
             break ;
             
         case "OperationEdit":
@@ -1234,9 +1231,8 @@ function showPage( state = "PatientList" ) {
             if ( patientId ) {
                 if ( operationId ) {
                     db.get( operationId )
-                    .then( function(doc) {
-                        objectPatientData = new OperationData( doc, structOperation ) ;
-                    }).catch( function(err) {
+                    .then( (doc) => objectPatientData = new OperationData( doc, structOperation )
+                    ).catch( (err) => {
                         console.log(err) ;
                         showPage( "InvalidPatient" ) ;
                     }) ;
@@ -1267,9 +1263,8 @@ function showPage( state = "PatientList" ) {
                 } ;
 
                 db.get( patientId, srch )
-                .then( function(doc) {
-                    PatientPhoto( doc ) ;
-                }).catch( function(err) {
+                .then( (doc) => PatientPhoto( doc )
+                ).catch( (err) => {
                     console.log(err) ;
                     showPage( "InvalidPatient" ) ;
                 }) ;
@@ -1281,9 +1276,8 @@ function showPage( state = "PatientList" ) {
         case "PatientDemographics":
             if ( patientId ) {
                 db.get( patientId )
-                .then( function(doc) {
-                    objectPatientData = new PatientData( doc, structDemographics ) ;
-                }).catch( function(err) {
+                .then( (doc) => objectPatientData = new PatientData( doc, structDemographics )
+                ).catch( (err) => {
                     console.log(err) ;
                     showPage( "InvalidPatient" ) ;
                 }) ;
@@ -1296,17 +1290,15 @@ function showPage( state = "PatientList" ) {
             if ( patientId ) {
                 var args ;
                 db.get( patientId )
-                .then( function(doc) {
+                .then( (doc) => {
                     args = [doc,structMedical] ;
                     return getOperations(true) ;
                 })
-                .then( function( olist ) {
-                    olist.rows.forEach( (r) => {
-                        args.push( r.doc, structOperation ) ;
-                    }) ;
+                .then( ( olist ) => {
+                    olist.rows.forEach( (r) => args.push( r.doc, structOperation ) ) ;
                     //objectPatientData = new PatientData( doc, structMedical ) ;
                     objectPatientData = new PatientData( ...args ) ;
-                }).catch( function(err) {
+                }).catch( (err) => {
                     console.log(err) ;
                     showPage( "InvalidPatient" ) ;
                 }) ;
@@ -1322,9 +1314,8 @@ function showPage( state = "PatientList" ) {
         case "NoteList":            
             if ( patientId ) {
                 db.get( patientId )
-                .then( function(doc) {
-                    objectNoteList = new NoteList( NoteListContent ) ;
-                }).catch( function(err) {
+                .then( (doc) => objectNoteList = new NoteList( NoteListContent )
+                ).catch( (err) => {
                     console.log(err) ;
                     showPage( "InvalidPatient" ) ;
                 }) ;
@@ -1432,7 +1423,7 @@ class SortTable {
         let rowsArray = Array.from(tbody.rows);
 
         let type = "number" ;
-        rowsArray.some( function(r) {
+        rowsArray.some( (r) => {
             let c = r.cells[colNum].innerText ;
             if ( c == "" ) {
             } else if ( isNaN( Number(r.cells[colNum].innerText) ) ) {
@@ -1449,14 +1440,10 @@ class SortTable {
 
         switch (type) {
             case 'number':
-                compare = function(rowA, rowB) {
-                    return (rowA.cells[colNum].innerText - rowB.cells[colNum].innerText) * dir;
-                };
+                compare = (rowA, rowB) => (rowA.cells[colNum].innerText - rowB.cells[colNum].innerText) * dir ;
                 break;
             case 'string':
-                compare = function(rowA, rowB) {
-                    return rowA.cells[colNum].innerText > rowB.cells[colNum].innerText ? dir : -dir;
-                };
+                compare = (rowA, rowB) => rowA.cells[colNum].innerText > rowB.cells[colNum].innerText ? dir : -dir ;
                 break;
         }
 
@@ -1476,9 +1463,7 @@ class PatientTable extends SortTable {
         let header = tbl.createTHead() ;
         let row = header.insertRow(0);
         row.classList.add('head') ;
-        collist.forEach( function(v,i,a) {
-            row.insertCell(i).outerHTML='<th>'+v+'</th>' ;
-        } );
+        collist.forEach( (v,i) => row.insertCell(i).outerHTML='<th>'+v+'</th>' );
 
         // Table Body
         let tbody = document.createElement('tbody');
@@ -1492,7 +1477,7 @@ class PatientTable extends SortTable {
         let tbody = this.tname.querySelector('tbody') ;
         tbody.innerHTML = "" ;
         let collist = this.collist ;
-        doclist.forEach( function(doc) {
+        doclist.forEach( (doc) => {
             let row = tbody.insertRow(-1) ;
             let record = doc.doc ;
             row.setAttribute("data-id",record._id) ;
@@ -1506,7 +1491,7 @@ class PatientTable extends SortTable {
                 selectPatient( record._id ) ;
                 showPage( "PatientPhoto" ) ;
             }) ;
-            collist.forEach( function(colname,i) {
+            collist.forEach( (colname,i) => {
                 let c = row.insertCell(i) ;
                 if ( colname in record ) {
                     c.innerText = record[colname] ;
@@ -1544,9 +1529,7 @@ class OperationTable extends SortTable {
         let header = tbl.createTHead() ;
         let row = header.insertRow(0);
         row.classList.add('head') ;
-        collist.forEach( function(v,i,a) {
-            row.insertCell(i).outerHTML='<th>'+v+'</th>' ;
-        } );
+        collist.forEach( (v,i) => row.insertCell(i).outerHTML='<th>'+v+'</th>' );
 
         // Table Body
         let tbody = document.createElement('tbody');
@@ -1560,7 +1543,7 @@ class OperationTable extends SortTable {
         let tbody = this.tname.querySelector('tbody') ;
         tbody.innerHTML = "" ;
         let collist = this.collist ;
-        doclist.forEach( function(doc) {
+        doclist.forEach( (doc) => {
             let row = tbody.insertRow(-1) ;
             let record = doc.doc ;
             row.setAttribute("data-id",record._id) ;
@@ -1574,7 +1557,7 @@ class OperationTable extends SortTable {
                 selectOperation( record._id ) ;
                 showPage( "OperationEdit" ) ;
             }) ;
-            collist.forEach( function(colname,i) {
+            collist.forEach( (colname,i) => {
                 let c = row.insertCell(i) ;
                 if ( colname in record ) {
                     c.innerText = record[colname] ;
@@ -1731,15 +1714,15 @@ function deletePatient() {
     if ( patientId ) {        
         db.get(patientId)
             // get patient
-        .then( function(doc) {
+        .then( (doc) => {
             indexdoc = doc ;
             return getNotes(false) ;
-        }).then( function(docs) {
+        }).then( (docs) => {
             // get notes
             notelist = docs.rows ;
             console.log("notelist",docs,notelist);
             return getOperations (false) ;
-        }).then( function(docs) {
+        }).then( (docs) => {
             // get operations
             oplist = docs.rows ;
             console.log("oplist",docs,oplist);
@@ -1761,28 +1744,19 @@ function deletePatient() {
             } else {
                 throw "No delete" ;
             }           
-        }).then( function(docs) {
-            // remove notes
-            return Promise.all(notelist.map( function (doc) {
-                console.log("n",doc);
-                return db.remove(doc.id,doc.value.rev) ;
-            })) ;
-        }).then( function(docs) {
-            // remove operations
-            return Promise.all(oplist.map( function (doc) {
-                console.log("o",doc);
-                return db.remove(doc.id,doc.value.rev) ;
-            })) ;
-        }).then( function() {
-            // remove patient
-            return db.remove(indexdoc) ;
-        }).then( function() {
+        }).then( (docs) => Promise.all(notelist.map( (doc) =>
+                db.remove(doc.id,doc.value.rev)
+            ))
+        ).then( (docs) => Promise.all(oplist.map( (doc) =>
+                db.remove(doc.id,doc.value.rev)
+            ))
+        ).then( () => db.remove(indexdoc) 
+        ).then( () => {
             // unselect
             unselectPatient() ;
             showPage( "PatientList" ) ;
-        }).catch( function(err) {
-            console.log(err) ;
-        });
+        }).catch( (err) => console.log(err)
+        );
     }
 }
 
@@ -1811,22 +1785,18 @@ function newImage() {
 function deleteNote() {
     if ( noteId ) {
         db.get( noteId )
-        .then( function(doc) {
+        .then( (doc) => {
             let spl = splitNoteId() ;
             if ( confirm("Delete note on patient" + spl.first + " " + spl.last + " from " +  + spl.date + ".\n -- Are you sure?") ) {
                 return doc ;
             } else {
                 throw "No delete" ;
             }           
-        }).then( function(doc) { 
-            return db.remove(doc) ;
-        }).then( function() {
-            unselectNote() ;
-        }).catch( function(err) {
-            console.log(err) ;
-        }).finally( function () {
-            showPage( "NoteList" ) ;
-        }) ;
+        }).then( (doc) => db.remove(doc)
+        ).then( () => unselectNote()
+        ).catch( (err) => console.log(err)
+        ).finally( () => showPage( "NoteList" )
+        ) ;
     }
     return true ;
 }    
@@ -1834,22 +1804,17 @@ function deleteNote() {
 function deleteOperation() {
     if ( operationId ) {
         db.get( operationId )
-        .then( function(doc) {
+        .then( (doc) => {
             let spl = splitOperationId() ;
             if ( confirm("Delete operation <"+doc.Procedure+">\n on patient" + spl.first + " " + spl.last + " from " +  + spl.date + ".\n -- Are you sure?") ) {
                 return doc ;
             } else {
                 throw "No delete" ;
             }           
-        }).then( function(doc) { 
-            return db.remove(doc) ;
-        }).then( function() {
-            unselectOperation() ;
-        }).catch( function(err) {
-            console.log(err) ;
-        }).finally( function () {
-            showPage( "OperationList" ) ;
-        }) ;
+        }).then( (doc) =>db.remove(doc)
+        ).then( () => unselectOperation()
+        ).catch( (err) => console.log(err)
+        ).finally( () => showPage( "OperationList" ) ) ;
     }
     return true ;
 }    
@@ -2191,7 +2156,7 @@ function printCard() {
         attachments: true, 
         binary: true, } 
         )
-    .then( function(doc) {
+    .then( (doc) => {
         show_screen( false ) ;
         console.log( "print",doc) ;
         var photo = document.getElementById("photoCard") ;
