@@ -1924,9 +1924,9 @@ function getOperations(attachments) {
         // also purges excess "blanks"
         return db.allDocs(doc)
         .then( (doclist) => {
-            let newlist = doclist.rows.filter( (row) => {
-                return ( row.doc.Status === "none" ) && ( row.doc.Procedure === "Enter new procedure" ) ; 
-                }).map( row => row.doc ) ;
+            let newlist = doclist.rows
+				.filter( (row) => ( row.doc.Status === "none" ) && ( row.doc.Procedure === "Enter new procedure" ) )
+				.map( row => row.doc ) ;
             switch ( newlist.length ) {
                 case 0 :
                     throw null ;
@@ -1946,17 +1946,13 @@ function getOperations(attachments) {
             }
             // too many empties
             console.log("Remove", dlist.length,"entries");
-            return Promise.all(dlist.map( function (doc) {
-                return db.remove(doc) ;
-            })).then( ()=> {
-                return getOperations( attachments )
-            }) ;
+            return Promise.all(dlist.map( (doc) => db.remove(doc) ))
+				.then( ()=> getOperations( attachments )
+				) ;
         })
         .catch( () => {
             console.log("Add a record") ;
-            return makeNewOperation().then( () => {
-                return getOperations( attachments ) ;
-            }) ;
+            return makeNewOperation().then( () => getOperations( attachments ) ) ;
         });
     } else {
         return db.allDocs(doc) ;
@@ -2004,9 +2000,8 @@ class NoteList {
             this.li = this.ul.getElementsByTagName('li')
                 
         }).bind(this)
-        ).catch( function(err) {
-            console.log(err) ;
-        }); 
+        ).catch( (err) => console.log(err)
+        ); 
     }
 
     liLabel( note ) {
@@ -2019,9 +2014,7 @@ class NoteList {
         cdiv.innerHTML = noteTitle(note) ;
         cdiv.classList.add("inly") ;
         li.appendChild(cdiv) ;
-        li.addEventListener( 'click', (e) => {
-            selectNote( note.id ) ;
-        }) ;
+        li.addEventListener( 'click', (e) => selectNote( note.id ) ) ;
 
         return li ;
     }
@@ -2130,9 +2123,8 @@ function quickImage2() {
     putImageInDoc( doc, image.type, image ) ;
 
     db.put( doc )
-    .then( function(response) {
-        showPage( "NoteList" ) ;
-    }).catch( function(err) {
+    .then( (response) => showPage( "NoteList" )
+    ).catch( (err) => {
         console.log(err) ;
         showPage( "NoteList" ) ;
     }) ;
@@ -2170,9 +2162,8 @@ function saveImage() {
     putImageInDoc( doc, image.type, image ) ;
 
     db.put( doc )
-    .then( function(response) {
-        showPage( "NoteList" ) ;
-    }).catch( function(err) {
+    .then( (response) => showPage( "NoteList" ) 
+    ).catch( (err) => {
         console.log(err) ;
         showPage( "NoteList" ) ;
     }) ;
@@ -2214,7 +2205,7 @@ function printCard() {
             photo.src = getImageFromDoc( doc ) ;
             console.log("Image gotten".doc)
         } 
-        catch(err) {
+        catch (err) {
             photo.src = "style/NoPhoto.png" ;
             console.log("No image",doc) ;
         }
@@ -2233,7 +2224,7 @@ function printCard() {
         t[1].rows[5].cells[1].innerText = "" ;
         return getOperations(true) ;
         })
-    .then( function(docs) {
+    .then( (docs) => {
         var oleng = docs.rows.length ;
         if ( oleng > 0 ) {
             t[0].rows[2].cells[1].innerText = docs.rows[oleng-1].doc.Procedure ;
@@ -2244,7 +2235,7 @@ function printCard() {
         window.print() ;
         show_screen( true ) ;
         showPage( "PatientPhoto" ) ;
-    }).catch( function(err) {
+    }).catch( (err) => {
         console.log(err) ;
         showPage( "InvalidPatient" ) ;
     });
@@ -2256,7 +2247,7 @@ function parseQuery() {
         return null ;
     }
     r = {} ;
-    s.substring(1).split("&").forEach( function(q) {
+    s.substring(1).split("&").forEach( (q) => {
         let qq = q.split("=") ;
         if ( qq.length== 2 ) {
             r[decodeURIComponent(qq[0])] = decodeURIComponent(qq[1]) ;
@@ -2274,7 +2265,7 @@ function parseQuery() {
     db.changes({
         since: 'now',
         live: true
-    }).on('change', function(change) {
+    }).on('change', (change) => {
         switch (displayState) {
             case "PatientList":
             case "OperationList":
@@ -2290,22 +2281,19 @@ function parseQuery() {
     function sync() {
         let synctext = document.getElementById("syncstatus") ;
         synctext.value = "syncing..." ;
-        db.sync( remoteCouch+"/"+cannonicalDBname , {
-            live: true,
-            retry: true
-        }).on('change', function(info) {
-            synctext.value = "changed -- " + info ;
-        }).on('paused', function() {
-            synctext.value = "pending" ;
-        }).on('active', function() {
-            synctext.value = "active";
-        }).on('denied', function(err) {
-            synctext.value = "denied " + err ;
-        }).on('complete', function(info) {
-            synctext.value = "complete -- " + info ;
-        }).on('error', function(err) {
-            synctext.value = "Sync status: error "+err ;
-        });
+        db.sync( 
+			remoteCouch+"/"+cannonicalDBname , 
+			{
+				live: true,
+				retry: true
+			}
+        ).on('change', (info)   => synctext.value = "changed -- " + info
+        ).on('paused', ()       => synctext.value = "pending"
+        ).on('active', ()       => synctext.value = "active"
+        ).on('denied', (err)    => synctext.value = "denied " + err
+        ).on('complete', (info) => synctext.value = "complete -- " + info
+        ).on('error', (err)     => synctext.value = "Sync status: error "+err 
+        );
     }
 
     if (remoteCouch) {
@@ -2324,9 +2312,7 @@ function parseQuery() {
         showPage( "UserName" ) ;
     } else {
         LocalRec = new Local( userName ) ;
-        Promise.all( [ "patientId", "commentId", "remoteCouch", "displayState" ].map( function(key) {
-            return LocalRec.getGlobal(key) ;
-        }))
+        Promise.all( [ "patientId", "commentId", "remoteCouch", "displayState" ].map( (key) => LocalRec.getGlobal(key) ))
         .then( () => {
         
             // first try the search field
