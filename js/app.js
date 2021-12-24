@@ -207,9 +207,7 @@ function createScheduleIndex() {
         },
     } ;
     db.get( id )
-    .catch( (e) => {
-        db.put( doc ) ;
-    });
+    .catch( (e) => db.put( doc ) ) ;
 }
 
 class PatientData {
@@ -253,7 +251,7 @@ class PatientData {
 
         var ul = document.createElement('ul') ;
         
-        struct.forEach(( function( item, idx ) {
+        struct.forEach( ( item, idx ) => {
             var li = document.createElement("li");
             li.setAttribute("data-index",idx) ;
             var l = document.createElement("label");
@@ -280,7 +278,7 @@ class PatientData {
                         v = item.choices[0] ;
                     }
                         
-                    item.choices.forEach( function(c) {
+                    item.choices.forEach( (c) => {
                         i = document.createElement("input") ;
                         i.type = "radio" ;
                         i.name = item.name ;
@@ -307,11 +305,11 @@ class PatientData {
                     var dlist = document.createElement("datalist") ;
                     dlist.id = 'datalist'+idx ;
                         
-                    item.choices.forEach( function(c) {
+                    item.choices.forEach( (c) => {
                         var op = document.createElement("option") ;
                         op.value = c ;
                         dlist.appendChild(op) ;
-                    }) ;
+                        }) ;
                     var id = document.createElement("input") ;
                     id.type = "list" ;
                     id.setAttribute( "list", dlist.id );
@@ -331,11 +329,11 @@ class PatientData {
                         try {
                             vdate = this.YYYYMMDDfromDate( d ) ;
                             vtime = this.AMfrom24( d.getHours(), d.getMinutes() ) ;
-                        }
+                            }
                         catch( err ) {
                             vdate = "" ;
                             vtime = "" ;
-                        }
+                            }
                     }
                         
                     var id = document.createElement("input") ;
@@ -429,7 +427,7 @@ class PatientData {
             }                
             
             ul.appendChild( li ) ;
-        }).bind(this));
+        });
         
         return ul ;
     }
@@ -548,13 +546,11 @@ class PatientData {
             let doc    = this.doc[ipair] ;
             let struct = this.struct[ipair] ;
             let ul     = this.ul[ipair] ;
-            ul.querySelectorAll("li").forEach(( function(li) {
+            ul.querySelectorAll("li").forEach( (li) => {
                 let idx = li.getAttribute("data-index") ;
                 switch ( struct[idx].type ) {
                     case "radio":
-                        document.getElementsByName(struct[idx].name).forEach( function (i) {
-                            i.disabled = false ;
-                        }) ;
+                        document.getElementsByName(struct[idx].name).forEach( (i) => i.disabled = false ) ;
                         break ;
                     case "checkbox":
                         li.querySelector("input").disabled = false ;
@@ -596,7 +592,7 @@ class PatientData {
                         li.querySelector("input").readOnly = false ;
                         break ;
                 }
-            }).bind(this)) ;
+            }) ;
         }
         [...document.getElementsByClassName("edit_note")].forEach( (e) => {
             e.disabled = true ;
@@ -604,14 +600,14 @@ class PatientData {
     }
     
     loadDocData() {
-		//return true if any real change
-		let changed = [] ; 
+        //return true if any real change
+        let changed = [] ; 
         for ( let ipair=0 ; ipair<this.pairs ; ++ipair ) {
             let doc    = this.doc[ipair] ;
             let struct = this.struct[ipair] ;
             let ul     = this.ul[ipair] ;
             changed[ipair] = false ;
-            ul.querySelectorAll("li").forEach(( function(li) {
+            ul.querySelectorAll("li").forEach( (li) => {
                 let idx = li.getAttribute("data-index") ;
                 let v = "" ;
                 let name = struct[idx].name ;
@@ -633,14 +629,15 @@ class PatientData {
                                 var t = this.AMto24( i[1].value ) ; // time
                                 d.setHours( t.hr ) ;
                                 d.setMinutes( t.min ) ;
-                            } catch( err ) {
-                            }
+                                } 
+                            catch( err ) {
+                                }
                             // convert to local time
                             v = d.toISOString() ;
-                        }
+                            }
                         catch( err ) {
                             v = "" ;
-                        }
+                            }
                         break ;
                     case "checkbox":
                         v = li.querySelector("input").checked ;
@@ -656,58 +653,56 @@ class PatientData {
                         break ;
                 }
                 if ( doc[name]==undefined || doc[name] != v ) {
-					changed[ipair] = true ;
-					doc[name] = v ;
-				}
-            }).bind(this)) ;
+                    changed[ipair] = true ;
+                    doc[name] = v ;
+                }
+            }) ;
         }
         return changed ;
     }
     
     saveChanged ( state ) {
-		let changed = this.loadDocData() ;
-		Promise.all( this.doc.filter( (doc, idx) => changed[idx] ).map( (doc) => db.put( doc ) ) )
-			.catch( (err) => console.log(err) )
-			.finally( () => showPage( state )
-		) ;
-	}
+        let changed = this.loadDocData() ;
+        Promise.all( this.doc.filter( (doc, idx) => changed[idx] ).map( (doc) => db.put( doc ) ) )
+            .catch( (err) => console.log(err) )
+            .finally( () => showPage( state )
+        ) ;
+    }
     
     savePatientData() {
-		this.saveChanged( "PatientPhoto" ) ;
+        this.saveChanged( "PatientPhoto" ) ;
     }
 }
 
 class OperationData extends PatientData {
     savePatientData() {
-		this.saveChanged( "OperationList" ) ;
+        this.saveChanged( "OperationList" ) ;
     }
 }
 
 class SettingData extends PatientData {
     savePatientData() {
         this.loadDocData() ;
-		if ( userName != this.doc[0].userName ) {
-			if ( userName != this.doc[0].userName ) {
-				// username changed
-				LocalRec = new Local( this.doc[0].userName ) ;
-				LocalRec.init()
-				.then(( function() {
-					return LocalRec.setDoc( this.doc ) ;
-				}).bind(this))
-				.then( () => {
-					showPage( "MainMenu" ) ;
-					window.location.reload(false) ;
-				})
-				.catch( (err) => {
-					console.log(err) ;
-					showPage( "MainMenu" ) ;
-				}) ;
-			} else {
-				this.saveChanged( "MainMenu" ) ;
-			}
-		} else {
-			showPage( "MainMenu" ) ;
-		}
+        if ( userName != this.doc[0].userName ) {
+            if ( userName != this.doc[0].userName ) {
+                // username changed
+                LocalRec = new Local( this.doc[0].userName ) ;
+                LocalRec.init()
+                .then( () => LocalRec.setDoc( this.doc ) )
+                .then( () => {
+                    showPage( "MainMenu" ) ;
+                    window.location.reload(false) ;
+                    })
+                .catch( (err) => {
+                    console.log(err) ;
+                    showPage( "MainMenu" ) ;
+                    }) ;
+            } else {
+                this.saveChanged( "MainMenu" ) ;
+            }
+        } else {
+            showPage( "MainMenu" ) ;
+        }
     }
 }
 
@@ -731,9 +726,8 @@ class NewPatientData extends PatientData {
             .then( (response) => {
                 selectPatient() ;
                 showPage( "PatientPhoto" ) ;
-            }).catch( (err) => {
-                console.log(err) ;
-            }) ;
+                })
+            .catch( (err) => console.log(err) ) ;
         }
     }
 }
@@ -769,27 +763,25 @@ class Local extends PreLocal {
 
     setValue( key, val ) {
         this._read()
-        .then((function(doc) {
-                if ( this.doc[key] != val ) {
-                    this.doc[key] = val ;
-                    this._write() ;
-                }
-        }).bind(this)) ;
+        .then( (doc) => {
+            if ( this.doc[key] != val ) {
+                this.doc[key] = val ;
+                this._write() ;
+            }
+            }) ;
     }
     
     getValue( key ) {
         this._read()
-        .then((function(doc) {
-            return this.doc[key] ;
-        }).bind(this)) ;
+        .then( (doc) => this.doc[key] ) ;
     }
     
     getGlobal( key ) {
         this._read()
-        .then((function(doc) {
+        .then( (doc) => {
             window[key] = this.doc[key] ;
             return true ;
-        }).bind(this)) ;
+            }) ;
     }
     
     delValue( key ) {
@@ -797,9 +789,7 @@ class Local extends PreLocal {
     }
     
     setDoc( doc ) {
-        Object.entries(doc).forEach(( function( k,v ) {
-            this.doc[k] = v ;
-        }).bind(this)) ;
+        Object.entries(doc).forEach( ( k,v ) => this.doc[k] = v ) ;
         return this._write() ;
     }
         
@@ -812,24 +802,20 @@ class Local extends PreLocal {
             return Promise.resolve(this.doc) ;
         }
         return db.get( this.id )
-        .then(( function(doc) {
+        .then( (doc) => {
             this.doc = doc ;
             this.readIn = true ;
-        }).bind(this))
-        .catch(( function(err) {
-            return this._write() ;
-        }).bind(this)) ;
+            })
+        .catch( (err) => this._write() ) ;
     }
     
     _write() {
         return db.put(this.doc)
-        .then(( function(response) {
-            this.doc._rev = response.rev ;
-        }).bind(this))
-        .catch(( (err) => {
+        .then( (response) => this.doc._rev = response.rev )
+        .catch( (err) => {
             console.log(err) ;
             return null ;
-        }).bind(this));
+            }) ;
     }
 }
    
@@ -980,7 +966,7 @@ class Cbar extends Tbar {
             if ( noteId ) {
                 // existing note
                 db.get(noteId)
-                .then(( function(doc) {
+                .then( (doc) => {
                     doc.text = this.working.textDiv.innerText ;
                     doc.patient_id = patientId ;
                     if ( this.working.upload == null ) {
@@ -990,10 +976,9 @@ class Cbar extends Tbar {
                         putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
                     }
                     return db.put( doc ) ;
-                }).bind(this)).catch( function(err) {
-                }).finally(( function() {
-                    this.leave() ;
-                }).bind(this)) ;
+                    })
+                .catch( (err) => console.log(err) )
+                .finally( () => this.leave() ) ;
             } else {
                 // new note
                 let doc = {
@@ -1005,11 +990,9 @@ class Cbar extends Tbar {
                 if (this.working.upload && this.working.upload !== "remove") {
                     putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
                 }                
-                db.put(doc).catch( function(err) {
-                    console.log(err) ;
-                }).finally(( function () {
-                    this.leave() ;
-                }).bind(this)) ;
+                db.put(doc)
+                .catch( (err) => console.log(err) )
+                .finally( () => this.leave() ) ;
             }
         }
     }
@@ -1054,8 +1037,8 @@ class Pbar extends Tbar {
         if ( this.active() ) {
             if ( patientId ) {
                 // existing LocalRec
-                db.get(patientId)
-                .then(( function(doc) {
+                getThePatient( true )
+                .then( (doc) => {
                     if ( this.working.upload == null ) {
                     } else if ( this.working.upload === "remove") {
                         deleteImageFromDoc( doc ) ;
@@ -1063,12 +1046,10 @@ class Pbar extends Tbar {
                         putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
                     }
                     return db.put( doc ) ;
-                }).bind(this)).catch( function(err) {
-                    console.log(err) ;
-                }).finally(( function() {
-                    this.leave() ;
-                }).bind(this)) ;
-            }unselectPatient
+                })
+                .catch( (err)  => console.log(err) )
+                .finally( () => this.leave() ) ;
+            }
         }
     }
     
@@ -1087,8 +1068,8 @@ function selectPatient( pid ) {
         
     patientId = pid ;
     // Check patient existence
-    db.get(patientId)
-    .then( function (doc) {
+    getThePatient(false)
+    .then( (doc) => {
         LocalRec.setValue( "patientId", pid ) ;
         if ( displayState == "PatientList" ) {
             // highlight the list row
@@ -1104,10 +1085,11 @@ function selectPatient( pid ) {
         document.getElementById("editreviewpatient").disabled = false ;
         let spl = splitPatientId() ;
         document.getElementById( "titlebox" ).innerHTML = "Name: <B>"+spl.last+"</B>, <B>"+spl.first+"</B>  DOB: <B>"+spl.dob+"</B>" ;
-    }).catch( function(err) {
+        })
+    .catch( (err) => {
         console.log(err) ;
         unselectPatient() ;
-    }) ;
+        }) ;
 }
 
 function selectOperation( oid ) {
@@ -1119,7 +1101,7 @@ function selectOperation( oid ) {
     operationId = oid ;
     // Check patient existence
     db.get(operationId)
-    .then( function (doc) {
+    .then( (doc) => {
         LocalRec.setValue( "operationId", oid ) ;
         if ( displayState == "OperationList" ) {
             // highlight the list row
@@ -1133,10 +1115,11 @@ function selectOperation( oid ) {
             }
         }
         document.getElementById("editreviewoperation").disabled = false ;
-    }).catch( (err) => {
+        })
+    .catch( (err) => {
         console.log(err) ;
         unselectOperation() ;
-    }) ;
+        }) ;
 }
 
 function unselectPatient() {
@@ -1175,9 +1158,7 @@ function unselectOperation() {
 function showPage( state = "PatientList" ) {
     displayState = state ;
 
-    Array.from(document.getElementsByClassName("pageOverlay")).forEach( (v)=> {
-        v.style.display = v.classList.contains(displayState) ? "block" : "none" ;
-    });
+    Array.from(document.getElementsByClassName("pageOverlay")).forEach( (v) => v.style.display = v.classList.contains(displayState) ? "block" : "none" );
 
     LocalRec.setValue("displayState",displayState) ;
 
@@ -1210,19 +1191,18 @@ function showPage( state = "PatientList" ) {
                 } else {
                     unselectPatient() ;
                 }
-            }).catch( (err) => console.log(err)
-            );
+                })
+            .catch( (err) => console.log(err) ) ;
             break ;
             
         case "OperationList":
             let objectOperationTable = new OperationTable( [ "Procedure", "Surgeon", "Status", "Schedule", "Duration", "Equipment" ]  ) ;
             getOperations(true)
-            .then( (docs) => objectOperationTable.fill(docs.rows)
-            ).catch( (err) => console.log(err)
-            );
+            .then( (docs) => objectOperationTable.fill(docs.rows) )
+            .catch( (err) => console.log(err) );
             break ;
             
-        case "OperationEdit":
+        case "OperationNew":
             unselectOperation() ;
             showPage( "OperationEdit" ) ;
             break ;
@@ -1231,11 +1211,11 @@ function showPage( state = "PatientList" ) {
             if ( patientId ) {
                 if ( operationId ) {
                     db.get( operationId )
-                    .then( (doc) => objectPatientData = new OperationData( doc, structOperation )
-                    ).catch( (err) => {
+                    .then( (doc) => objectPatientData = new OperationData( doc, structOperation ) )
+                    .catch( (err) => {
                         console.log(err) ;
                         showPage( "InvalidPatient" ) ;
-                    }) ;
+                        }) ;
                 } else {
                     objectPatientData = new OperationData(
                     {
@@ -1262,12 +1242,12 @@ function showPage( state = "PatientList" ) {
                     attachments: true ,
                 } ;
 
-                db.get( patientId, srch )
-                .then( (doc) => PatientPhoto( doc )
-                ).catch( (err) => {
+                getThePatient( true )
+                .then( (doc) => PatientPhoto( doc ) )
+                .catch( (err) => {
                     console.log(err) ;
                     showPage( "InvalidPatient" ) ;
-                }) ;
+                    }) ;
             } else {
                 showPage( "PatientList" ) ;
             }
@@ -1275,12 +1255,12 @@ function showPage( state = "PatientList" ) {
             
         case "PatientDemographics":
             if ( patientId ) {
-                db.get( patientId )
-                .then( (doc) => objectPatientData = new PatientData( doc, structDemographics )
-                ).catch( (err) => {
+                getThePatient( false )
+                .then( (doc) => objectPatientData = new PatientData( doc, structDemographics ) )
+                .catch( (err) => {
                     console.log(err) ;
                     showPage( "InvalidPatient" ) ;
-                }) ;
+                    }) ;
             } else {
                 showPage( "PatientList" ) ;
             }
@@ -1289,19 +1269,20 @@ function showPage( state = "PatientList" ) {
         case "PatientMedical":
             if ( patientId ) {
                 var args ;
-                db.get( patientId )
+                getThePatient( false )
                 .then( (doc) => {
                     args = [doc,structMedical] ;
                     return getOperations(true) ;
-                })
+                    })
                 .then( ( olist ) => {
                     olist.rows.forEach( (r) => args.push( r.doc, structOperation ) ) ;
                     //objectPatientData = new PatientData( doc, structMedical ) ;
                     objectPatientData = new PatientData( ...args ) ;
-                }).catch( (err) => {
+                    })
+                .catch( (err) => {
                     console.log(err) ;
                     showPage( "InvalidPatient" ) ;
-                }) ;
+                    }) ;
             } else {
                 showPage( "PatientList" ) ;
             }
@@ -1313,12 +1294,12 @@ function showPage( state = "PatientList" ) {
 
         case "NoteList":            
             if ( patientId ) {
-                db.get( patientId )
-                .then( (doc) => objectNoteList = new NoteList( NoteListContent )
-                ).catch( (err) => {
+                getThePatient( false )
+                .then( (doc) => objectNoteList = new NoteList( NoteListContent ) )
+                .catch( (err) => {
                     console.log(err) ;
                     showPage( "InvalidPatient" ) ;
-                }) ;
+                    }) ;
             } else {
                 showPage( "PatientList" ) ;
             }
@@ -1712,17 +1693,19 @@ function deletePatient() {
     let notelist ;
     let oplist ;
     if ( patientId ) {        
-        db.get(patientId)
+        getThePatient( true )
             // get patient
         .then( (doc) => {
             indexdoc = doc ;
             return getNotes(false) ;
-        }).then( (docs) => {
+            })
+        .then( (docs) => {
             // get notes
             notelist = docs.rows ;
             console.log("notelist",docs,notelist);
             return getOperations (false) ;
-        }).then( (docs) => {
+            })
+        .then( (docs) => {
             // get operations
             oplist = docs.rows ;
             console.log("oplist",docs,oplist);
@@ -1744,19 +1727,13 @@ function deletePatient() {
             } else {
                 throw "No delete" ;
             }           
-        }).then( (docs) => Promise.all(notelist.map( (doc) =>
-                db.remove(doc.id,doc.value.rev)
-            ))
-        ).then( (docs) => Promise.all(oplist.map( (doc) =>
-                db.remove(doc.id,doc.value.rev)
-            ))
-        ).then( () => db.remove(indexdoc) 
-        ).then( () => {
-            // unselect
-            unselectPatient() ;
-            showPage( "PatientList" ) ;
-        }).catch( (err) => console.log(err)
-        );
+            })
+        .then( () => Promise.all(notelist.map( (doc) => db.remove(doc.id,doc.value.rev) ) ) )
+        .then( () => Promise.all(oplist.map( (doc) => db.remove(doc.id,doc.value.rev) ) ) )
+        .then( () => db.remove(indexdoc) )
+        .then( () => unselectPatient() )
+        .catch( (err) => console.log(err) ) 
+        .finally( () => showPage( "PatientList" ) ) ;
     }
 }
 
@@ -1771,10 +1748,10 @@ function PatientPhoto( doc ) {
     let p = document.getElementById("PatientPhotoContent").getElementsByTagName("img")[0] ;
     try {
         p.src = getImageFromDoc( doc ) ;
-    }
+        }
     catch( err ) {
         p.src = NoPhoto ;
-    }
+        }
 }
 
 function newImage() {
@@ -1792,11 +1769,11 @@ function deleteNote() {
             } else {
                 throw "No delete" ;
             }           
-        }).then( (doc) => db.remove(doc)
-        ).then( () => unselectNote()
-        ).catch( (err) => console.log(err)
-        ).finally( () => showPage( "NoteList" )
-        ) ;
+            })
+        .then( (doc) => db.remove(doc) )
+        .then( () => unselectNote() )
+        .catch( (err) => console.log(err) )
+        .finally( () => showPage( "NoteList" ) ) ;
     }
     return true ;
 }    
@@ -1811,10 +1788,11 @@ function deleteOperation() {
             } else {
                 throw "No delete" ;
             }           
-        }).then( (doc) =>db.remove(doc)
-        ).then( () => unselectOperation()
-        ).catch( (err) => console.log(err)
-        ).finally( () => showPage( "OperationList" ) ) ;
+            })
+        .then( (doc) =>db.remove(doc) )
+        .then( () => unselectOperation() )
+        .catch( (err) => console.log(err) )
+        .finally( () => showPage( "OperationList" ) ) ;
     }
     return true ;
 }    
@@ -1861,6 +1839,10 @@ function noteTitle( doc ) {
     return "New note" ;
 }
 
+function getThePatient(attachments) {
+    return db.get( patientId, { attachments: attachments, binary: attachments } ) ;
+}
+
 function getPatients(attachments) {
     doc = {
         startkey: makePatientId(null,"first"),
@@ -1890,8 +1872,8 @@ function getOperations(attachments) {
         return db.allDocs(doc)
         .then( (doclist) => {
             let newlist = doclist.rows
-				.filter( (row) => ( row.doc.Status === "none" ) && ( row.doc.Procedure === "Enter new procedure" ) )
-				.map( row => row.doc ) ;
+                .filter( (row) => ( row.doc.Status === "none" ) && ( row.doc.Procedure === "Enter new procedure" ) )
+                .map( row => row.doc ) ;
             switch ( newlist.length ) {
                 case 0 :
                     throw null ;
@@ -1903,7 +1885,7 @@ function getOperations(attachments) {
                     throw newlist.slice(1) ;
                     break ;
                 }
-        })
+            })
         .catch( (dlist) => {
             if ( dlist == null ) {
                 // needs an empty
@@ -1912,13 +1894,13 @@ function getOperations(attachments) {
             // too many empties
             console.log("Remove", dlist.length,"entries");
             return Promise.all(dlist.map( (doc) => db.remove(doc) ))
-				.then( ()=> getOperations( attachments )
-				) ;
-        })
+                .then( ()=> getOperations( attachments )
+                ) ;
+            })
         .catch( () => {
             console.log("Add a record") ;
             return makeNewOperation().then( () => getOperations( attachments ) ) ;
-        });
+            });
     } else {
         return db.allDocs(doc) ;
     }
@@ -1953,20 +1935,19 @@ class NoteList {
 
         // get notes
         getNotes(true)
-        .then(( function(docs) {
-            docs.rows.forEach(( function(note, i) {
+        .then( (docs) => {
+            docs.rows.forEach( (note, i) => {
 
                 let li1 = this.liLabel(note) ;
                 this.ul.appendChild( li1 ) ;
                 let li2 = this.liNote(note,li1) ;
                 this.ul.appendChild( li2 ) ;
 
-            }).bind(this)) ;
+            }) ;
             this.li = this.ul.getElementsByTagName('li')
                 
-        }).bind(this)
-        ).catch( (err) => console.log(err)
-        ); 
+            })
+        .catch( (err) => console.log(err) ) ; 
     }
 
     liLabel( note ) {
@@ -1997,10 +1978,10 @@ class NoteList {
                 img.classList.add("entryfield_image") ;
                 img.src = imagedata ;
                 li.appendChild(img);
-            }
+                }
             catch(err) {
                 console.log(err) ;
-            }
+                }
 
             let textdiv = document.createElement("div") ;
             textdiv.innerText = ("text" in note.doc) ? note.doc.text : "" ;
@@ -2088,11 +2069,11 @@ function quickImage2() {
     putImageInDoc( doc, image.type, image ) ;
 
     db.put( doc )
-    .then( (response) => showPage( "NoteList" )
-    ).catch( (err) => {
+    .then( (response) => showPage( "NoteList" ) )
+    .catch( (err) => {
         console.log(err) ;
         showPage( "NoteList" ) ;
-    }) ;
+        }) ;
 }
 
 function getImage() {
@@ -2127,11 +2108,11 @@ function saveImage() {
     putImageInDoc( doc, image.type, image ) ;
 
     db.put( doc )
-    .then( (response) => showPage( "NoteList" ) 
-    ).catch( (err) => {
+    .then( (response) => showPage( "NoteList" ) )
+    .catch( (err) => {
         console.log(err) ;
         showPage( "NoteList" ) ;
-    }) ;
+        }) ;
     document.getElementById('imageCheck').src = "" ;
 }
 
@@ -2151,11 +2132,7 @@ function printCard() {
     }
     var card = document.getElementById("printCard") ;
     var t = card.getElementsByTagName("table") ;
-    db.get( patientId , { 
-        include_docs: true ,
-        attachments: true, 
-        binary: true, } 
-        )
+    getThePatient( true )
     .then( (doc) => {
         show_screen( false ) ;
         console.log( "print",doc) ;
@@ -2169,11 +2146,11 @@ function printCard() {
         try {
             photo.src = getImageFromDoc( doc ) ;
             console.log("Image gotten".doc)
-        } 
+            } 
         catch (err) {
             photo.src = "style/NoPhoto.png" ;
             console.log("No image",doc) ;
-        }
+            }
         t[0].rows[0].cells[1].innerText = doc.LastName+"' "+doc.FirstName ;
         t[0].rows[1].cells[1].innerText = doc.Complaint ;
         t[0].rows[2].cells[1].innerText = "" ;
@@ -2200,10 +2177,11 @@ function printCard() {
         window.print() ;
         show_screen( true ) ;
         showPage( "PatientPhoto" ) ;
-    }).catch( (err) => {
+        })
+    .catch( (err) => {
         console.log(err) ;
         showPage( "InvalidPatient" ) ;
-    });
+        }) ;
 }
 
 function parseQuery() {
@@ -2247,11 +2225,11 @@ function parseQuery() {
         let synctext = document.getElementById("syncstatus") ;
         synctext.value = "syncing..." ;
         db.sync( 
-			remoteCouch+"/"+cannonicalDBname , 
-			{
-				live: true,
-				retry: true
-			}
+            remoteCouch+"/"+cannonicalDBname , 
+            {
+                live: true,
+                retry: true
+            }
         ).on('change', (info)   => synctext.value = "changed -- " + info
         ).on('paused', ()       => synctext.value = "pending"
         ).on('active', ()       => synctext.value = "active"
@@ -2286,6 +2264,7 @@ function parseQuery() {
                 selectPatient( q.patientId ) ;
                 showPage( "PatientPhoto" ) ;
             } else {
+                console.log("switch",userName,displayState) ;
                 switch ( displayState ) {
                     case "PatientList":
                     case "MainMenu":
@@ -2302,6 +2281,7 @@ function parseQuery() {
                     case "NoteImage":
                         showPage( "NoteList" ) ;
                         break ;
+                    case undefined:
                     case "UserName":
                     case "InvalidPatient":
                         showPage( "PatientList" ) ;
@@ -2314,7 +2294,11 @@ function parseQuery() {
                         break ;
                 }
             }
-        });
+            })
+        .catch( (err) => {
+            console.log(err) ;
+            showPage( "MainMenu" ) ;
+            }) ;
     }
         
     
