@@ -518,9 +518,6 @@ class PatientData {
         [...document.getElementsByClassName('discarddata')].forEach( (e) => {
             e.disabled = bool ;
         });
-        [...document.getElementsByClassName('returndata')].forEach( (e) => {
-            e.disabled = !bool ;
-        });
     }
     
     fsclick( target ) {
@@ -856,10 +853,10 @@ class Tbar {
         this.buttonsdisabled(true) ;
     }
     
-    leave(showFunction) {
+    leave(page) {
         this.is_active = false ;
         this.buttonsdisabled(false) ;
-        showFunction() ;
+        showPage(page) ;
     }
 
     fieldset( existingdiv, toolbarclass ) {
@@ -899,7 +896,7 @@ class Tbar {
 
     deleteedit() {
         this.deletefunc() ;
-        this.leave() ;
+        this.leave("NoteList") ;
     }
 
     getImage() {
@@ -978,7 +975,7 @@ class Cbar extends Tbar {
                     return db.put( doc ) ;
                     })
                 .catch( (err) => console.log(err) )
-                .finally( () => this.leave() ) ;
+                .finally( () => this.leave("NoteList") ) ;
             } else {
                 // new note
                 let doc = {
@@ -992,13 +989,9 @@ class Cbar extends Tbar {
                 }                
                 db.put(doc)
                 .catch( (err) => console.log(err) )
-                .finally( () => this.leave() ) ;
+                .finally( () => this.leave("NoteList") ) ;
             }
         }
-    }
-
-    leave() {
-        super.leave(showNoteList) ;
     }
 }
     
@@ -1048,14 +1041,10 @@ class Pbar extends Tbar {
                     return db.put( doc ) ;
                 })
                 .catch( (err)  => console.log(err) )
-                .finally( () => this.leave() ) ;
+                .finally( () => this.leave("PatientPhoto") ) ;
             }
         }
-    }
-    
-    leave() {
-        super.leave(showPatientPhoto) ;
-    }
+    }    
 }
     
 var photoBar = new Pbar() ;        

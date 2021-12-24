@@ -20,7 +20,7 @@
                     <div class="SettingMenu pageOverlay">
                         <button type="button" class="divbutton edit_note" onclick="objectPatientData.clickEdit()">Edit</button>
                         <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
-                        <button type="button" class="divbutton returndata return" onclick="showPage( 'PatientList' )">Cancel</button>
+                        <button type="button" class="divbutton return" onclick="showPage( 'PatientList' )">Cancel</button>
                     </div>
                     <!-- top: PatientList -->
                     <div class="PatientList pageOverlay">
@@ -48,14 +48,14 @@
                     <div class="PatientData PatientDemographics PatientMedical pageOverlay">
                         <button type="button" class="divbutton edit_note" onclick="objectPatientData.clickEdit()">Edit</button>
                         <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
-                        <button type="button" class="divbutton returndata return" onclick="showPage( 'PatientPhoto' )">Cancel</button>
+                        <button type="button" class="divbutton return" onclick="showPage( 'PatientPhoto' )">Cancel</button>
                     </div>
                     <!-- top: OperationEdit -->
                     <div class="PatientData OperationEdit pageOverlay">
                         <button type="button" class="divbutton edit_note" onclick="objectPatientData.clickEdit()">Edit</button>
                         <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
                         <button type="button" class="divbutton delete" onclick="deleteOperation()">Delete Operation</button>
-                        <button type="button" class="divbutton returndata return" onclick="showPage( 'OperationList' )">Cancel</button>
+                        <button type="button" class="divbutton return" onclick="showPage( 'OperationList' )">Cancel</button>
                     </div>
                     <!-- top: InvalidPatient -->
                     <div class="InvalidPatient pageOverlay">
@@ -173,7 +173,7 @@
         <div id="templates" class="pageOverlay">
             <div class="editToolbar">
                 <button type="button" onclick="editBar.saveedit()"><span><B>Save</B></span></button>
-                <button type="button" onclick="editBar.leave()"><span><B>Cancel</B></span></button>
+                <button type="button" onclick="editBar.leave('NoteList')"><span><B>Cancel</B></span></button>
                 <button type="button" onclick="editBar.getImage()" title="Get image"><span><B>&#128247;</B></span></button>            
                 <button type="button" onclick="editBar.removeImage()" class="tbarxpic" title="Remove image"><span><B>&#128473;&#128247;</B></span></button>
                 <button type="button" onclick="editBar.deleteedit()" class="tbardel delete" title="Delete note"><span><B>Delete</B></span></button>
@@ -181,7 +181,7 @@
             </div>
             <div class="photoToolbar">
                 <button type="button" onclick="photoBar.saveedit()"><span><B>Save</B></span></button>
-                <button type="button" onclick="photoBar.leave()"><span><B>Cancel</B></span></button>
+                <button type="button" onclick="photoBar.leave('PatientPhoto')"><span><B>Cancel</B></span></button>
                 <button type="button" onclick="photoBar.getImage()" title="Get image"><span><B>&#128247;</B></span></button>            
                 <button type="button" onclick="photoBar.removeImage()" class="tbarxpic" title="Remove image"><span><B>&#128473;&#128247;</B></span></button>
                 <input type="file" accept="image/*" class="imageBar" onchange="photoBar.handleImage()" capture="environment">

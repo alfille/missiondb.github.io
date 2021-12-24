@@ -114,6 +114,7 @@ So there is a light relational database on top of the data
 |author|user name|automatic|username of record creator|
 |patient_id|Patient Id|automatic|link back to patient|
 |text|Note text|free text||
+|date|Date|YYY-MM-DD|automatic and editable|
 |_attachments:image:data|Image|automatic|binary image data|
 |_attachments:image:content_type|Image type|automatic|e.g. png||
 
