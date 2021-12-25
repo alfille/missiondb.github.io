@@ -321,37 +321,11 @@ class PatientData {
                     break ;
                 case "datetime":
                 case "datetime-local":
-                    var vdate  = "" ;
-                    var vtime  = "" ;
+                    var d = null ;
                     if ( item.name in doc ) { 
-                        var d = new Date( doc[item.name] ) ;
-                        // date
-                        try {
-                            vdate = this.YYYYMMDDfromDate( d ) ;
-                            vtime = this.AMfrom24( d.getHours(), d.getMinutes() ) ;
-                            }
-                        catch( err ) {
-                            vdate = "" ;
-                            vtime = "" ;
-                            }
+                        d = new Date( doc[item.name] ) ;
                     }
-                        
-                    var id = document.createElement("input") ;
-                    id.type = "text" ;
-                    id.size = 10 ;
-                    id.pattern="\d+-\d+-\d+" ;
-                    id.value = vdate ;
-                    id.title = "Date in format YYYY-MM-DD" ;
-                    
-                    var it = document.createElement("input") ;
-                    it.type = "text" ;
-                    it.pattern="[0-1][0-9]:[0-5][0-9] [A|P]M" ;
-                    it.size = 9 ;
-                    it.value = vtime ;
-                    it.title = "Time in format HH:MM AM or HH:MM PM" ;
-                    
-                    l.appendChild(id) ;
-                    l.appendChild(it) ;
+                    this.DateTimetoInput(d).forEach( (f) => l.appendChild(f) ) ;
                     break ;
                 case "date":
                     var v  = "" ;
@@ -398,7 +372,7 @@ class PatientData {
                     
                     l.appendChild(it) ;
                     break ;
-                case "checkbox":
+                  case "checkbox":
                     i = document.createElement("input");
                     i.type = item.type ;
                     i.title = item.hint ;
@@ -431,6 +405,53 @@ class PatientData {
         
         return ul ;
     }
+
+    DateTimetoInput( d ) {
+        var vdate ;
+        var vtime ;
+        try {
+            [vdate, vtime] =  [ this.YYYYMMDDfromDate( d ), this.AMfrom24( d.getHours(), d.getMinutes() ) ] ;
+            }
+        catch( err ) {
+            [vdate, vtime] = [ "", "" ] ;
+            }
+            
+        var id = document.createElement("input") ;
+        id.type = "text" ;
+        id.size = 10 ;
+        id.pattern="\d+-\d+-\d+" ;
+        id.value = vdate ;
+        id.title = "Date in format YYYY-MM-DD" ;
+        
+        var it = document.createElement("input") ;
+        it.type = "text" ;
+        it.pattern="[0-1][0-9]:[0-5][0-9] [A|P]M" ;
+        it.size = 9 ;
+        it.value = vtime ;
+        it.title = "Time in format HH:MM AM or HH:MM PM" ;
+        return [ id, it ] ;
+    }
+
+    DateTimefromInput( field ) {
+        var i = field.querySelectorAll("input") ;
+        try {
+            var d =  this.YYYYMMDDtoDate( i[0].value ) ; // date
+            
+            try {
+                var t = this.AMto24( i[1].value ) ; // time
+                d.setHours( t.hr ) ;
+                d.setMinutes( t.min ) ;
+                } 
+            catch( err ) {
+                }
+            // convert to local time
+            return d.toISOString() ;
+            }
+        catch( err ) {
+            return "" ;
+            }
+    }
+
 
     HMtoMin ( inp ) {
         if ( typeof inp != 'string' ) {
@@ -618,23 +639,7 @@ class PatientData {
                         break ;
                     case "datetime":
                     case "datetime-local":
-                        var i = li.querySelectorAll("input") ;
-                        try {
-                            var d =  this.YYYYMMDDtoDate( i[0].value ) ; // date
-                            
-                            try {
-                                var t = this.AMto24( i[1].value ) ; // time
-                                d.setHours( t.hr ) ;
-                                d.setMinutes( t.min ) ;
-                                } 
-                            catch( err ) {
-                                }
-                            // convert to local time
-                            v = d.toISOString() ;
-                            }
-                        catch( err ) {
-                            v = "" ;
-                            }
+                        v = this.DateTimefromInput( li ) ;
                         break ;
                     case "checkbox":
                         v = li.querySelector("input").checked ;
@@ -1867,7 +1872,6 @@ function getOperations(attachments) {
                 case 0 :
                     throw null ;
                 case 1 :
-                console.log( "Just perfect");
                     return Promise.resolve( doclist ) ;
                     break ;
                 default:
@@ -1908,7 +1912,7 @@ function getNotes(attachments) {
     return db.allDocs(doc) ;
 }
 
-class NoteList {
+class NoteList extends PatientData {
     constructor( parent ) {
         if ( parent == null ) {
             parent = document.body ;
@@ -1946,8 +1950,8 @@ class NoteList {
         li.appendChild( document.getElementById("templates").getElementsByClassName("edit_note")[0].cloneNode(true) );
 
         let cdiv = document.createElement("div");
-        cdiv.innerHTML = noteTitle(note) ;
         cdiv.classList.add("inly") ;
+        let dbut = document.createElement("input") ;
         li.appendChild(cdiv) ;
         li.addEventListener( 'click', (e) => selectNote( note.id ) ) ;
 
