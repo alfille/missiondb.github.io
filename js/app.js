@@ -411,8 +411,10 @@ class PatientData {
         var vtime ;
         try {
             [vdate, vtime] =  [ this.YYYYMMDDfromDate( d ), this.AMfrom24( d.getHours(), d.getMinutes() ) ] ;
+            console.log( "good", d ) ;
             }
         catch( err ) {
+			console.log( "bad",d ) ;
             [vdate, vtime] = [ "", "" ] ;
             }
             
@@ -923,7 +925,7 @@ class Tbar {
     }
 }
 
-class Cbar extends Tbar {
+class Nbar extends Tbar {
     // for notes
     startedit( existingdiv ) {
         if ( this.active() ) {
@@ -988,6 +990,7 @@ class Cbar extends Tbar {
                     author: userName,
                     text: this.working.textDiv.innerText,
                     patient_id: patientId,
+                    date: new Date().toISOString(),
                 } ;
                 if (this.working.upload && this.working.upload !== "remove") {
                     putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
@@ -1000,7 +1003,7 @@ class Cbar extends Tbar {
     }
 }
     
-var editBar = new Cbar() ;        
+var editBar = new Nbar() ;        
 
 class Pbar extends Tbar {
     // for PatientPhoto
@@ -1230,12 +1233,6 @@ function showPage( state = "PatientList" ) {
             
         case "PatientPhoto":
             if ( patientId ) {
-                let srch = {
-                    include_docs: true ,
-                    binary: true ,
-                    attachments: true ,
-                } ;
-
                 getThePatient( true )
                 .then( (doc) => PatientPhoto( doc ) )
                 .catch( (err) => {
@@ -1586,11 +1583,11 @@ function splitPatientId( pid = patientId ) {
             return null ;
         }
         return {
-            "type": spl[0],
-            "version": spl[1],
-            "last" : spl[2],
-            "first": spl[3],
-            "dob": spl[4],
+            type: spl[0],
+            version: spl[1],
+            last : spl[2],
+            first: spl[3],
+            dob: spl[4],
         } ;
     }
     return null ;
@@ -1615,8 +1612,8 @@ function makeNoteId(position=null) {
         RecordFormat.type.note,
         RecordFormat.version,
         spl.last,
-        doc.first,
-        doc.dob,
+        spl.first,
+        spl.dob,
         d , 
         ].join(";") ;
 }
@@ -1646,9 +1643,9 @@ function makeOperationId(position=null) {
         ].join(";") ;
 }
 
-function splitNoteId() {
-    if ( noteId ) {
-        var spl = noteId.split(";") ;
+function splitNoteId( nid=noteId ) {
+    if ( nid ) {
+        var spl = nid.split(";") ;
         if ( spl.length !== 6 ) {
             return null ;
         }
@@ -1664,9 +1661,9 @@ function splitNoteId() {
     return null ;
 }
 
-function splitOperationId() {
-    if ( operationId ) {
-        var spl = operationId.split(";") ;
+function splitOperationId( oid = operationId ) {
+    if ( oid ) {
+        var spl = oid.split(";") ;
         if ( spl.length !== 6 ) {
             return null ;
         }
@@ -1823,14 +1820,20 @@ function unselectNote() {
 }
 
 function noteTitle( doc ) {
-    if ( doc ) {
-        let d = doc ;
-        if ( "doc" in doc ) {
-            d = doc.doc ;
-        }
-        return d._id.split(';').pop()+"  by <b>"+(d.author||"anonymous")+"</b>" ;
-    }
-    return "New note" ;
+	let date = new Date().toISOString() ;
+	author = userName ;
+    if ( doc  && doc.id ) {
+        date = splitNoteId(doc.id).key ;
+		console.log( "from key", date ) ;
+        if ( doc.doc && doc.doc.author ) {
+			author = doc.doc.author ;
+		}
+        if ( doc.doc && doc.doc.date ) {
+			date = doc.doc.date ;
+			console.log( "from doc", date ) ;
+		}
+	}
+    return [author, new Date(date)] ;
 }
 
 function getThePatient(attachments) {
@@ -1914,33 +1917,32 @@ function getNotes(attachments) {
 
 class NoteList extends PatientData {
     constructor( parent ) {
+		super() ;
         if ( parent == null ) {
             parent = document.body ;
         }
-        let uls = parent.getElementsByTagName('ul') ;
-        if (uls.length > 0 ) { // get rid of old
-            parent.removeChild(uls[0]) ;
-        }
+        console.log("parent",parent) ;
+
+        [...parent.getElementsByTagName('ul')].forEach( (u) => parent.removeChild(u) ) ;
 
         this.ul = document.createElement('ul') ;
         this.ul.setAttribute( "id", "NoteList" ) ;
         parent.appendChild(this.ul) ;
 
-        // get notes
-        getNotes(true)
-        .then( (docs) => {
-            docs.rows.forEach( (note, i) => {
+		// get notes
+		getNotes(true)
+		.then( (docs) => {
+			docs.rows.forEach( (note, i) => {
+				let li1 = this.liLabel(note) ;
+				this.ul.appendChild( li1 ) ;
+				let li2 = this.liNote(note,li1) ;
+				this.ul.appendChild( li2 ) ;
 
-                let li1 = this.liLabel(note) ;
-                this.ul.appendChild( li1 ) ;
-                let li2 = this.liNote(note,li1) ;
-                this.ul.appendChild( li2 ) ;
-
-            }) ;
-            this.li = this.ul.getElementsByTagName('li')
-                
-            })
-        .catch( (err) => console.log(err) ) ; 
+			}) ;
+			this.li = this.ul.getElementsByTagName('li')
+				
+			})
+		.catch( (err) => console.log(err) ) ; 
     }
 
     liLabel( note ) {
@@ -1951,6 +1953,9 @@ class NoteList extends PatientData {
 
         let cdiv = document.createElement("div");
         cdiv.classList.add("inly") ;
+        let nt = noteTitle( note ) ;
+        this.DateTimetoInput(nt[1]).forEach( (i) => cdiv.appendChild(i) ) ;
+        cdiv.appendChild( document.createTextNode( " by "+nt[0]) ) ;
         let dbut = document.createElement("input") ;
         li.appendChild(cdiv) ;
         li.addEventListener( 'click', (e) => selectNote( note.id ) ) ;
@@ -1990,12 +1995,19 @@ class NoteList extends PatientData {
         }) ;
         label.getElementsByClassName("edit_note")[0].onclick =
             (e) => {
+			var i = label.querySelectorAll("input") ;
+			picker.attach({ element: i[0] }) ;
+			tp.attach({ element: i[1] }) ;
             selectNote( note.id ) ;
             editBar.startedit( li ) ;
-        } ;
+			} ;
         label.addEventListener( 'dblclick', (e) => {
+			var i = label.querySelectorAll("input") ;
+			picker.attach({ element: i[0] }) ;
+			tp.attach({ element: i[1] }) ;
+            selectNote( note.id ) ;
             editBar.startedit( li ) ;
-        }) ;
+			}) ;
 
         return li ;
     }
@@ -2031,7 +2043,7 @@ function putImageInDoc( doc, itype, idata ) {
 }
 
 function NoteNew() {
-    document.getElementById("NoteNewLabel").innerHTML = noteTitle(null)  ;
+    document.getElementById("NoteNewLabel").innerHTML = noteTitle()  ;
     let d = document.getElementById("NoteNewText") ;
     d.innerHTML = "" ;
     editBar.startedit( d ) ;
