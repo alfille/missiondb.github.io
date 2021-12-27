@@ -49,6 +49,16 @@ const structNewPatient = [
     
 const structDemographics = [
     {
+        name: "LastName",
+        hint: "Late name of patient",
+        type: "text",
+    },
+    {
+        name: "FirstName",
+        hint: "First name of patient",
+        type: "text",
+    },
+    {
         name: "DOB",
         hint: "Date of Birth",
         type: "date",
@@ -414,7 +424,7 @@ class PatientData {
             console.log( "good", d ) ;
             }
         catch( err ) {
-			console.log( "bad",d ) ;
+            console.log( "bad",d ) ;
             [vdate, vtime] = [ "", "" ] ;
             }
             
@@ -1080,8 +1090,7 @@ function selectPatient( pid ) {
             }
         }
         document.getElementById("editreviewpatient").disabled = false ;
-        let spl = splitPatientId() ;
-        document.getElementById( "titlebox" ).innerHTML = "Name: <B>"+spl.last+"</B>, <B>"+spl.first+"</B>  DOB: <B>"+spl.dob+"</B>" ;
+        document.getElementById( "titlebox" ).innerHTML = "Name: <B>"+doc.LastName+"</B>, <B>"+doc.FirstName+"</B>  DOB: <B>"+doc.DOB+"</B>" ;
         })
     .catch( (err) => {
         console.log(err) ;
@@ -1179,7 +1188,7 @@ function showPage( state = "PatientList" ) {
             break ;
             
         case "PatientList":
-            let objectPatientTable = new PatientTable( ["LastName", "FirstName", "DOB","Dx","Procedure" ] ) ;
+            let objectPatientTable = new PatientTable( ["LastName", "FirstName", "DOB","Dx" ] ) ;
             getPatients(true)
             .then( (docs) => {
                 objectPatientTable.fill(docs.rows) ;
@@ -1233,6 +1242,7 @@ function showPage( state = "PatientList" ) {
             
         case "PatientPhoto":
             if ( patientId ) {
+                selectPatient( patientId ) ;
                 getThePatient( true )
                 .then( (doc) => PatientPhoto( doc ) )
                 .catch( (err) => {
@@ -1820,19 +1830,19 @@ function unselectNote() {
 }
 
 function noteTitle( doc ) {
-	let date = new Date().toISOString() ;
-	author = userName ;
+    let date = new Date().toISOString() ;
+    author = userName ;
     if ( doc  && doc.id ) {
         date = splitNoteId(doc.id).key ;
-		console.log( "from key", date ) ;
+        console.log( "from key", date ) ;
         if ( doc.doc && doc.doc.author ) {
-			author = doc.doc.author ;
-		}
+            author = doc.doc.author ;
+        }
         if ( doc.doc && doc.doc.date ) {
-			date = doc.doc.date ;
-			console.log( "from doc", date ) ;
-		}
-	}
+            date = doc.doc.date ;
+            console.log( "from doc", date ) ;
+        }
+    }
     return [author, new Date(date)] ;
 }
 
@@ -1917,7 +1927,7 @@ function getNotes(attachments) {
 
 class NoteList extends PatientData {
     constructor( parent ) {
-		super() ;
+        super() ;
         if ( parent == null ) {
             parent = document.body ;
         }
@@ -1929,20 +1939,20 @@ class NoteList extends PatientData {
         this.ul.setAttribute( "id", "NoteList" ) ;
         parent.appendChild(this.ul) ;
 
-		// get notes
-		getNotes(true)
-		.then( (docs) => {
-			docs.rows.forEach( (note, i) => {
-				let li1 = this.liLabel(note) ;
-				this.ul.appendChild( li1 ) ;
-				let li2 = this.liNote(note,li1) ;
-				this.ul.appendChild( li2 ) ;
+        // get notes
+        getNotes(true)
+        .then( (docs) => {
+            docs.rows.forEach( (note, i) => {
+                let li1 = this.liLabel(note) ;
+                this.ul.appendChild( li1 ) ;
+                let li2 = this.liNote(note,li1) ;
+                this.ul.appendChild( li2 ) ;
 
-			}) ;
-			this.li = this.ul.getElementsByTagName('li')
-				
-			})
-		.catch( (err) => console.log(err) ) ; 
+            }) ;
+            this.li = this.ul.getElementsByTagName('li')
+                
+            })
+        .catch( (err) => console.log(err) ) ; 
     }
 
     liLabel( note ) {
@@ -1995,19 +2005,19 @@ class NoteList extends PatientData {
         }) ;
         label.getElementsByClassName("edit_note")[0].onclick =
             (e) => {
-			var i = label.querySelectorAll("input") ;
-			picker.attach({ element: i[0] }) ;
-			tp.attach({ element: i[1] }) ;
+            var i = label.querySelectorAll("input") ;
+            picker.attach({ element: i[0] }) ;
+            tp.attach({ element: i[1] }) ;
             selectNote( note.id ) ;
             editBar.startedit( li ) ;
-			} ;
+            } ;
         label.addEventListener( 'dblclick', (e) => {
-			var i = label.querySelectorAll("input") ;
-			picker.attach({ element: i[0] }) ;
-			tp.attach({ element: i[1] }) ;
+            var i = label.querySelectorAll("input") ;
+            picker.attach({ element: i[0] }) ;
+            tp.attach({ element: i[1] }) ;
             selectNote( note.id ) ;
             editBar.startedit( li ) ;
-			}) ;
+            }) ;
 
         return li ;
     }
