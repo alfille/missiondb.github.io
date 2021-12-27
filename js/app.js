@@ -736,6 +736,7 @@ class NewPatientData extends PatientData {
             alert("Enter some Date Of Birth") ;
         } else {
             this.doc[0]._id = makePatientId( this.doc[0] ) ;
+            this.doc[0].type = "patient" ;
             db.put( this.doc[0] )
             .then( (response) => {
                 selectPatient() ;
@@ -1000,6 +1001,7 @@ class Nbar extends Tbar {
                     author: userName,
                     text: this.working.textDiv.innerText,
                     patient_id: patientId,
+                    type: "note",
                     date: new Date().toISOString(),
                 } ;
                 if (this.working.upload && this.working.upload !== "remove") {
@@ -1490,6 +1492,7 @@ function makeNewOperation() {
     let doc = {
         _id: makeOperationId(),
         author: userName,
+        type: "operation",
         Procedure: "Enter new procedure",
         Surgeon: "",
         "Date-Time": "",
