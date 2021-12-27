@@ -73,6 +73,7 @@ So there is a light relational database on top of the data
 |:-|:-|:-|:-|
 |_id|Patient Id|automatic|p;0;Last;First;DOB "p",version,...|
 |author|user name|automatic|username of record creator|
+|type|record type|automatic|"patient"|
 |LastName|Last name|text|required|
 |FirstName|First Name|text|required|
 |DOB|Date of Birth|YYYY-MM-DD|required|
@@ -97,6 +98,7 @@ So there is a light relational database on top of the data
 |:-|:-|:-|:-|
 |_id|Operation Id|automatic|o;0;Last;First;DOB;timestamp modified patient_id + creation timestamp |
 |author|user name|automatic|username of record creator|
+|type|record type|automatic|"operation"|
 |patient_id|Patient Id|automatic|link back to patient|
 |Procedure|Type of operation|text||
 |Surgeon|Surgeon|text||
@@ -112,6 +114,7 @@ So there is a light relational database on top of the data
 |:-|:-|:-|:-|
 |_id|Operation Id|automatic|c;0;Last;First;DOB;timestamp modified patient_id + creation timestamp |
 |author|user name|automatic|username of record creator|
+|type|record type|automatic|"note"|
 |patient_id|Patient Id|automatic|link back to patient|
 |text|Note text|free text||
 |date|Date|YYY-MM-DD|automatic and editable|
