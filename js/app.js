@@ -1690,37 +1690,35 @@ function splitOperationId( oid = operationId ) {
 }
 
 function deletePatient() {
-    let indexdoc ;
-    let notelist ;
-    let oplist ;
     if ( patientId ) {        
+        let pdoc ;
+        let ndocs ;
+        let odocs ;
         getThePatient( true )
             // get patient
         .then( (doc) => {
-            indexdoc = doc ;
+            pdoc = doc ;
             return getNotes(false) ;
             })
         .then( (docs) => {
             // get notes
-            notelist = docs.rows ;
-            console.log("notelist",docs,notelist);
+            ndocs = docs.rows ;
             return getOperations (false) ;
             })
         .then( (docs) => {
             // get operations
-            oplist = docs.rows ;
-            console.log("oplist",docs,oplist);
+            odocs = docs.rows ;
             // Confirm question
-            let c = "Delete patient \n   " + indexdoc.FirstName + " " + indexdoc.LastName + "\n    " ;
-            if (notelist.length == 0 ) {
+            let c = "Delete patient \n   " + pdoc.FirstName + " " + pdoc.LastName + " DOB: " + pdoc.DOB + "\n    " ;
+            if (ndocs.length == 0 ) {
                 c += "(no associated notes on this patient) \n   " ;
             } else {
-                c += "also delete "+notelist.length+" associated notes\n   " ;
+                c += "also delete "+ndocs.length+" associated notes\n   " ;
             }
-            if (oplist.length == 0 ) {
+            if (odocs.length == 0 ) {
                 c += "(no associated operations on this patient) \n   " ;
             } else {
-                c += "also delete "+oplist.length+" associated operations\n   " ;
+                c += "also delete "+odocs.length+" associated operations\n   " ;
             }
             c += "Are you sure?" ;
             if ( confirm(c) ) {
@@ -1729,9 +1727,9 @@ function deletePatient() {
                 throw "No delete" ;
             }           
             })
-        .then( () => Promise.all(notelist.map( (doc) => db.remove(doc.id,doc.value.rev) ) ) )
-        .then( () => Promise.all(oplist.map( (doc) => db.remove(doc.id,doc.value.rev) ) ) )
-        .then( () => db.remove(indexdoc) )
+        .then( () => Promise.all(ndocs.map( (doc) => db.remove(doc.id,doc.value.rev) ) ) )
+        .then( () => Promise.all(odocs.map( (doc) => db.remove(doc.id,doc.value.rev) ) ) )
+        .then( () => db.remove(pdoc) )
         .then( () => unselectPatient() )
         .catch( (err) => console.log(err) ) 
         .finally( () => showPage( "PatientList" ) ) ;
@@ -1762,10 +1760,14 @@ function newImage() {
 
 function deleteNote() {
     if ( noteId ) {
-        db.get( noteId )
+        let pdoc ;
+        getThePatient( false )
         .then( (doc) => {
-            let spl = splitNoteId() ;
-            if ( confirm("Delete note on patient" + spl.first + " " + spl.last + " from " +  + spl.date + ".\n -- Are you sure?") ) {
+            pdoc = doc ;
+            return db.get( noteId ) ;
+            })
+        .then( (doc) => {
+            if ( confirm("Delete note on patient " + pdoc.FirstName + " " + pdoc.LastName + " DOB: " + pdoc.DOB + ".\n -- Are you sure?") ) {
                 return doc ;
             } else {
                 throw "No delete" ;
@@ -1781,10 +1783,14 @@ function deleteNote() {
     
 function deleteOperation() {
     if ( operationId ) {
-        db.get( operationId )
+        let pdoc ;
+        getThePatient( false )
+        .then( (doc) => { 
+            pdoc = doc ;
+            return db.get( operationId ) ;
+            })
         .then( (doc) => {
-            let spl = splitOperationId() ;
-            if ( confirm("Delete operation <"+doc.Procedure+">\n on patient" + spl.first + " " + spl.last + " from " +  + spl.date + ".\n -- Are you sure?") ) {
+            if ( confirm("Delete operation\<"+doc.Procedure+">\n on patient " + pdoc.FirstName + " " + pdoc.LastName + " DOB: " + pdoc.DOB + ".\n -- Are you sure?") ) {
                 return doc ;
             } else {
                 throw "No delete" ;
