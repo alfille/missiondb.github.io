@@ -16,6 +16,10 @@
                     <!-- top: UserName MainMenu -->
                     <div class="UserName MainMenu pageOverlay">
                     </div>
+                    <!-- top: Download -->
+                    <div class="Download pageOverlay">
+                        <button type="button" class="divbutton" onclick="showPage( 'MainMenu' )">Main Menu</button>
+                    </div>
                     <!-- top: SettingMenu -->
                     <div class="SettingMenu pageOverlay">
                         <button type="button" class="divbutton edit_note" onclick="objectPatientData.clickEdit()">Edit</button>
@@ -89,7 +93,15 @@
                 <div id="MainMenuContent" >
                     <button type="button" class="divbutton" onclick="showPage( 'PatientList' )">Patient List</button>
                     <button type="button" class="divbutton" onclick="showPage( 'SettingMenu' )">Settings</button>
-                    <button type="button" class="divbutton" onclick="showPage( 'PatientDemographics' )">Help</button>
+                    <button type="button" class="divbutton" onclick="showPage( 'Download' )">Help</button>
+                </div>
+            </div>
+            <!-- body: Download -->
+            <div class="Download pageOverlay">
+                <div id="MainMenuContent" >
+					<h3>Download Spreadsheet file</h3>
+                    <button type="button" class="divbutton" onclick="">Patient List</button>
+                    <button type="button" class="divbutton" onclick="All Data">All data</button>
                 </div>
             </div>
             <!-- body: PatientList -->

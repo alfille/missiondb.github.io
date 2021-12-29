@@ -421,10 +421,8 @@ class PatientData {
         var vtime ;
         try {
             [vdate, vtime] =  [ this.YYYYMMDDfromDate( d ), this.AMfrom24( d.getHours(), d.getMinutes() ) ] ;
-            console.log( "good", d ) ;
             }
         catch( err ) {
-            console.log( "bad",d ) ;
             [vdate, vtime] = [ "", "" ] ;
             }
             
@@ -1555,38 +1553,39 @@ class OperationTable extends SortTable {
   
 }
 
-function makePatientId(doc, position=null) {
-    switch (position) {
-        case "first":
-            return [ 
-                RecordFormat.type.patient,
-                RecordFormat.version,
-                "!",
-                "",
-                "", 
-                ].join(";") ;
-            break ;
-        case "last":
-            return [ 
-                RecordFormat.type.patient,
-                RecordFormat.version,
-                "\\fff0",
-                "",
-                "", 
-                ].join(";") ;
-            break ;
-        default:
-            d = new Date().toISOString() ;
-            break;
-    }
-
-    return [ 
-        RecordFormat.type.patient,
-        RecordFormat.version,
-        doc.LastName,
-        doc.FirstName,
-        doc.DOB, 
-        ].join(";") ;
+function makePatientId( doc_or_pos ) {
+	switch ( typeof(doc_or_pos ) ) {
+		case "string":
+			switch (doc_or_pos) {
+				case "first":
+					return [ 
+						RecordFormat.type.patient,
+						RecordFormat.version,
+						"!",
+						"",
+						"", 
+						].join(";") ;
+				case "last":
+					return [ 
+						RecordFormat.type.patient,
+						RecordFormat.version,
+						"\\fff0",
+						"",
+						"", 
+						].join(";") ;
+				}
+			break ;
+		case "object":
+			return [ 
+				RecordFormat.type.patient,
+				RecordFormat.version,
+				doc_or_pos.LastName,
+				doc_or_pos.FirstName,
+				doc_or_pos.DOB, 
+				].join(";") ;
+		}
+    console.log("Call for unrecognized Patient Id type") ;
+    return null ;
 }
 
 function splitPatientId( pid = patientId ) {
@@ -1609,12 +1608,32 @@ function splitPatientId( pid = patientId ) {
 function makeNoteId(position=null) {
     let d ;
     switch (position) {
+        case "veryfirst":
+            d = "" ;
+			return [ 
+				RecordFormat.type.note,
+				RecordFormat.version,
+				d ,
+				d ,
+				d ,
+				d , 
+				].join(";") ;
         case "first":
             d = "" ;
             break ;
         case "last":
             d = "\\fff0" ;
             break ;
+        case "verylast":
+            d = "\\fff0" ;
+			return [ 
+				RecordFormat.type.note,
+				RecordFormat.version,
+				d ,
+				d ,
+				d ,
+				d , 
+				].join(";") ;
         default:
             d = new Date().toISOString() ;
             break;
@@ -1634,9 +1653,29 @@ function makeNoteId(position=null) {
 function makeOperationId(position=null) {
     let d ;
     switch (position) {
+        case "veryfirst":
+            d = "" ;
+			return [ 
+				RecordFormat.type.operation,
+				RecordFormat.version,
+				d,
+				d,
+				d,
+				d , 
+				].join(";") ;
         case "first":
             d = "" ;
             break ;
+        case "verylast":
+            d = "\\fff0" ;
+			return [ 
+				RecordFormat.type.operation,
+				RecordFormat.version,
+				d,
+				d,
+				d,
+				d , 
+				].join(";") ;
         case "last":
             d = "\\fff0" ;
             break ;
@@ -1861,8 +1900,8 @@ function getThePatient(attachments) {
 
 function getPatients(attachments) {
     doc = {
-        startkey: makePatientId(null,"first"),
-        endkey: makePatientId(null,"last"),
+        startkey: makePatientId("first"),
+        endkey: makePatientId("last"),
     } ;
     if (attachments) {
         doc.include_docs = true ;
@@ -1871,6 +1910,17 @@ function getPatients(attachments) {
     }
 
     return db.allDocs(doc) ;
+}
+
+function getOperationsAll() {
+    doc = {
+        startkey: makeOperationId("veryfirst"),
+        endkey: makeOperationId("verylast"),
+        include_docs: true,
+        binary: true,
+        attachments: true,
+    } ;
+	return db.allDocs(doc) ;
 }
 
 function getOperations(attachments) {
@@ -1919,6 +1969,17 @@ function getOperations(attachments) {
     } else {
         return db.allDocs(doc) ;
     }
+}
+
+function getNoteAll() {
+    doc = {
+        startkey: makeNoteId("veryfirst"),
+        endkey: makeNoteId("verylast"),
+        include_docs: true,
+        binary: false,
+        attachments: false,
+    } ;
+	return db.allDocs(doc) ;
 }
 
 function getNotes(attachments) {
@@ -2248,19 +2309,13 @@ function parseQuery() {
     function sync() {
         let synctext = document.getElementById("syncstatus") ;
         synctext.value = "syncing..." ;
-        db.sync( 
-            remoteCouch+"/"+cannonicalDBname , 
-            {
-                live: true,
-                retry: true
-            }
-        ).on('change', (info)   => synctext.value = "changed -- " + info
-        ).on('paused', ()       => synctext.value = "pending"
-        ).on('active', ()       => synctext.value = "active"
-        ).on('denied', (err)    => synctext.value = "denied " + err
-        ).on('complete', (info) => synctext.value = "complete -- " + info
-        ).on('error', (err)     => synctext.value = "Sync status: error "+err 
-        );
+        db.sync( remoteCouch+"/"+cannonicalDBname , { live: true, retry: true, } )
+        .on('change', (info)   => synctext.value = "changed -- " + info )
+        .on('paused', ()       => synctext.value = "pending" )
+        .on('active', ()       => synctext.value = "active" )
+        .on('denied', (err)    => synctext.value = "denied " + err )
+        .on('complete', (info) => synctext.value = "complete -- " + info )
+        .on('error', (err)     => synctext.value = "Sync status: error "+err );
     }
 
     if (remoteCouch) {
