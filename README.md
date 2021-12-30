@@ -5,7 +5,8 @@ Database for medical mission work. Intentionally simple. Multiuser but phone/lap
 
 ## Inspiration
 Dr. Gennadiy Fuzaylov, a pediatric anesthesiologist at Massachusetts General Hospital and veteran of over 60 medical missions to the Ukraine, Columbia and found keeping track of patients, procedures and results was increasingly difficult. 
-![Doctors Collaborating To Help Children](images/dctohc.png)(https://www.dctohc.org)
+![[Doctors Collaborating To Help Children](http://dcthc.org)](images/dctohc.png)
+
 A spreadsheet was not adequate -- poor phone interface, poor support for images, poorly multiuser and problematic security. Hence this project was born.
 
 ## Scope
@@ -15,7 +16,8 @@ A spreadsheet was not adequate -- poor phone interface, poor support for images,
 - Providers with contact information
 - Followup
 - Workflow support including patient ID cards, handheld data entry
-- Schedule
+- Schedule ?
+
 ### Out of scope
 - lab values 
 - vital signs
@@ -65,6 +67,41 @@ A spreadsheet was not adequate -- poor phone interface, poor support for images,
   * pictures
   
 So there is a light relational database on top of the data
+
+# Usage
+* Initial login.  Choose User Name 
+![Login screen](images/mdb-Login.png)
+* Main Menu.  Patient List is most common choice 
+![Patient list](images/mdb-MainMenu.png)
+* Patient List.  List of known patients 
+![Patient list](images/mdb-PatientList.png)
+* Patient List.  Select a patient 
+![Patient menu](images/mdb-PatientListSelect.png)
+* Patient is selected. Menu for this patient 
+![Demographics](images/mdb-PatientPhoto.png)
+* Demographics for this patient. How to edit 
+![Demographics](images/mdb-PatientDemographics1.png)
+* Demographics for this patient. How to save changes 
+![Medical](images/mdb-PatientDemographics2.png)
+* Medical Information and Operations  This is the main data entry screen for planning and recording operations
+* Notes List Controls
+![Note](images/mdb-NoteList.png)
+* Notes List Start editting
+![Note](images/mdb-NoteList2.png)
+* Notes List Text entry field
+![Note](images/mdb-NoteList3.png)
+* Notes List Edit picture
+![Note](images/mdb-NoteList4.png)
+* Notes List Save or cancel changes
+![Note](images/mdb-NoteList5.png)
+* Notes List Edit the date and time
+![Note](images/mdb-NoteList6.png)
+* Notes List How to delete a note
+![Note](images/mdb-NoteList7.png)
+* Notes List Add a new note
+![Note](images/mdb-NewNote.png)
+* Notes List Add a new photo
+![Note](images/mdb-NewPhoto.png)
 
 # Schema as implemented
 * Patient record
@@ -133,6 +170,8 @@ So there is a light relational database on top of the data
 |noteId|Note Id|automatic|Last note selected|
 |operationId|Operation Id|automatic|Last operation selected|
 
+
+
 # Installation
 * Instructions from [pouchdb](https://pouchdb.com/guides/setup-couchdb.html):
 ```
@@ -151,10 +190,6 @@ add-cors-to-couchdb
 
 # PouchDB
 sudo npm install --save pouchdb-browser
-
-# react,js
-Instructions from https://medium.com/@kayodeniyi/simplest-react-app-setup-a74277b99e43
-
 
 ```
 
