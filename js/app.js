@@ -92,11 +92,6 @@ const structMedical = [
         type: "textarea",
     } , 
     {
-        name: "Complaint",
-        hint: "Main complaint (patient's view of the problem)",
-        type: "textarea",
-    },
-    {
         name: "Sex",
         hint: "Patient gender",
         type: "radio",
@@ -131,6 +126,11 @@ const structMedical = [
 ] ;
 
 const structOperation = [
+    {
+        name: "Complaint",
+        hint: "Main complaint (patient's view of the problem)",
+        type: "textarea",
+    },
     {
         name: "Procedure",
         hint: "Surgical operation / procedure",
