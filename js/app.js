@@ -1181,6 +1181,7 @@ function showPage( state = "PatientList" ) {
             break ;
            
        case "MainMenu":
+       case "Download":
             break ;
             
         case "SettingMenu":
@@ -2267,6 +2268,40 @@ function printCard() {
         console.log(err) ;
         showPage( "InvalidPatient" ) ;
         }) ;
+}
+
+function downloadCSV(csv, filename) {
+    var csvFile;
+    var downloadLink;
+   
+    //define the file type to text/csv
+    csvFile = new Blob([csv], {type: 'text/csv'});
+    downloadLink = document.createElement("a");
+    downloadLink.download = filename;
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+    downloadLink.style.display = "none";
+
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+}
+
+//user-defined function to export the data to CSV file format
+function downloadPatients() {
+    const fields = [ "LastName", "FirstName", "DOB", "Dx", "Weight", "Height", "Sex", "Allergies", "Meds", "ASA" ] ; 
+    var csv = fields.map( f => '"'+f+'"' ).join(',')+'\n' ;
+    console.log( csv ) ;
+    getPatients(true)
+    .then( doclist => {
+        csv += doclist.rows
+            .map( row => fields
+                .map( f => row.doc[f] )
+                .map( v => typeof(v) == "number" ? v : '"'+v+'"' )
+                .join(',')
+                )
+            .join( '\n' ) ;
+        console.log(csv);
+        downloadCSV( csv, 'mdbPatient.csv' ) ;
+    }) ;
 }
 
 function parseQuery() {
