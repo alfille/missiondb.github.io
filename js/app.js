@@ -2285,7 +2285,6 @@ function downloadCSV(csv, filename) {
     downloadLink.click();
 }
 
-//user-defined function to export the data to CSV file format
 function downloadPatients() {
     const fields = [ "LastName", "FirstName", "DOB", "Dx", "Weight", "Height", "Sex", "Allergies", "Meds", "ASA" ] ; 
     var csv = fields.map( f => '"'+f+'"' ).join(',')+'\n' ;
@@ -2294,14 +2293,60 @@ function downloadPatients() {
     .then( doclist => {
         csv += doclist.rows
             .map( row => fields
-                .map( f => row.doc[f] )
+                .map( f => row.doc[f] || "" )
                 .map( v => typeof(v) == "number" ? v : '"'+v+'"' )
                 .join(',')
                 )
             .join( '\n' ) ;
-        console.log(csv);
         downloadCSV( csv, 'mdbPatient.csv' ) ;
-    }) ;
+        }) ;
+}
+
+function downloadAll() {
+    const pfields = [ "LastName", "FirstName", "DOB", "Dx", "Weight", "Height", "Sex", "Allergies", "Meds", "ASA" ] ; 
+    const ofields = [ "Complaint", "Procedure", "Surgeon", "Equipment", "Status", "Date-Time", "Duration", "Lateratility" ] ; 
+    var csv = pfields
+                .concat(ofields,["Notes"])
+                .map( f => '"'+f+'"' )
+                .join(',')+'\n' ;
+    var plist ;
+    var olist = {} ;
+    var nlist = {} ;
+    console.log( csv ) ;
+    getPatients(true)
+    .then( doclist => {
+        plist = doclist.rows ;
+        plist.forEach( p => nlist[p.id] = 0 ) ;
+        return getOperationsAll() ;
+        })
+    .then ( doclist => {
+        doclist.rows.forEach( row => {
+            if ( ! ( new Date(row.doc["Date-Time"]) == "Invalid Date" ) ) {
+                olist[row.doc.patient_id] = row.doc ;
+            }
+            }) ;
+        return getNoteAll() ;
+        })
+    .then( doclist => {
+        doclist.rows.forEach( row => ++nlist[row.doc.patient_id] ) ;
+        csv += plist
+            .map( row =>
+                pfields
+                .map( f => row.doc[f] || "" )
+                .map( v => typeof(v) == "number" ? v : '"'+v+'"' )
+                .concat(
+                    (row.id in olist) ? ofields
+                                        .map( ff => olist[row.id][ff] || "" )
+                                        .map( v => typeof(v) == "number" ? v : '"'+v+'"' )
+                                        :
+                                        ofields.map( ff => "" ) ,
+                    [nlist[row.id]]
+                    )
+                .join(',')
+                )
+            .join( '\n' ) ;
+        downloadCSV( csv, 'mdbAllData.csv' ) ;
+        }) ;
 }
 
 function parseQuery() {

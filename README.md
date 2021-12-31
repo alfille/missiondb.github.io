@@ -119,7 +119,6 @@ So there is a light relational database on top of the data
 |Address|address |free text|in Demographics|
 |Contact|contact info|free text|in Demographics|
 |Dx|Diagnosis| free text|in Medical|
-|Complaint|Patient presenting complaint|free text|in Medical|
 |Sex|Sex| multiple choice|in Medical|
 |Weight|Patient weight (kg)|number|in Medical|
 |Height|Patient height (cm)|number|in Medical|
@@ -137,6 +136,7 @@ So there is a light relational database on top of the data
 |author|user name|automatic|username of record creator|
 |type|record type|automatic|"operation"|
 |patient_id|Patient Id|automatic|link back to patient|
+|Complaint|Patient presenting complaint|free text|in Medical|
 |Procedure|Type of operation|text||
 |Surgeon|Surgeon|text||
 |Equipment|Needed equipment|free text||
