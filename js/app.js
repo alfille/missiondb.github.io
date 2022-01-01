@@ -699,6 +699,7 @@ class SettingData extends PatientData {
                 deleteCookie( "patientId" ) ;
                 deleteCookie( "operationId" ) ;
                 deletecookie( "noteId" ) ;
+                document.getElementById( "userstatus" ).value = userName ;
             }
         }
         setCookie ( "remoteCouch", this.doc[0].remoteCouch )
@@ -736,6 +737,7 @@ function UserNameInput() {
     const un = document.getElementById("UserNameText");
     if ( un.value && un.value.length > 0 ) {
         setCookie( "userName", un ) ;
+        document.getElementById( "userstatus" ).value = userName ;
         deleteCookie( "patientId" ) ;
         deleteCookie( "operationId" ) ;
         deletecookie( "noteId" ) ;
@@ -2307,9 +2309,11 @@ function parseQuery() {
     // search field
     // No search, use cookies
     userName = getCookie( "userName" ) ;
+
     if ( userName == null ) {
         showPage( "UserName" ) ;
     } else {
+        document.getElementById( "userstatus" ).value = userName ;
         getCookie ( "patientId" ) ;
         getCookie ( "commentId" ) ;
         getCookie ( "remoteCouch" ) ;
