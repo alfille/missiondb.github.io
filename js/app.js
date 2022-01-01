@@ -734,10 +734,9 @@ class NewPatientData extends PatientData {
             alert("Enter some Date Of Birth") ;
         } else {
             this.doc[0]._id = makePatientId( this.doc[0] ) ;
-            this.doc[0].type = "patient" ;
             db.put( this.doc[0] )
             .then( (response) => {
-                selectPatient() ;
+                selectPatient(response.id) ;
                 showPage( "PatientPhoto" ) ;
                 })
             .catch( (err) => console.log(err) ) ;
@@ -1239,7 +1238,7 @@ function showPage( state = "PatientList" ) {
             
         case "PatientNew":
             unselectPatient() ;
-            objectPatientData = new NewPatientData( { author: userName, }, structNewPatient ) ;
+            objectPatientData = new NewPatientData( { author: userName, type:"patient" }, structNewPatient ) ;
             break ;
             
         case "PatientPhoto":
@@ -1556,36 +1555,36 @@ class OperationTable extends SortTable {
 }
 
 function makePatientId( doc_or_pos ) {
-	switch ( typeof(doc_or_pos ) ) {
-		case "string":
-			switch (doc_or_pos) {
-				case "first":
-					return [ 
-						RecordFormat.type.patient,
-						RecordFormat.version,
-						"!",
-						"",
-						"", 
-						].join(";") ;
-				case "last":
-					return [ 
-						RecordFormat.type.patient,
-						RecordFormat.version,
-						"\\fff0",
-						"",
-						"", 
-						].join(";") ;
-				}
-			break ;
-		case "object":
-			return [ 
-				RecordFormat.type.patient,
-				RecordFormat.version,
-				doc_or_pos.LastName,
-				doc_or_pos.FirstName,
-				doc_or_pos.DOB, 
-				].join(";") ;
-		}
+    switch ( typeof(doc_or_pos ) ) {
+        case "string":
+            switch (doc_or_pos) {
+                case "first":
+                    return [ 
+                        RecordFormat.type.patient,
+                        RecordFormat.version,
+                        "!",
+                        "",
+                        "", 
+                        ].join(";") ;
+                case "last":
+                    return [ 
+                        RecordFormat.type.patient,
+                        RecordFormat.version,
+                        "\\fff0",
+                        "",
+                        "", 
+                        ].join(";") ;
+                }
+            break ;
+        case "object":
+            return [ 
+                RecordFormat.type.patient,
+                RecordFormat.version,
+                doc_or_pos.LastName,
+                doc_or_pos.FirstName,
+                doc_or_pos.DOB, 
+                ].join(";") ;
+        }
     console.log("Call for unrecognized Patient Id type") ;
     return null ;
 }
@@ -1612,14 +1611,14 @@ function makeNoteId(position=null) {
     switch (position) {
         case "veryfirst":
             d = "" ;
-			return [ 
-				RecordFormat.type.note,
-				RecordFormat.version,
-				d ,
-				d ,
-				d ,
-				d , 
-				].join(";") ;
+            return [ 
+                RecordFormat.type.note,
+                RecordFormat.version,
+                d ,
+                d ,
+                d ,
+                d , 
+                ].join(";") ;
         case "first":
             d = "" ;
             break ;
@@ -1628,14 +1627,14 @@ function makeNoteId(position=null) {
             break ;
         case "verylast":
             d = "\\fff0" ;
-			return [ 
-				RecordFormat.type.note,
-				RecordFormat.version,
-				d ,
-				d ,
-				d ,
-				d , 
-				].join(";") ;
+            return [ 
+                RecordFormat.type.note,
+                RecordFormat.version,
+                d ,
+                d ,
+                d ,
+                d , 
+                ].join(";") ;
         default:
             d = new Date().toISOString() ;
             break;
@@ -1657,27 +1656,27 @@ function makeOperationId(position=null) {
     switch (position) {
         case "veryfirst":
             d = "" ;
-			return [ 
-				RecordFormat.type.operation,
-				RecordFormat.version,
-				d,
-				d,
-				d,
-				d , 
-				].join(";") ;
+            return [ 
+                RecordFormat.type.operation,
+                RecordFormat.version,
+                d,
+                d,
+                d,
+                d , 
+                ].join(";") ;
         case "first":
             d = "" ;
             break ;
         case "verylast":
             d = "\\fff0" ;
-			return [ 
-				RecordFormat.type.operation,
-				RecordFormat.version,
-				d,
-				d,
-				d,
-				d , 
-				].join(";") ;
+            return [ 
+                RecordFormat.type.operation,
+                RecordFormat.version,
+                d,
+                d,
+                d,
+                d , 
+                ].join(";") ;
         case "last":
             d = "\\fff0" ;
             break ;
@@ -1922,7 +1921,7 @@ function getOperationsAll() {
         binary: true,
         attachments: true,
     } ;
-	return db.allDocs(doc) ;
+    return db.allDocs(doc) ;
 }
 
 function getOperations(attachments) {
@@ -1981,7 +1980,7 @@ function getNoteAll() {
         binary: false,
         attachments: false,
     } ;
-	return db.allDocs(doc) ;
+    return db.allDocs(doc) ;
 }
 
 function getNotes(attachments) {
