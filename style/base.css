@@ -134,6 +134,7 @@ ul {
 }
 .entryfield_text {
   min-height: 1em;
+  display: inline-block;
 }
   
 body {
@@ -191,13 +192,15 @@ footer {
 }
 
 .entryfield_image {
-  max-width: 100%;
+  max-width: 20%;
+  display: inline-block;
   height: auto ;
 }
 @media only and (orientation: landscape) {
   .entryfield_image {
-    max-height: 80%;
-  width: auto ;
+    max-height: 20%;
+    display: inline-block;
+    width: auto ;
   }
 }
 #imageInput, .imageBar, #imageQ {
@@ -329,12 +332,7 @@ footer {
   background: #b3b3ff ;
   justify-content: center;
   align-items: center;
-  flex-direction: column ; 
-}
-#PatientPhotoContent img {
-  display: block ;
-  max-width: 50% ;
-  height: auto;
+  flex-direction: row ; 
 }
 #PatientPhotoButtons {
   display: flex;
