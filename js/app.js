@@ -1,8 +1,6 @@
 var objectPatientData  ;
 var objectNoteList ;
 
-var LocalRec ;
-
 var displayState ;
 var userName ;
 var patientId ;
@@ -696,25 +694,15 @@ class SettingData extends PatientData {
     savePatientData() {
         this.loadDocData() ;
         if ( userName != this.doc[0].userName ) {
-            if ( userName != this.doc[0].userName ) {
-                // username changed
-                LocalRec = new Local( this.doc[0].userName ) ;
-                LocalRec.init()
-                .then( () => LocalRec.setDoc( this.doc ) )
-                .then( () => {
-                    showPage( "MainMenu" ) ;
-                    window.location.reload(false) ;
-                    })
-                .catch( (err) => {
-                    console.log(err) ;
-                    showPage( "MainMenu" ) ;
-                    }) ;
-            } else {
-                this.saveChanged( "MainMenu" ) ;
+            if ( un.value && un.value.length > 0 ) {
+                setCookie( "userName", un ) ;
+                deleteCookie( "patientId" ) ;
+                deleteCookie( "operationId" ) ;
+                deletecookie( "noteId" ) ;
             }
-        } else {
-            showPage( "MainMenu" ) ;
         }
+        setCookie ( "remoteCouch", this.doc[0].remoteCouch )
+        showPage( "MainMenu" ) ;
     }
 }
 
@@ -744,109 +732,14 @@ class NewPatientData extends PatientData {
     }
 }
 
-class PreLocal {
-    constructor ( user = "<not set yet>" ) {
-        document.getElementById("userstatus").value = user ;
-    }
-    setValue( key, val ) {}
-    getValue( key ) {}
-    delValue( key ) {}
-}
-
-class Local extends PreLocal {
-    constructor( user ) {
-        super( user ) ;
-        userName = user ;
-        setCookie( "userName", userName ) ;
-        this.id = [" _local", user ].join("/" ) ;
-        this.readIn = false;
-        // default 
-        this.doc = {
-            userName: user ,
-            remoteCouch: cloudantDb ,
-            _id: this.id,
-            
-        } ;
-    }
-    
-    init() {
-        this._read() ;
-    }
-
-    setValue( key, val ) {
-        this._read()
-        .then( (doc) => {
-            if ( this.doc[key] != val ) {
-                this.doc[key] = val ;
-                this._write() ;
-            }
-            }) ;
-    }
-    
-    getValue( key ) {
-        this._read()
-        .then( (doc) => this.doc[key] ) ;
-    }
-    
-    getGlobal( key ) {
-        this._read()
-        .then( (doc) => {
-            window[key] = this.doc[key] ;
-            return true ;
-            }) ;
-    }
-    
-    delValue( key ) {
-        delete this.doc[key] ;
-    }
-    
-    setDoc( doc ) {
-        Object.entries(doc).forEach( ( k,v ) => this.doc[k] = v ) ;
-        return this._write() ;
-    }
-        
-    getDoc() {
-        return this.doc ;
-    }
-
-    _read() {
-        if ( this.readIn ) {
-            return Promise.resolve(this.doc) ;
-        }
-        return db.get( this.id )
-        .then( (doc) => {
-            this.doc = doc ;
-            this.readIn = true ;
-            })
-        .catch( (err) => this._write() ) ;
-    }
-    
-    _write() {
-        return db.put(this.doc)
-        .then( (response) => this.doc._rev = response.rev )
-        .catch( (err) => {
-            console.log(err) ;
-            return null ;
-            }) ;
-    }
-}
-   
 function UserNameInput() {
     const un = document.getElementById("UserNameText");
     if ( un.value && un.value.length > 0 ) {
-        LocalRec = new Local( un.value ) ;
-        displayState = LocalRec.getValue( "displayState" ) ;
-        userName     = LocalRec.getValue( "userName" ) ;
-        patientId    = LocalRec.getValue( "patientId" ) ;
-        noteId    = LocalRec.getValue( "noteId" ) ;
-        operationId  = LocalRec.getValue( "operationId" ) ;
-        remoteCouch  = LocalRec.getValue( "remoteCouch" ) ;
-        
-        if ( patientId ) {
-            selectPatient( patientId ) ;
-        } else {
-            unselectPatient() ;
-        }
+        setCookie( "userName", un ) ;
+        deleteCookie( "patientId" ) ;
+        deleteCookie( "operationId" ) ;
+        deletecookie( "noteId" ) ;
+        setCookie( "remoteCouch", cloudantDb )
         showPage( "PatientList" ) ;
     } else {
         showPage( "UserName" ) ;
@@ -1047,7 +940,6 @@ class Pbar extends Tbar {
     saveedit() {
         if ( this.active() ) {
             if ( patientId ) {
-                // existing LocalRec
                 getThePatient( true )
                 .then( (doc) => {
                     if ( this.working.upload == null ) {
@@ -1073,11 +965,10 @@ function selectPatient( pid ) {
         unselectNote() ;
     }
         
-    patientId = pid ;
+    setCookie( "patientId", pid ) ;
     // Check patient existence
     getThePatient(false)
     .then( (doc) => {
-        LocalRec.setValue( "patientId", pid ) ;
         if ( displayState == "PatientList" ) {
             // highlight the list row
             let rows = document.getElementById("PatientList").rows ;
@@ -1104,11 +995,10 @@ function selectOperation( oid ) {
         unselectOperation() ;
     }
         
-    operationId = oid ;
+    setCookie ( "operationId", oid  ) ;
     // Check patient existence
     db.get(operationId)
     .then( (doc) => {
-        LocalRec.setValue( "operationId", oid ) ;
         if ( displayState == "OperationList" ) {
             // highlight the list row
             let rows = document.getElementById("OperationsList").rows ;
@@ -1130,7 +1020,7 @@ function selectOperation( oid ) {
 
 function unselectPatient() {
     patientId = null ;
-    LocalRec.delValue( "patientId" ) ;
+    deleteCookie ( "patientId" ) ;
     unselectNote() ;
     unselectOperation() ;
     if ( displayState == "PatientList" ) {
@@ -1148,7 +1038,7 @@ function unselectPatient() {
 
 function unselectOperation() {
     operationId = null ;
-    LocalRec.delValue( "operationId" ) ;
+    deleteCookie( "operationId" ) ;
     if ( displayState == "OperationList" ) {
         let ot = document.getElementById("OperationsList") ;
         if ( ot ) {
@@ -1162,11 +1052,9 @@ function unselectOperation() {
 }
 
 function showPage( state = "PatientList" ) {
-    displayState = state ;
+    setCookie( "displayState", state ) ;
 
     Array.from(document.getElementsByClassName("pageOverlay")).forEach( (v) => v.style.display = v.classList.contains(displayState) ? "block" : "none" );
-
-    LocalRec.setValue("displayState",displayState) ;
 
     objectPatientData = null ;
     objectNoteList = null ;
@@ -1185,7 +1073,7 @@ function showPage( state = "PatientList" ) {
             break ;
             
         case "SettingMenu":
-            objectPatientData = new SettingData( LocalRec.getDoc() , structSetting ) ;
+            objectPatientData = new SettingData( { userName: userName, remoteCouch: remoteCouch, } , structSetting ) ;
             break ;
             
         case "PatientList":
@@ -1333,6 +1221,7 @@ function showPage( state = "PatientList" ) {
 
 function setCookie( cname, value ) {
   // From https://www.tabnine.com/academy/javascript/how-to-set-cookies-javascript/
+    window[cname] = value ;
     let date = new Date();
     date.setTime(date.getTime() + (400 * 24 * 60 * 60 * 1000)); // > 1year
     const expires = " expires=" + date.toUTCString();
@@ -1340,18 +1229,20 @@ function setCookie( cname, value ) {
 }
 
 function deleteCookie( cname ) {
+    window[cname] = null ;
     document.cookie = cname +  "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
 }
 
 function getCookie( cname ) {
-      const name = cname + "=";
-      var ret = null ;
-      decodeURIComponent(document.cookie).split('; ').forEach( (val) => {
-          if (val.indexOf(name) === 0) {
-              ret =  val.substring(name.length) ;
-          }
-      }) ;
-      return ret;
+    const name = cname + "=";
+    var ret = null ;
+    decodeURIComponent(document.cookie).split('; ').forEach( (val) => {
+      if (val.indexOf(name) === 0) {
+          ret =  val.substring(name.length) ;
+      }
+    }) ;
+    window[cname] = ret ;
+    return ret;
 }
 
 function isAndroid() {
@@ -1848,8 +1739,7 @@ function deleteOperation() {
 }    
     
 function selectNote( cid ) {
-    noteId = cid ;
-    LocalRec.setValue( "noteId", cid ) ;
+    setCookie( "noteId", cid ) ;
     if ( displayState == "NoteList" ) {
         // highlight the list row
         let li = document.getElementById("NoteList").getElementsByTagName("LI");
@@ -1866,8 +1756,7 @@ function selectNote( cid ) {
 }
 
 function unselectNote() {
-    noteId = null ;
-    LocalRec.delValue( "noteId" ) ;
+    deleteCookie ( "noteId" ) ;
     if ( displayState == "NoteList" ) {
         let li = document.getElementById("NoteList").li ;
         if ( li && (li.length > 0) ) {
@@ -2411,8 +2300,6 @@ function parseQuery() {
     if (remoteCouch) {
         sync();
     }
-
-    LocalRec = new PreLocal() ;
     
     // Initial start
     show_screen(true) ;
@@ -2420,54 +2307,53 @@ function parseQuery() {
     // search field
     // No search, use cookies
     userName = getCookie( "userName" ) ;
-    if ( !userName ) {
+    if ( userName == null ) {
         showPage( "UserName" ) ;
     } else {
-        LocalRec = new Local( userName ) ;
-        Promise.all( [ "patientId", "commentId", "remoteCouch", "displayState" ].map( (key) => LocalRec.getGlobal(key) ))
-        .then( () => {
-        
-            // first try the search field
-            let q = parseQuery() ;
-            if ( q && ( patientId in q ) ) {
-                selectPatient( q.patientId ) ;
-                showPage( "PatientPhoto" ) ;
-            } else {
-                console.log("switch",userName,displayState) ;
-                switch ( displayState ) {
-                    case "PatientList":
-                    case "MainMenu":
-                    case "PatientPhoto":
-                    case "NoteList":
-                    case "OperationList":
-                    case "SettingMenu":
-                        showPage( displayState ) ;
-                        break;
-                    case "OperationEdit":
-                        showPage( "OperationList" ) ;
-                        break ;
-                    case "NoteNew":
-                    case "NoteImage":
-                        showPage( "NoteList" ) ;
-                        break ;
-                    case undefined:
-                    case "UserName":
-                    case "InvalidPatient":
-                        showPage( "PatientList" ) ;
-                        break ;
-                    case "PatientNew":
-                    case "PatientDemographics":
-                    case "PatientMedical":
-                    default:
-                        showPage( "PatientPhoto" ) ;
-                        break ;
-                }
+        getCookie ( "patientId" ) ;
+        getCookie ( "commentId" ) ;
+        getCookie ( "remoteCouch" ) ;
+        getCookie ( "displayState" ) ;
+        getCookie ( "operationId" ) ;
+
+        // first try the search field
+        let q = parseQuery() ;
+        if ( q && ( patientId in q ) ) {
+            selectPatient( q.patientId ) ;
+            showPage( "PatientPhoto" ) ;
+        } else {
+            console.log("switch",userName,displayState) ;
+            switch ( displayState ) {
+                case "PatientList":
+                case "MainMenu":
+                case "PatientPhoto":
+                case "NoteList":
+                case "OperationList":
+                case "SettingMenu":
+                    showPage( displayState ) ;
+                    break;
+                case "OperationEdit":
+                    showPage( "OperationList" ) ;
+                    break ;
+                case "NoteNew":
+                case "NoteImage":
+                    showPage( "NoteList" ) ;
+                    break ;
+                case undefined:
+                case "UserName":
+                    showPage( "userName" ) ;
+                    break ;
+                case "InvalidPatient":
+                    showPage( "PatientList" ) ;
+                    break ;
+                case "PatientNew":
+                case "PatientDemographics":
+                case "PatientMedical":
+                default:
+                    showPage( "PatientPhoto" ) ;
+                    break ;
             }
-            })
-        .catch( (err) => {
-            console.log(err) ;
-            showPage( "MainMenu" ) ;
-            }) ;
+        }
     }
         
     
