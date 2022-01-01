@@ -124,7 +124,7 @@
             <!-- body: PatientPhoto -->
             <div class="PatientPhoto pageOverlay">
                 <div id="PatientPhotoContent" >
-                    <img class="entryfield_image">
+                    <img class="entryfield_image" onclick="ShowBigPicture(this)">
                     <div class="entryfield_text">
                         <button class="edit_note libutton" type="button" onClick="photoBar.startedit()">Edit</button>
                         Patient Photo
@@ -159,7 +159,7 @@
             <!-- body: NoteNew (quick note) -->
             <div class="NoteNew pageOverlay">
                 <div id="NoteNewContent">
-                    <img id="NoteNewImage" class="entryfield_image">
+                    <img id="NoteNewImage" class="entryfield_image" onclick="ShowBigPicture(this)">
                     <label for="NoteNewText" id="NoteNewLabel"></label>
                     <div id="NoteNewText" class="editable"></div>
                 </div>
@@ -175,12 +175,14 @@
             <!-- body: NoteImage2 (quick photo) -->
             <div class="NoteImage2 pageOverlay">
                 <div id="NoteImage2Content" ></div>
-                <img id="imageCheck" class="entryfield_image">
+                <img id="imageCheck" class="entryfield_image" onclick="ShowBigPicture(this)">
                 <label for="annotation">Image notes (optional)</label>
                 <div id="annotation" class="editable"></div>
                 <button type="button" class="divbutton" onclick="saveImage()">Save</button>
                 <button type="button" class="divbutton" onclick="showPage( 'NoteList' )">Cancel</button>
             </div>
+            <!-- body: FloatPicture -->
+            <img class="FloatPicture pageOverlay" onclick="HideBigPicture(this)">
         </div>
         <!-- copyable parts -->
         <div id="templates" class="pageOverlay">
@@ -201,7 +203,7 @@
             </div>
            <button class="edit_note libutton" type="button">Edit</button>
             <div id="phototemplate">
-                <img class="entryfield_image">
+                <img class="entryfield_image" onclick="ShowBigPicture(this)">
                 <div class="entryfield_text">
                     <button class="edit_note libutton" type="button" onClick="photoBar.startedit()">Edit</button>
                     Patient Photo

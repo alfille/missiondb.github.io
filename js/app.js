@@ -898,6 +898,7 @@ class Tbar {
         this.working.textDiv.contentEditable = true ;
         this.working.img     = document.createElement("img") ;
         this.working.img.classList.add("entryfield_image") ;
+        this.working.img.onclick = ShowBigPicture(this) ;
         this.working.upload = null
     }
 
@@ -1883,13 +1884,13 @@ function noteTitle( doc ) {
     author = userName ;
     if ( doc  && doc.id ) {
         date = splitNoteId(doc.id).key ;
-        console.log( "from key", date ) ;
+        //console.log( "from key", date ) ;
         if ( doc.doc && doc.doc.author ) {
             author = doc.doc.author ;
         }
         if ( doc.doc && doc.doc.date ) {
             date = doc.doc.date ;
-            console.log( "from doc", date ) ;
+            //console.log( "from doc", date ) ;
         }
     }
     return [author, new Date(date)] ;
@@ -2055,6 +2056,7 @@ class NoteList extends PatientData {
                 let imagedata = getImageFromDoc( note.doc ) ;
                 let img = document.createElement("img") ;
                 img.classList.add("entryfield_image") ;
+                img.addEventListener('click', (e) => ShowBigPicture(img) ) ;
                 img.src = imagedata ;
                 li.appendChild(img);
                 }
@@ -2064,9 +2066,7 @@ class NoteList extends PatientData {
 
             let textdiv = document.createElement("div") ;
             textdiv.innerText = ("text" in note.doc) ? note.doc.text : "" ;
-            li.addEventListener( 'dblclick', (e) => {
-                editBar.startedit( li ) ;
-            }) ;
+            li.addEventListener( 'dblclick', (e) => editBar.startedit( li ) ) ;
             textdiv.classList.add("entryfield_text") ;
             li.appendChild(textdiv);
         }    
@@ -2268,6 +2268,17 @@ function printCard() {
         console.log(err) ;
         showPage( "InvalidPatient" ) ;
         }) ;
+}
+
+function HideBigPicture( target ) {
+    target.src = "" ;
+    target.style.display = "none" ;
+}
+
+function ShowBigPicture( target ) {
+    var big = document.getElementsByClassName( "FloatPicture" )[0] ;
+    big.src = target.src ;
+    big.style.display = "block" ;
 }
 
 function downloadCSV(csv, filename) {
