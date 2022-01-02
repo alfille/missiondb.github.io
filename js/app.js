@@ -8,10 +8,17 @@ var noteId ;
 var operationId ;
 var remoteCouch ;
 var NoPhoto = "style/NoPhoto.png"
-  
+
+var UniqueSurgeons ;
+var UniqueEquipment ;
+var UniqueProcedure ;
+
 const cannonicalDBname = 'mdb' ;
+
+// Create/Open the database (locally) 
 var db = new PouchDB( cannonicalDBname ) ;
 
+// For remote replication
 const cloudantDb = "https://apikey-v2-qx7a577tpow3c98mnl8lsy8ldwpzevtteatwbrl2611:d87aed426ff20ba3969ffa0a2b44c3d3@bc3debc5-694c-4094-84b9-440fc5bf6964-bluemix.cloudantnosqldb.appdomain.cloud" ;
 var remoteCouch = cloudantDb ;
 
@@ -137,7 +144,8 @@ const structOperation = [
     {
         name: "Surgeon",
         hint: "Surgeon(s) involved",
-        type: "text",
+        type: "calclist",
+        choices: "UniqueSurgeons"
     },
     {
         name: "Equipment",
@@ -191,31 +199,70 @@ function createScheduleIndex() {
         views: {
             bySurgeon: {
                 map: function( doc ) {
-                    if ( doc._id.split(';')[0] == RecordFormat.type.operation ) {
-                        emit( doc.Surgeon, doc.Status ) ;
+                    if ( doc.type=="operation" ) {
+                        emit( doc.Surgeon, null  ) ;
                     }
-                }
+                }.toString(),
+            },
+            byEquipment: {
+                map: function( doc ) {
+                    if ( doc.type=="operation" ) {
+                        emit( doc.Equipment, null  ) ;
+                    }
+                }.toString(),
+            },
+            byProcedure: {
+                map: function( doc ) {
+                    if ( doc.type=="operation" ) {
+                        emit( doc.Procedure, null  ) ;
+                    }
+                }.toString(),
             },
             scheduled: {
                 map: function( doc ) {
-                    if ( doc._id.split(';')[0] == RecordFormat.type.operation ) {
+                    if ( doc.type == "operation" ) {
                         if ( doc.Status == "scheduled" ) {
                             emit( doc["Date-Time"], doc.Duration ) ;
                         }
                     }
-                }
+                }.toString(),
             },
             status: {
                 map: function(doc) {
-                    if ( doc._id.split(';')[0] == RecordFormat.type.operation ) {
+                    if ( doc.type == "operation" ) {
                         emit( doc.status, null ) ;
                     }
                 }
-            },
+            }.toString(),
         },
     } ;
+    console.log(ddoc) ;
     db.get( id )
-    .catch( (e) => db.put( doc ) ) ;
+    .then( doc => {
+        console.log(doc) ;
+        ddoc._rev = doc._rev ;
+        db.put( ddoc ) ;
+        })
+    .catch( (err) => {
+        console.log(err) ;
+        db.put( ddoc ) ;
+        })
+    .catch( (err) => console.log(err ) ) ;
+}
+
+function testScheduleIndex() {
+    db.query( "scheduling/bySurgeon" )
+    .then(docs => console.log(docs))
+    .catch( err => console.log(err)) ;
+}
+
+function UniqueList( query ) {
+    return db.query( query )
+    .then( docs => [...new Set( docs.rows.map( r=>r.key ) )] )
+    .catch( err => {
+        console.log(err) ;
+        return [] ;
+        }) ;
 }
 
 class PatientData {
@@ -319,7 +366,32 @@ class PatientData {
                         dlist.appendChild(op) ;
                         }) ;
                     var id = document.createElement("input") ;
-                    id.type = "list" ;
+                    id.type = "text" ;
+                    id.setAttribute( "list", dlist.id );
+                    id.value = v ;
+                    id.readonly = true ;
+                    id.disabled = true ;
+                    l.appendChild( dlist ) ;
+                    l.appendChild( id ) ;                    
+                    break ;
+                case "calclist":
+                    var v  = "" ;
+                    var any_choices = window[item.choices].length > 0 ;
+                    if ( item.name in doc ) {
+                        v = doc[item.name] ;
+                    } else if ( any_choices ) {
+                        v = window[item.choices][0] ;
+                    }
+                    var dlist = document.createElement("datalist") ;
+                    dlist.id = 'datalist'+idx ;
+                        
+                    window[item.choices].filter( c=> c.length>0 ).forEach( (c) => {
+                        var op = document.createElement("option") ;
+                        op.value = c ;
+                        dlist.appendChild(op) ;
+                        }) ;
+                    var id = document.createElement("input") ;
+                    id.type = "text" ;
                     id.setAttribute( "list", dlist.id );
                     id.value = v ;
                     id.readonly = true ;
@@ -611,6 +683,7 @@ class PatientData {
                         li.querySelector("textarea").readOnly = false ;
                         break ;
                     case "list":
+                    case "calclist":
                         li.querySelector("input").readOnly = false ;
                         li.querySelector("input").disabled = false ;
                         break ;
@@ -1107,7 +1180,11 @@ function showPage( state = "PatientList" ) {
         case "OperationEdit":
             if ( patientId ) {
                 if ( operationId ) {
-                    db.get( operationId )
+                    UniqueList( "scheduling/bySurgeon" )
+                    .then( s => {
+                        UniqueSurgeons = s ;
+                        return db.get( operationId ) ;
+                        })
                     .then( (doc) => objectPatientData = new OperationData( doc, structOperation ) )
                     .catch( (err) => {
                         console.log(err) ;
@@ -1161,7 +1238,11 @@ function showPage( state = "PatientList" ) {
         case "PatientMedical":
             if ( patientId ) {
                 var args ;
-                getThePatient( false )
+                UniqueList( "scheduling/bySurgeon" )
+                .then( s => {
+                    UniqueSurgeons = s ;
+                    return getThePatient( false )
+                    })
                 .then( (doc) => {
                     args = [doc,structMedical] ;
                     return getOperations(true) ;
@@ -1849,13 +1930,13 @@ function getOperations(attachments) {
                 throw null ;
             }
             // too many empties
-            console.log("Remove", dlist.length,"entries");
+            //console.log("Remove", dlist.length,"entries");
             return Promise.all(dlist.map( (doc) => db.remove(doc) ))
                 .then( ()=> getOperations( attachments )
                 ) ;
             })
         .catch( () => {
-            console.log("Add a record") ;
+            //console.log("Add a record") ;
             return makeNewOperation().then( () => getOperations( attachments ) ) ;
             });
     } else {
@@ -1893,8 +1974,6 @@ class NoteList extends PatientData {
         if ( parent == null ) {
             parent = document.body ;
         }
-        console.log("parent",parent) ;
-
         [...parent.getElementsByTagName('ul')].forEach( (u) => parent.removeChild(u) ) ;
 
         this.ul = document.createElement('ul') ;
@@ -2121,11 +2200,11 @@ function printCard() {
             4) ;
         try {
             photo.src = getImageFromDoc( doc ) ;
-            console.log("Image gotten".doc)
+            //console.log("Image gotten".doc)
             } 
         catch (err) {
             photo.src = "style/NoPhoto.png" ;
-            console.log("No image",doc) ;
+            //console.log("No image",doc) ;
             }
         t[0].rows[0].cells[1].innerText = doc.LastName+"' "+doc.FirstName ;
         t[0].rows[1].cells[1].innerText = doc.Complaint ;
@@ -2326,7 +2405,6 @@ function parseQuery() {
             selectPatient( q.patientId ) ;
             showPage( "PatientPhoto" ) ;
         } else {
-            console.log("switch",userName,displayState) ;
             switch ( displayState ) {
                 case "PatientList":
                 case "MainMenu":
@@ -2334,6 +2412,9 @@ function parseQuery() {
                 case "NoteList":
                 case "OperationList":
                 case "SettingMenu":
+                case "PatientDemographics":
+                case "PatientMedical":
+                case "UserName":
                     showPage( displayState ) ;
                     break;
                 case "OperationEdit":
@@ -2343,16 +2424,10 @@ function parseQuery() {
                 case "NoteImage":
                     showPage( "NoteList" ) ;
                     break ;
-                case undefined:
-                case "UserName":
-                    showPage( "userName" ) ;
-                    break ;
                 case "InvalidPatient":
                     showPage( "PatientList" ) ;
                     break ;
                 case "PatientNew":
-                case "PatientDemographics":
-                case "PatientMedical":
                 default:
                     showPage( "PatientPhoto" ) ;
                     break ;

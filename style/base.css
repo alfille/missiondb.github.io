@@ -338,12 +338,19 @@ footer {
   background: #3366CC;
 }
   
-#PatientPhotoContent, #MainMenuContent {
+#PatientPhotoContent {
   display: flex ;
   background: #b3b3ff ;
   justify-content: center;
   align-items: center;
   flex-direction: row ; 
+}
+#MainMenuContent {
+  display: flex ;
+  background: #b3b3ff ;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column ; 
 }
 #PatientPhotoButtons {
   display: flex;
