@@ -196,6 +196,7 @@ function createScheduleIndex() {
     let id = "_design/scheduling" ;
     let ddoc = {
         _id: id ,
+        version: 0,
         views: {
             bySurgeon: {
                 map: function( doc ) {
@@ -236,12 +237,12 @@ function createScheduleIndex() {
             }.toString(),
         },
     } ;
-    console.log(ddoc) ;
     db.get( id )
     .then( doc => {
-        console.log(doc) ;
-        ddoc._rev = doc._rev ;
-        db.put( ddoc ) ;
+        if ( ddoc.version !== doc.version ) {
+            ddoc._rev = doc._rev ;
+            db.put( ddoc ) ;
+        }
         })
     .catch( (err) => {
         console.log(err) ;
@@ -2384,6 +2385,9 @@ function parseQuery() {
     
     // Initial start
     show_screen(true) ;
+
+    // design document creation (assync)
+    createScheduleIndex() ;
     
     // search field
     // No search, use cookies
