@@ -197,12 +197,12 @@ function createIndexes() {
     let ddoclist = [
     {
         _id: id ,
-        version: 1,
+        version: 2,
         views: {
             bySurgeon: {
                 map: function( doc ) {
                     if ( doc.type=="operation" ) {
-                        emit( doc.Surgeon, null  ) ;
+                        emit( doc.Surgeon ) ;
                     }
                 }.toString(),
             },
