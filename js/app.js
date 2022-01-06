@@ -192,11 +192,12 @@ const structSetting = [
     },
 ] ;
 
-function createScheduleIndex() {
-    let id = "_design/scheduling" ;
-    let ddoc = {
+function createIndexes() {
+    let id = "_design/bySurgeon" ;
+    let ddoclist = [
+    {
         _id: id ,
-        version: 0,
+        version: 1,
         views: {
             bySurgeon: {
                 map: function( doc ) {
@@ -205,54 +206,29 @@ function createScheduleIndex() {
                     }
                 }.toString(),
             },
-            byEquipment: {
-                map: function( doc ) {
-                    if ( doc.type=="operation" ) {
-                        emit( doc.Equipment, null  ) ;
-                    }
-                }.toString(),
-            },
-            byProcedure: {
-                map: function( doc ) {
-                    if ( doc.type=="operation" ) {
-                        emit( doc.Procedure, null  ) ;
-                    }
-                }.toString(),
-            },
-            scheduled: {
-                map: function( doc ) {
-                    if ( doc.type == "operation" ) {
-                        if ( doc.Status == "scheduled" ) {
-                            emit( doc["Date-Time"], doc.Duration ) ;
-                        }
-                    }
-                }.toString(),
-            },
-            status: {
-                map: function(doc) {
-                    if ( doc.type == "operation" ) {
-                        emit( doc.status, null ) ;
-                    }
-                }
-            }.toString(),
         },
-    } ;
-    db.get( id )
-    .then( doc => {
-        if ( ddoc.version !== doc.version ) {
-            ddoc._rev = doc._rev ;
-            db.put( ddoc ) ;
-        }
-        })
-    .catch( (err) => {
-        console.log(err) ;
-        db.put( ddoc ) ;
-        })
+    }, 
+    ] ;
+    Promise.all( ddoclist.map( (ddoc) => {
+        db.get( ddoc._id )
+        .then( doc => {
+            if ( ddoc.version !== doc.version ) {
+                ddoc._rev = doc._rev ;
+                return db.put( ddoc ) ;
+            } else {
+                return Promise.resolve(true) ;
+            }
+            })
+        .catch( (err) => {
+            console.log(err) ;
+            return db.put( ddoc ) ;
+            })
+        }))
     .catch( (err) => console.log(err ) ) ;
 }
 
 function testScheduleIndex() {
-    db.query( "scheduling/bySurgeon" )
+    db.query( "bySurgeon" )
     .then(docs => console.log(docs))
     .catch( err => console.log(err)) ;
 }
@@ -1181,7 +1157,7 @@ function showPage( state = "PatientList" ) {
         case "OperationEdit":
             if ( patientId ) {
                 if ( operationId ) {
-                    UniqueList( "scheduling/bySurgeon" )
+                    UniqueList( "bySurgeon" )
                     .then( s => {
                         UniqueSurgeons = s ;
                         return db.get( operationId ) ;
@@ -1239,7 +1215,7 @@ function showPage( state = "PatientList" ) {
         case "PatientMedical":
             if ( patientId ) {
                 var args ;
-                UniqueList( "scheduling/bySurgeon" )
+                UniqueList( "bySurgeon" )
                 .then( s => {
                     UniqueSurgeons = s ;
                     return getThePatient( false )
@@ -2387,7 +2363,7 @@ function parseQuery() {
     show_screen(true) ;
 
     // design document creation (assync)
-    createScheduleIndex() ;
+    createIndexes() ;
     
     // search field
     // No search, use cookies
