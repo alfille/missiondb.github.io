@@ -17,6 +17,10 @@
                     <!-- top: UserName MainMenu -->
                     <div class="UserName MainMenu pageOverlay">
                     </div>
+                    <!-- top: DatabaseInfo -->
+                    <div class="PatientData DatabaseInfo pageOverlay">
+                        <button type="button" class="divbutton return" onclick="showPage( 'MainMenu' )">Return</button>
+                    </div>
                     <!-- top: Download -->
                     <div class="Download pageOverlay">
                         <button type="button" class="divbutton" onclick="showPage( 'MainMenu' )">Main Menu</button>
@@ -95,6 +99,7 @@
                     <button type="button" class="divbutton" onclick="showPage( 'PatientList' )">Patient List</button>
                     <button type="button" class="divbutton" onclick="showPage( 'SettingMenu' )">Settings</button>
                     <button type="button" class="divbutton" onclick="showPage( 'Download' )">Download</button>
+                    <button type="button" class="divbutton" onclick="showPage( 'DatabaseInfo' )">Database Information</button>
                     <button type="button" class="divbutton" onclick="createIndexes()">DesignIndex</button>
                     <button type="button" class="divbutton" onclick="testScheduleIndex()">CreateIndex</button>
                 </div>
@@ -119,8 +124,8 @@
                     <table id="OperationsList"></table>
                 </div>
             </div>
-            <!-- body: PatientNew PatientDemographics PatientMedical OperationEdit SettingMenu -->
-            <div class="PatientData PatientNew PatientDemographics PatientMedical OperationEdit SettingMenu pageOverlay">
+            <!-- body: PatientNew PatientDemographics PatientMedical OperationEdit SettingMenu DatabaseInfo -->
+            <div class="PatientData PatientNew PatientDemographics PatientMedical OperationEdit SettingMenu DatabaseInfo pageOverlay">
                 <div id="PatientDataContent" ></div>
             </div>
             <!-- body: PatientPhoto -->

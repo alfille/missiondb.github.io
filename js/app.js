@@ -192,6 +192,38 @@ const structSetting = [
     },
 ] ;
 
+const structDatabaseInfo = [
+    {
+        name: "db_name",
+        alias: "Dabase name",
+        hint: "Name of underlying database",
+        type: "text",
+    },
+    {
+        name: "doc_count",
+        alias: "Document count",
+        hint: "Total number of undeleted documents",
+        type: "number",
+    },
+    {
+        name: "update_seq",
+        hint: "Sequence number",
+        type: "number",
+    },
+    {
+        name: "adapter",
+        alias: "Database adapter",
+        hint: "Actual database type used",
+        type: "text",
+    },
+    {
+        name: "auto_compaction",
+        alias: "Automatic compaction",
+        hint: "Database compaction done automaticslly?",
+        type: "text",
+    },
+] ;
+    
 function createIndexes() {
     let id = "_design/bySurgeon" ;
     let ddoclist = [
@@ -740,6 +772,10 @@ class OperationData extends PatientData {
     }
 }
 
+class DatabaseInfoData extends PatientData {
+    savePatientData() {}
+}
+
 class SettingData extends PatientData {
     savePatientData() {
         this.loadDocData() ;
@@ -1238,6 +1274,15 @@ function showPage( state = "PatientList" ) {
             }
             break ;
             
+        case "DatabaseInfo":
+            db.info()
+            .then( doc => {
+                console.log(doc) ;
+                objectPatientData = new DatabaseInfoData( doc, structDatabaseInfo ) ;
+                })
+            .catch( err => console.log(err) ) ;
+            break ;
+
         case "InvalidPatient":
             unselectPatient() ;
             break ;
@@ -2346,7 +2391,12 @@ function parseQuery() {
     function sync() {
         let synctext = document.getElementById("syncstatus") ;
         synctext.value = "syncing..." ;
-        db.sync( remoteCouch+"/"+cannonicalDBname , { live: true, retry: true, } )
+        db.sync( remoteCouch+"/"+cannonicalDBname ,
+        {
+            live: true,
+            retry: true,
+            filter: (doc) => doc._id.indexOf('_design') !== 0,
+        } )
         .on('change', (info)   => synctext.value = "changed -- " + info )
         .on('paused', ()       => synctext.value = "pending" )
         .on('active', ()       => synctext.value = "active" )
@@ -2364,6 +2414,9 @@ function parseQuery() {
 
     // design document creation (assync)
     createIndexes() ;
+
+    db.viewCleanup()
+    .catch( err => console.log(err) ) ;
     
     // search field
     // No search, use cookies
