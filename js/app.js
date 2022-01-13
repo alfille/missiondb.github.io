@@ -229,7 +229,7 @@ function createIndexes() {
     let ddoclist = [
     {
         _id: id ,
-        version: 2,
+        version: 1,
         views: {
             bySurgeon: {
                 map: function( doc ) {
@@ -237,6 +237,7 @@ function createIndexes() {
                         emit( doc.Surgeon ) ;
                     }
                 }.toString(),
+                reduce: '_count',
             },
         },
     }, 
@@ -263,15 +264,9 @@ function testScheduleIndex() {
     db.query( "bySurgeon" )
     .then(docs => console.log(docs))
     .catch( err => console.log(err)) ;
-}
-
-function UniqueList( query ) {
-    return db.query( query )
-    .then( docs => [...new Set( docs.rows.map( r=>r.key ) )] )
-    .catch( err => {
-        console.log(err) ;
-        return [] ;
-        }) ;
+    db.query( "bySurgeon", {group:true,reduce:true} )
+    .then(docs => console.log(docs))
+    .catch( err => console.log(err)) ;
 }
 
 class PatientData {
@@ -1193,9 +1188,9 @@ function showPage( state = "PatientList" ) {
         case "OperationEdit":
             if ( patientId ) {
                 if ( operationId ) {
-                    UniqueList( "bySurgeon" )
+                    db.query("bySurgeon",{group:true,reduce:true})
                     .then( s => {
-                        UniqueSurgeons = s ;
+                        UniqueSurgeons = s.rows.map( ss => ss.key ) ;
                         return db.get( operationId ) ;
                         })
                     .then( (doc) => objectPatientData = new OperationData( doc, structOperation ) )
@@ -1251,9 +1246,9 @@ function showPage( state = "PatientList" ) {
         case "PatientMedical":
             if ( patientId ) {
                 var args ;
-                UniqueList( "bySurgeon" )
+                db.query("bySurgeon",{group:true,reduce:true})
                 .then( s => {
-                    UniqueSurgeons = s ;
+                    UniqueSurgeons = s.rows.map( ss => ss.key ) ;
                     return getThePatient( false )
                     })
                 .then( (doc) => {
@@ -2290,7 +2285,6 @@ function downloadCSV(csv, filename) {
 function downloadPatients() {
     const fields = [ "LastName", "FirstName", "DOB", "Dx", "Weight", "Height", "Sex", "Allergies", "Meds", "ASA" ] ; 
     var csv = fields.map( f => '"'+f+'"' ).join(',')+'\n' ;
-    console.log( csv ) ;
     getPatients(true)
     .then( doclist => {
         csv += doclist.rows
@@ -2314,7 +2308,6 @@ function downloadAll() {
     var plist ;
     var olist = {} ;
     var nlist = {} ;
-    console.log( csv ) ;
     getPatients(true)
     .then( doclist => {
         plist = doclist.rows ;
