@@ -225,10 +225,9 @@ const structDatabaseInfo = [
 ] ;
     
 function createIndexes() {
-    let id = "_design/bySurgeon" ;
     let ddoclist = [
     {
-        _id: id ,
+        _id: "_design/bySurgeon" ,
         version: 1,
         views: {
             bySurgeon: {
@@ -238,6 +237,32 @@ function createIndexes() {
                     }
                 }.toString(),
                 reduce: '_count',
+            },
+        },
+    }, 
+    {
+        _id: "_design/Patient2Operation" ,
+        version: 0,
+        views: {
+            Patient2Operation: {
+                map: function( doc ) {
+                    if ( doc.type=="operation" ) {
+                        emit( doc.patient_id ) ;
+                    }
+                }.toString(),
+            },
+        },
+    }, 
+    {
+        _id: "_design/Patient2Note" ,
+        version: 0,
+        views: {
+            Patient2Note: {
+                map: function( doc ) {
+                    if ( doc.type=="note" ) {
+                        emit( doc.patient_id ) ;
+                    }
+                }.toString(),
             },
         },
     }, 
@@ -261,7 +286,16 @@ function createIndexes() {
 }
 
 function testScheduleIndex() {
-    db.query( "bySurgeon" )
+    db.compact()
+    .then( err => console.log("compact",err) )
+    .catch( err => console.log("compact",err) ) ;
+    getPatients(true)
+    .then( doclist => doclist.rows.forEach( row => console.log(row.doc.type,row.id) ) ) ;
+    getOperationsAll ()
+    .then( doclist => doclist.rows.forEach( row => console.log(row.doc.type,row.id) ) ) ;
+    getNotesAll()
+    .then( doclist => doclist.rows.forEach( row => console.log(row.doc.type,row.id) ) ) ;
+    db.query( "Patient2Operation" )
     .then(docs => console.log(docs))
     .catch( err => console.log(err)) ;
     db.query( "bySurgeon", {group:true,reduce:true} )
@@ -958,6 +992,7 @@ class Nbar extends Tbar {
                 .then( (doc) => {
                     doc.text = this.working.textDiv.innerText ;
                     doc.patient_id = patientId ;
+                    doc.type = "note" ;
                     if ( this.working.upload == null ) {
                     } else if ( this.working.upload === "remove") {
                         deleteImageFromDoc( doc ) ;
@@ -1642,48 +1677,15 @@ function makeNoteId(position=null) {
         ].join(";") ;
 }
 
-function makeOperationId(position=null) {
-    let d ;
-    switch (position) {
-        case "veryfirst":
-            d = "" ;
-            return [ 
-                RecordFormat.type.operation,
-                RecordFormat.version,
-                d,
-                d,
-                d,
-                d , 
-                ].join(";") ;
-        case "first":
-            d = "" ;
-            break ;
-        case "verylast":
-            d = "\\fff0" ;
-            return [ 
-                RecordFormat.type.operation,
-                RecordFormat.version,
-                d,
-                d,
-                d,
-                d , 
-                ].join(";") ;
-        case "last":
-            d = "\\fff0" ;
-            break ;
-        default:
-            d = new Date().toISOString() ;
-            break;
-    }
-    let spl = splitPatientId() ;
-    
+function makeOperationId() {
+    let spl = splitPatientId() ;    
     return [ 
         RecordFormat.type.operation,
         RecordFormat.version,
         spl.last,
         spl.first,
         spl.dob,
-        d , 
+        new Date().toISOString() , 
         ].join(";") ;
 }
 
@@ -1904,8 +1906,8 @@ function getPatients(attachments) {
 
 function getOperationsAll() {
     doc = {
-        startkey: makeOperationId("veryfirst"),
-        endkey: makeOperationId("verylast"),
+        startkey: RecordFormat.type.operation+";" ,
+        endkey: RecordFormat.type.operation+";\\fff0",
         include_docs: true,
         binary: true,
         attachments: true,
@@ -1915,8 +1917,7 @@ function getOperationsAll() {
 
 function getOperations(attachments) {
     doc = {
-        startkey: makeOperationId("first"),
-        endkey: makeOperationId("last"),
+        key: patientId,
     } ;
     if (attachments) {
         doc.include_docs = true ;
@@ -1925,7 +1926,7 @@ function getOperations(attachments) {
 
         // Adds a single "blank"
         // also purges excess "blanks"
-        return db.allDocs(doc)
+        return db.query( "Patient2Operation", doc)
         .then( (doclist) => {
             let newlist = doclist.rows
                 .filter( (row) => ( row.doc.Status === "none" ) && ( row.doc.Procedure === "Enter new procedure" ) )
@@ -1961,7 +1962,7 @@ function getOperations(attachments) {
     }
 }
 
-function getNoteAll() {
+function getNotesAll() {
     doc = {
         startkey: makeNoteId("veryfirst"),
         endkey: makeNoteId("verylast"),
@@ -2320,7 +2321,7 @@ function downloadAll() {
                 olist[row.doc.patient_id] = row.doc ;
             }
             }) ;
-        return getNoteAll() ;
+        return getNotesAll() ;
         })
     .then( doclist => {
         doclist.rows.forEach( row => ++nlist[row.doc.patient_id] ) ;
