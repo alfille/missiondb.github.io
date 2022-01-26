@@ -210,7 +210,7 @@ const structDatabase = [
     },    
     {
         name: "address",
-        alias: "Remote Database Address",
+        alias: "Remote database server address",
         hint: "https://location -- don't include database name",
         type: "text",
     },
@@ -942,8 +942,7 @@ class DatabaseInfoData extends PatientData {
 
 class DatabaseData extends PatientData {
     savePatientData() {
-        this.loadDocData();
-        if ( Object.keys( this.doc[0] ).some( k => this.doc[0][k] != remoteCouch[k] ) ) {
+        if ( this.loadDocData()[0] ) {
             setCookie ( "remoteCouch", Object.assign({},this.doc[0]) );
             showPage( "MainMenu" );
             location.reload(); // force reload
@@ -1023,7 +1022,7 @@ class NewUserData extends NewPatientData {
 
 class EditUserData extends PatientData {
     savePatientData() {
-        if ( this.loadDocData() ) {
+        if ( this.loadDocData()[0] ) {
             this.doc[0].roles = [ this.doc[0].roles ];
             userPass[this.doc[0]._id] = this.doc[0].password; // for informing user
             admin_db.put( this.doc[0] )
