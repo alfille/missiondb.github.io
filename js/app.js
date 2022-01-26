@@ -1,26 +1,46 @@
-var objectPatientData  ;
-var objectNoteList ;
+"use strict";
 
-var displayState ;
-var userName ;
-var patientId ;
-var noteId ;
-var operationId ;
-var remoteCouch ;
-var NoPhoto = "style/NoPhoto.png"
+// globals not cookie backed
+var objectPatientData;
+var objectNoteList;
+var objectPatientTable = null;
+var objectOperationTable = null;
+var objectUserTable = null;
+var userId = null; // not cookie backed
+var userPass = {};
 
-var UniqueSurgeons ;
-var UniqueEquipment ;
-var UniqueProcedure ;
+// globals cookie backed
+var displayState;
+var patientId;
+var noteId;
+var operationId;
+var remoteCouch;
+var NoPhoto = "style/NoPhoto.png";
 
-const cannonicalDBname = 'mdb' ;
+var UniqueSurgeons;
+var UniqueEquipment;
+var UniqueProcedure;
+
+const cannonicalDBname = 'mdb';
 
 // Create/Open the database (locally) 
-var db = new PouchDB( cannonicalDBname ) ;
+var db = new PouchDB( cannonicalDBname );
+var admin_db = null;
+var remoteAdmin = {
+    database: "_users" ,
+    username: "admin",
+    password: "",
+    address: "",
+    };
 
 // For remote replication
-const cloudantDb = "https://apikey-v2-qx7a577tpow3c98mnl8lsy8ldwpzevtteatwbrl2611:d87aed426ff20ba3969ffa0a2b44c3d3@bc3debc5-694c-4094-84b9-440fc5bf6964-bluemix.cloudantnosqldb.appdomain.cloud" ;
-var remoteCouch = cloudantDb ;
+const remoteFields = [ "address", "username", "password", "database" ];
+const cloudantDb = {
+    address: "https://bc3debc5-694c-4094-84b9-440fc5bf6964-bluemix.cloudantnosqldb.appdomain.cloud",
+    username: "apikey-v2-qx7a577tpow3c98mnl8lsy8ldwpzevtteatwbrl2611",
+    password: "d87aed426ff20ba3969ffa0a2b44c3d3",
+    database: "mdb2"
+    };
 
 // used for record keys ( see makePatientId, etc )
 const RecordFormat = {
@@ -32,8 +52,9 @@ const RecordFormat = {
         list: "l" ,
         } ,
     version: 0,
-} ;
+};
 
+// used to generate data entry pages "PatientData" type
 const structNewPatient = [
     {
         name: "LastName",
@@ -50,7 +71,7 @@ const structNewPatient = [
         hint: "Date of birst (as close as possible)",
         type: "date",
     },
-] ;
+];
     
 const structDemographics = [
     {
@@ -88,7 +109,7 @@ const structDemographics = [
         hint: "Additional contact information (family member, local address,...)",
         type: "textarea",
     },
-] ;
+];
 
 const structMedical = [
     {
@@ -128,7 +149,7 @@ const structMedical = [
         hint: "Medicine and antibiotics",
         type: "textarea",
     },
-] ;
+];
 
 const structOperation = [
     {
@@ -174,23 +195,31 @@ const structOperation = [
         type: "radio",
         choices: ["?", "L", "R", "L+R", "N/A"],
     },
-] ;
+];
 
-const structSetting = [
+const structDatabase = [
     {
-        name: "userName",
-        alias: "User Name",
-        hint: "Your user name",
+        name: "username",
+        hint: "Your user name for access",
         type: "text",
     },
     {
-        name: "remoteCouch",
-        alias: "Remote Database",
-        hint: "user:password@url of remote -- don't include database name",
-        type: "list",
-        choices: [ cloudantDb, ],
+        name: "password",
+        hint: "Your password for access",
+        type: "password",
+    },    
+    {
+        name: "address",
+        alias: "Remote Database Address",
+        hint: "https://location -- don't include database name",
+        type: "text",
     },
-] ;
+    {
+        name: "database",
+        hint: 'Name of patient information database (e.g. "mdb"',
+        type: "text",
+    },
+];
 
 const structDatabaseInfo = [
     {
@@ -222,8 +251,76 @@ const structDatabaseInfo = [
         hint: "Database compaction done automaticslly?",
         type: "text",
     },
-] ;
+];
+
+const structNewUser = [
+    {
+        name: "name",
+        hint: "User Name (can be email address)",
+        type: "text",
+    },
+    {
+        name: "password",
+        hint: "User password",
+        type: "password",
+    } ,
+    {
+        name: "roles",
+        hint: "Regular user or administrator",
+        type: "radio",
+        choices: ["user","admin",],
+    },
+    {
+        name: "email",
+        alias: "email address",
+        hint: "email address of user (optional but helps send invite)",
+        type: "email",
+    }
+];
+
+const structEditUser = [
+    {
+        name: "name",
+        hint: "User Name (can be email address)",
+        type: "text",
+        readonly: "true",
+    },
+    {
+        name: "password",
+        hint: "User password",
+        type: "password",
+    } ,
+    {
+        name: "roles",
+        hint: "Regular user or administrator",
+        type: "radio",
+        choices: ["user","admin",],
+    },
+    {
+        name: "email",
+        alias: "email address",
+        hint: "email address of user (optional but helps send invite)",
+        type: "email",
+    }
+];
     
+const structSuperUser = [
+    {
+        name: "username",
+        alias: "Superuser name" ,
+        hint: "Site administrator name",
+        type: "text",
+    },
+    {
+        name: "password",
+        alias: "Superuser password" ,
+        hint: "Site admnistrator password",
+        type: "password",
+    } ,
+];
+
+// Create pouchdb indexes. Used for links between records and getting list of choices
+// change version number to force a new version
 function createIndexes() {
     let ddoclist = [
     {
@@ -233,7 +330,7 @@ function createIndexes() {
             bySurgeon: {
                 map: function( doc ) {
                     if ( doc.type=="operation" ) {
-                        emit( doc.Surgeon ) ;
+                        emit( doc.Surgeon );
                     }
                 }.toString(),
                 reduce: '_count',
@@ -247,7 +344,7 @@ function createIndexes() {
             Patient2Operation: {
                 map: function( doc ) {
                     if ( doc.type=="operation" ) {
-                        emit( doc.patient_id ) ;
+                        emit( doc.patient_id );
                     }
                 }.toString(),
             },
@@ -260,373 +357,409 @@ function createIndexes() {
             Patient2Note: {
                 map: function( doc ) {
                     if ( doc.type=="note" ) {
-                        emit( doc.patient_id ) ;
+                        emit( doc.patient_id );
                     }
                 }.toString(),
             },
         },
     }, 
-    ] ;
+    ];
     Promise.all( ddoclist.map( (ddoc) => {
         db.get( ddoc._id )
         .then( doc => {
             if ( ddoc.version !== doc.version ) {
-                ddoc._rev = doc._rev ;
-                return db.put( ddoc ) ;
+                ddoc._rev = doc._rev;
+                return db.put( ddoc );
             } else {
-                return Promise.resolve(true) ;
+                return Promise.resolve(true);
             }
             })
         .catch( (err) => {
-            console.log(err) ;
-            return db.put( ddoc ) ;
-            })
+            console.log(err);
+            return db.put( ddoc );
+            });
         }))
-    .catch( (err) => console.log(err ) ) ;
+    .catch( (err) => console.log(err ) );
 }
 
 function testScheduleIndex() {
+    /*
     db.compact()
     .then( err => console.log("compact",err) )
-    .catch( err => console.log("compact",err) ) ;
+    .catch( err => console.log("compact",err) );
     getPatients(true)
-    .then( doclist => doclist.rows.forEach( row => console.log(row.doc.type,row.id) ) ) ;
+    .then( doclist => doclist.rows.forEach( row => console.log(row.doc.type,row.id) ) );
     getOperationsAll ()
-    .then( doclist => doclist.rows.forEach( row => console.log(row.doc.type,row.id) ) ) ;
+    .then( doclist => doclist.rows.forEach( row => console.log(row.doc.type,row.id) ) );
     getNotesAll()
-    .then( doclist => doclist.rows.forEach( row => console.log(row.doc.type,row.id) ) ) ;
+    .then( doclist => doclist.rows.forEach( row => console.log(row.doc.type,row.id) ) );
     db.query( "Patient2Operation" )
     .then(docs => console.log(docs))
-    .catch( err => console.log(err)) ;
+    .catch( err => console.log(err));
     db.query( "bySurgeon", {group:true,reduce:true} )
     .then(docs => console.log(docs))
-    .catch( err => console.log(err)) ;
+    .catch( err => console.log(err));
+    * */
+    /*
+    getNotesAll()
+    .then( doclist => Promise.all( doclist.rows.filter( row => !("patient_id" in row.doc) || !("type" in row.doc) ).map( row => {
+        row.doc.type = "note";
+        row.doc.patient_id = "p;"+ row.id.split(';').slice(1,5).join(';');
+        console.log(row.doc);
+        return db.put( row.doc );
+    })))
+    .catch( err => console.log(err) );
+    * */
+    getNotesAll()
+    .then( doclist => Promise.all( doclist.rows.map( row => {
+        forceReplicate(row.id);
+        Promise.resolve(true);
+    })))
+    .catch(err => console.log(err)); 
 }
 
+// data entry page type
+// except for Noteslist and some html entries, this is the main type
 class PatientData {
     constructor(...args) {
-        this.parent = document.getElementById("PatientDataContent") ;
-        let fieldset = document.getElementById("templates").querySelector("fieldset") ;
-        
-        this.doc = [] ;
-        this.struct = [] ;
-        this.ul = [] ;
-        this.pairs = 0 ;
+        this.parent = document.getElementById("PatientDataContent");
+        let fieldset = document.getElementById("templates").querySelector("fieldset");
 
-        for ( let iarg = 0 ; iarg<args.length ; ++iarg ) {
-            this.doc[this.pairs] = args[iarg] ;
-            ++ iarg ;
+        console.log( ...args);
+        
+        this.doc = [];
+        this.struct = [];
+        this.ul = [];
+        this.pairs = 0;
+
+        for ( let iarg = 0; iarg<args.length; ++iarg ) {
+            this.doc[this.pairs] = args[iarg];
+            ++ iarg;
             if ( iarg == args.length ) {
-                break ;
+                break;
             }
-            this.struct[this.pairs] = args[iarg] ;
-            ++ this.pairs ;
+            this.struct[this.pairs] = args[iarg];
+            ++ this.pairs;
         } 
         
-        this.ButtonStatus( true ) ;
+        this.ButtonStatus( true );
         [...document.getElementsByClassName("edit_note")].forEach( (e) => {
-            e.disabled = false ;
-        }) ;
-        picker.detach() ;
-        this.parent.innerHTML = "" ;
+            e.disabled = false;
+        });
+        picker.detach();
+        this.parent.innerHTML = "";
         
-        for ( let ipair = 0 ; ipair < this.pairs ; ++ ipair ) {
-            let fs = fieldset.cloneNode( true ) ;
-            this.ul[ipair] = this.fill(ipair) ;
-            fs.appendChild( this.ul[ipair] ) ;
-            this.parent.appendChild( fs ) ;
+        for ( let ipair = 0; ipair < this.pairs; ++ ipair ) {
+            let fs = fieldset.cloneNode( true );
+            this.ul[ipair] = this.fill(ipair);
+            fs.appendChild( this.ul[ipair] );
+            this.parent.appendChild( fs );
         }
     }
     
     fill( ipair ) {
-        var doc = this.doc[ipair] ;
-        var struct = this.struct[ipair] ;
+        let doc = this.doc[ipair];
+        let struct = this.struct[ipair];
 
-        var ul = document.createElement('ul') ;
+        let ul = document.createElement('ul');
         
         struct.forEach( ( item, idx ) => {
-            var li = document.createElement("li");
-            li.setAttribute("data-index",idx) ;
-            var l = document.createElement("label");
-            li.appendChild(l) ;
+            let li = document.createElement("li");
+            li.setAttribute("data-index",idx);
+            let l = document.createElement("label");
+            li.appendChild(l);
             
             if ( "alias" in item ) {
                 l.appendChild( document.createTextNode(item.alias + ": ") );
             } else {
                 l.appendChild( document.createTextNode(item.name + ": ") );
             }
-            l.title = item.hint ;
+            l.title = item.hint;
 
             let i = null;
             switch( item.type ) {
                 case "radio":
-                    var v  = "" ;
-                    var any_choices = item.choices.length > 0 ;
+                    {
+                    let v  = "";
+                    let any_choices = item.choices.length > 0;
                     if ( item.name in doc ) { 
-                        v = doc[item.name] ;
+                        v = doc[item.name];
                         if ( !item.choices.includes(v) && any_choices ) {
-                            v = item.choices[0] ;
+                            v = item.choices[0];
                         }
                     } else if ( any_choices ) {
-                        v = item.choices[0] ;
+                        v = item.choices[0];
                     }
                         
                     item.choices.forEach( (c) => {
-                        i = document.createElement("input") ;
-                        i.type = "radio" ;
-                        i.name = item.name ;
-                        i.value = c ;
+                        i = document.createElement("input");
+                        i.type = "radio";
+                        i.name = item.name;
+                        i.value = c;
                         if ( c == v ) {
-                            i.checked = true ;
-                            i.disabled = false ;
+                            i.checked = true;
+                            i.disabled = false;
                         } else {
-                            i.disabled = true ;
+                            i.disabled = true;
                         }
-                        i.title = item.hint ;
-                        l.appendChild(i) ;
-                        l.appendChild( document.createTextNode(c) ) ;
-                    }) ;
-                    break ;
-                case "list":
-                    var v  = "" ;
-                    var any_choices = item.choices.length > 0 ;
-                    if ( item.name in doc ) {
-                        v = doc[item.name] ;
-                    } else if ( any_choices ) {
-                        v = item.choices[0] ;
+                        i.title = item.hint;
+                        l.appendChild(i);
+                        l.appendChild( document.createTextNode(c) );
+                    }); 
                     }
-                    var dlist = document.createElement("datalist") ;
-                    dlist.id = 'datalist'+idx ;
+                    break;
+                case "list":
+                    {
+                    let v  = "";
+                    let any_choices = item.choices.length > 0;
+                    if ( item.name in doc ) {
+                        v = doc[item.name];
+                    } else if ( any_choices ) {
+                        v = item.choices[0];
+                    }
+                    let dlist = document.createElement("datalist");
+                    dlist.id = 'datalist'+idx;
                         
                     item.choices.forEach( (c) => {
-                        var op = document.createElement("option") ;
-                        op.value = c ;
-                        dlist.appendChild(op) ;
-                        }) ;
-                    var id = document.createElement("input") ;
-                    id.type = "text" ;
+                        let op = document.createElement("option");
+                        op.value = c;
+                        dlist.appendChild(op);
+                        });
+                    let id = document.createElement("input");
+                    id.type = "text";
                     id.setAttribute( "list", dlist.id );
-                    id.value = v ;
-                    id.readonly = true ;
-                    id.disabled = true ;
-                    l.appendChild( dlist ) ;
-                    l.appendChild( id ) ;                    
-                    break ;
-                case "calclist":
-                    var v  = "" ;
-                    var any_choices = window[item.choices].length > 0 ;
-                    if ( item.name in doc ) {
-                        v = doc[item.name] ;
-                    } else if ( any_choices ) {
-                        v = window[item.choices][0] ;
+                    id.value = v;
+                    id.readonly = true;
+                    id.disabled = true;
+                    l.appendChild( dlist );
+                    l.appendChild( id );                    
                     }
-                    var dlist = document.createElement("datalist") ;
-                    dlist.id = 'datalist'+idx ;
+                    break;
+                case "calclist":
+                    {
+                    let v  = "";
+                    let any_choices = window[item.choices].length > 0;
+                    if ( item.name in doc ) {
+                        v = doc[item.name];
+                    } else if ( any_choices ) {
+                        v = window[item.choices][0];
+                    }
+                    let dlist = document.createElement("datalist");
+                    dlist.id = 'datalist'+idx;
                         
                     window[item.choices].filter( c=> c.length>0 ).forEach( (c) => {
-                        var op = document.createElement("option") ;
-                        op.value = c ;
-                        dlist.appendChild(op) ;
-                        }) ;
-                    var id = document.createElement("input") ;
-                    id.type = "text" ;
+                        var op = document.createElement("option");
+                        op.value = c;
+                        dlist.appendChild(op);
+                        });
+                    let id = document.createElement("input");
+                    id.type = "text";
                     id.setAttribute( "list", dlist.id );
-                    id.value = v ;
-                    id.readonly = true ;
-                    id.disabled = true ;
-                    l.appendChild( dlist ) ;
-                    l.appendChild( id ) ;                    
-                    break ;
+                    id.value = v;
+                    id.readonly = true;
+                    id.disabled = true;
+                    l.appendChild( dlist );
+                    l.appendChild( id );                    
+                    }
+                    break;
                 case "datetime":
                 case "datetime-local":
-                    var d = null ;
+                    {
+                    let d = null;
                     if ( item.name in doc ) { 
-                        d = new Date( doc[item.name] ) ;
+                        d = new Date( doc[item.name] );
                     }
-                    this.DateTimetoInput(d).forEach( (f) => l.appendChild(f) ) ;
-                    break ;
+                    this.DateTimetoInput(d).forEach( (f) => l.appendChild(f) );
+                    }
+                    break;
                 case "date":
-                    var v  = "" ;
+                    {
+                    let v  = "";
                     if ( item.name in doc ) { 
-                        v = doc[item.name] ;
+                        v = doc[item.name];
                     }
                         
-                    var id = document.createElement("input") ;
-                    id.type = "text" ;
-                    id.pattern="\d+-\d+-\d+" ;
-                    id.size = 10 ;
-                    id.value = v ;
-                    id.title = "Date in format YYYY-MM-DD" ;
+                    let id = document.createElement("input");
+                    id.type = "text";
+                    id.pattern="\d+-\d+-\d+";
+                    id.size = 10;
+                    id.value = v;
+                    id.title = "Date in format YYYY-MM-DD";
                     
-                    l.appendChild(id) ;
-                    break ;
+                    l.appendChild(id);
+                    }
+                    break;
                 case "time":
-                    var v  = "" ;
+                    {
+                    let v  = "";
                     if ( item.name in doc ) { 
-                        v = doc[item.name] ;
+                        v = doc[item.name];
                     }
                         
-                    var it = document.createElement("input") ;
-                    it.type = "text" ;
-                    it.pattern="[0-1][0-9]:[0-5][0-9] [A|P]M" ;
-                    it.size = 9 ;
-                    it.value = v ;
-                    it.title = "Time in format HH:MM PM or HH:MM AM" ;
+                    let it = document.createElement("input");
+                    it.type = "text";
+                    it.pattern="[0-1][0-9]:[0-5][0-9] [A|P]M";
+                    it.size = 9;
+                    it.value = v;
+                    it.title = "Time in format HH:MM PM or HH:MM AM";
                     
-                    l.appendChild(it) ;
-                    break ;
+                    l.appendChild(it);
+                    }
+                    break;
                 case "length":
-                    var v  = 0 ;
+                    {
+                    let v  = 0;
                     if ( item.name in doc ) { 
-                        v = doc[item.name] ;
+                        v = doc[item.name];
                     }
                         
-                    var it = document.createElement("input") ;
-                    it.type = "text" ;
-                    it.pattern="\d+:[0-5][0-9]" ;
-                    it.size = 6 ;
-                    it.value = this.HMfromMin(v) ;
-                    it.title = "Time length in format HH:MM" ;
+                    let it = document.createElement("input");
+                    it.type = "text";
+                    it.pattern="\d+:[0-5][0-9]";
+                    it.size = 6;
+                    it.value = this.HMfromMin(v);
+                    it.title = "Time length in format HH:MM";
                     
-                    l.appendChild(it) ;
-                    break ;
-                  case "checkbox":
+                    l.appendChild(it);
+                    }
+                    break;
+                case "checkbox":
                     i = document.createElement("input");
-                    i.type = item.type ;
-                    i.title = item.hint ;
-                    i.checked = doc[item.name] ;
-                    i.disabled = true ;
-                    l.appendChild(i) ;
-                    break ;
+                    i.type = item.type;
+                    i.title = item.hint;
+                    i.checked = doc[item.name];
+                    i.disabled = true;
+                    l.appendChild(i);
+                    break;
                 case "textarea" :
                     if ( i == null ) {
-                        i = document.createElement("textarea") ;
+                        i = document.createElement("textarea");
                     }
                     // fall through
                 default:
                     if ( i == null ) {
-                        i = document.createElement("input") ;
-                        i.type = item.type ;
+                        i = document.createElement("input");
+                        i.type = item.type;
                     }
-                    i.title = item.hint ;
-                    i.readOnly = true ;
-                    i.value = "" ;
+                    i.title = item.hint;
+                    i.readOnly = true;
+                    i.value = "";
                     if ( item.name in doc ) {
-                        i.value = doc[item.name] ;
+                        i.value = doc[item.name];
                     }
-                    l.appendChild(i) ;
-                    break ;
+                    l.appendChild(i);
+                    break;
             }                
             
-            ul.appendChild( li ) ;
+            ul.appendChild( li );
         });
         
-        return ul ;
+        return ul;
     }
 
     DateTimetoInput( d ) {
-        var vdate ;
-        var vtime ;
+        let vdate;
+        let vtime;
         try {
-            [vdate, vtime] =  [ this.YYYYMMDDfromDate( d ), this.AMfrom24( d.getHours(), d.getMinutes() ) ] ;
+            [vdate, vtime] =  [ this.YYYYMMDDfromDate( d ), this.AMfrom24( d.getHours(), d.getMinutes() ) ];
             }
         catch( err ) {
-            [vdate, vtime] = [ "", "" ] ;
+            [vdate, vtime] = [ "", "" ];
             }
             
-        var id = document.createElement("input") ;
-        id.type = "text" ;
-        id.size = 10 ;
-        id.pattern="\d+-\d+-\d+" ;
-        id.value = vdate ;
-        id.title = "Date in format YYYY-MM-DD" ;
+        let id = document.createElement("input");
+        id.type = "text";
+        id.size = 10;
+        id.pattern="\d+-\d+-\d+";
+        id.value = vdate;
+        id.title = "Date in format YYYY-MM-DD";
         
-        var it = document.createElement("input") ;
-        it.type = "text" ;
-        it.pattern="[0-1][0-9]:[0-5][0-9] [A|P]M" ;
-        it.size = 9 ;
-        it.value = vtime ;
-        it.title = "Time in format HH:MM AM or HH:MM PM" ;
-        return [ id, it ] ;
+        let it = document.createElement("input");
+        it.type = "text";
+        it.pattern="[0-1][0-9]:[0-5][0-9] [A|P]M";
+        it.size = 9;
+        it.value = vtime;
+        it.title = "Time in format HH:MM AM or HH:MM PM";
+        return [ id, it ];
     }
 
     DateTimefromInput( field ) {
-        var i = field.querySelectorAll("input") ;
+        let i = field.querySelectorAll("input");
         try {
-            var d =  this.YYYYMMDDtoDate( i[0].value ) ; // date
+            var d =  this.YYYYMMDDtoDate( i[0].value ); // date
             
             try {
-                var t = this.AMto24( i[1].value ) ; // time
-                d.setHours( t.hr ) ;
-                d.setMinutes( t.min ) ;
+                let t = this.AMto24( i[1].value ); // time
+                d.setHours( t.hr );
+                d.setMinutes( t.min );
                 } 
             catch( err ) {
                 }
             // convert to local time
-            return d.toISOString() ;
+            return d.toISOString();
             }
         catch( err ) {
-            return "" ;
+            return "";
             }
     }
 
 
     HMtoMin ( inp ) {
         if ( typeof inp != 'string' ) {
-            throw "bad" ;
+            throw "bad";
         }
-        var d = inp.match( /\d+/g ) ;
+        let d = inp.match( /\d+/g );
         if ( (d == null) || d.length < 2 ) {
-            throw "bad" ;
+            throw "bad";
         }
-        return parseInt(d[0]) * 60 + parseInt(d[1]) ;
+        return parseInt(d[0]) * 60 + parseInt(d[1]);
     }
         
     HMfromMin ( min ) {
         if ( typeof min == 'number' ) {
-            return (Math.floor(min/60)+100).toString().substr(-2) + ":" + ((min%60)+100).toString().substr(-2) ;
+            return (Math.floor(min/60)+100).toString().substr(-2) + ":" + ((min%60)+100).toString().substr(-2);
         } else {
-            return "00:00" ;
+            return "00:00";
         }
     }
         
     AMto24( inp ) {
         if ( typeof inp != 'string' ) {
-            throw "bad" ;
+            throw "bad";
         }
-        var d = inp.match( /\d+/g ) ;
+        let d = inp.match( /\d+/g );
         if ( (d == null) || d.length < 2 ) {
-            throw "bad" ;
+            throw "bad";
         } else if ( /PM/i.test(inp) ) {
             return {
                 hr: parseInt(d[0])+12,
                 min: parseInt(d[1]),
-            } ;
+            };
         } else {
             return {
                 hr: parseInt(d[0]),
                 min: parseInt(d[1]),
-            } ;
+            };
         }
     }
 
     AMfrom24( hr, min ) {
         if ( hr < 13 ) {
-            return (hr+100).toString().substr(-2) + ":" + (min+100).toString().substr(-2) + " AM" ;
+            return (hr+100).toString().substr(-2) + ":" + (min+100).toString().substr(-2) + " AM";
         } else {
-            return (hr+100-12).toString().substr(-2) + ":" + (min+100).toString().substr(-2) + " PM" ;
+            return (hr+100-12).toString().substr(-2) + ":" + (min+100).toString().substr(-2) + " PM";
         }
     }
 
     YYYYMMDDtoDate( inp ) {
         if ( typeof inp != 'string' ) {
-            throw "bad" ;
+            throw "bad";
         }
-        var d = inp.match( /\d+/g ) ;
+        let d = inp.match( /\d+/g );
         if ( d.length < 3 ) {
-            throw "bad" ;
+            throw "bad";
         }
-        return new Date( d[0],d[1],d[2] ) ;
+        return new Date( d[0],d[1],d[2] );
     }
 
     YYYYMMDDfromDate( d ) {
@@ -636,168 +769,170 @@ class PatientData {
                     d.getFullYear(),
                     d.getMonth(),
                     d.getDate(),
-                    ].join("-") ;
+                    ].join("-");
             }
         }
-        throw "bad" ;
+        throw "bad";
     }
 
     toLocalString( d ) {
         if ( d instanceof Date ) {
-            return new Date( d.getTime() - d.getTimezoneOffset()*1000 ).toISOString() ;
+            return new Date( d.getTime() - d.getTimezoneOffset()*1000 ).toISOString();
         } else {
-            return "" ;
+            return "";
         }
     }
 
     ButtonStatus( bool ) {
         [...document.getElementsByClassName('savedata')].forEach( (e) => {
-            e.disabled = bool ;
+            e.disabled = bool;
         });
         [...document.getElementsByClassName('discarddata')].forEach( (e) => {
-            e.disabled = bool ;
+            e.disabled = bool;
         });
     }
     
     fsclick( target ) {
         if ( this.pairs > 1 ) {
-            let ul = target.parentNode.parentNode.querySelector("ul") ;
+            let ul = target.parentNode.parentNode.querySelector("ul");
             if ( target.value === "show" ) {
                 // hide
-                target.innerHTML = "&#10133;" ;
-                ul.style.display = "none" ;
-                target.value = "hide" ;
+                target.innerHTML = "&#10133;";
+                ul.style.display = "none";
+                target.value = "hide";
             } else {
                 // show
-                target.innerHTML = "&#10134;" ;
-                ul.style.display = "" ;
-                target.value = "show" ;
+                target.innerHTML = "&#10134;";
+                ul.style.display = "";
+                target.value = "show";
             }
         }
     }                
 
     clickEdit() {
-        this.ButtonStatus( false ) ;
-        for ( let ipair=0 ; ipair<this.pairs ; ++ipair ) {
-            let doc    = this.doc[ipair] ;
-            let struct = this.struct[ipair] ;
-            let ul     = this.ul[ipair] ;
+        this.ButtonStatus( false );
+        for ( let ipair=0; ipair<this.pairs; ++ipair ) {
+            let struct = this.struct[ipair];
+            let ul     = this.ul[ipair];
             ul.querySelectorAll("li").forEach( (li) => {
-                let idx = li.getAttribute("data-index") ;
+                let idx = li.getAttribute("data-index");
+                if ( ( "readonly" in struct[idx] ) && struct[idx].readonly == "true" ) {
+                    return;
+                }
                 switch ( struct[idx].type ) {
                     case "radio":
-                        document.getElementsByName(struct[idx].name).forEach( (i) => i.disabled = false ) ;
-                        break ;
+                        document.getElementsByName(struct[idx].name).forEach( (i) => i.disabled = false );
+                        break;
                     case "checkbox":
-                        li.querySelector("input").disabled = false ;
-                        parent.querySelector("input").readOnly = false ;
-                        break ;
+                        li.querySelector("input").disabled = false;
+                        li.querySelector("input").readOnly = false;
+                        break;
                     case "date":
                         picker.attach({
                             element: li.querySelector("input"),
-                        }) ;
-                        break ;
+                        });
+                        break;
                     case "time":
                         tp.attach({
                             element: li.querySelector("input"),
-                        }) ;
-                        break ;
+                        });
+                        break;
                     case "length":
                         lp.attach({
                             element: li.querySelector("input"),
-                        }) ;
-                        break ;
+                        });
+                        break;
                     case "datetime":
                     case "datetime-local":
-                        var i = li.querySelectorAll("input") ;
+                        var i = li.querySelectorAll("input");
                         picker.attach({
                             element: i[0],
-                        }) ;
+                        });
                         tp.attach({
                             element: i[1],
-                        }) ;
-                        break ;
+                        });
+                        break;
                     case "textarea":
-                        li.querySelector("textarea").readOnly = false ;
-                        break ;
+                        li.querySelector("textarea").readOnly = false;
+                        break;
                     case "list":
                     case "calclist":
-                        li.querySelector("input").readOnly = false ;
-                        li.querySelector("input").disabled = false ;
-                        break ;
+                        li.querySelector("input").readOnly = false;
+                        li.querySelector("input").disabled = false;
+                        break;
                     default:
-                        li.querySelector("input").readOnly = false ;
-                        break ;
+                        li.querySelector("input").readOnly = false;
+                        break;
                 }
-            }) ;
+            });
         }
         [...document.getElementsByClassName("edit_note")].forEach( (e) => {
-            e.disabled = true ;
-        }) ;
+            e.disabled = true;
+        });
     }
     
     loadDocData() {
         //return true if any real change
-        let changed = [] ; 
-        for ( let ipair=0 ; ipair<this.pairs ; ++ipair ) {
-            let doc    = this.doc[ipair] ;
-            let struct = this.struct[ipair] ;
-            let ul     = this.ul[ipair] ;
-            changed[ipair] = false ;
+        let changed = []; 
+        for ( let ipair=0; ipair<this.pairs; ++ipair ) {
+            let doc    = this.doc[ipair];
+            let struct = this.struct[ipair];
+            let ul     = this.ul[ipair];
+            changed[ipair] = false;
             ul.querySelectorAll("li").forEach( (li) => {
-                let idx = li.getAttribute("data-index") ;
-                let v = "" ;
-                let name = struct[idx].name ;
+                let idx = li.getAttribute("data-index");
+                let v = "";
+                let name = struct[idx].name;
                 switch ( struct[idx].type ) {
                     case "radio":
                         document.getElementsByName(name).forEach( (i) => {
                             if ( i.checked == true ) {
-                                v = i.value ;
+                                v = i.value;
                             }
-                        }) ;
-                        break ;
+                        });
+                        break;
                     case "datetime":
                     case "datetime-local":
-                        v = this.DateTimefromInput( li ) ;
-                        break ;
+                        v = this.DateTimefromInput( li );
+                        break;
                     case "checkbox":
-                        v = li.querySelector("input").checked ;
-                        break ;
+                        v = li.querySelector("input").checked;
+                        break;
                     case "length":
-                        v = this.HMtoMin( li.querySelector("input").value ) ;
-                        break ;
+                        v = this.HMtoMin( li.querySelector("input").value );
+                        break;
                     case "textarea":
-                        v = li.querySelector("textarea").value ;
-                        break ;
+                        v = li.querySelector("textarea").value;
+                        break;
                     default:
-                        v = li.querySelector("input").value ;
-                        break ;
+                        v = li.querySelector("input").value;
+                        break;
                 }
                 if ( doc[name]==undefined || doc[name] != v ) {
-                    changed[ipair] = true ;
-                    doc[name] = v ;
+                    changed[ipair] = true;
+                    doc[name] = v;
                 }
-            }) ;
+            });
         }
-        return changed ;
+        return changed;
     }
     
     saveChanged ( state ) {
-        let changed = this.loadDocData() ;
+        let changed = this.loadDocData();
         Promise.all( this.doc.filter( (doc, idx) => changed[idx] ).map( (doc) => db.put( doc ) ) )
             .catch( (err) => console.log(err) )
             .finally( () => showPage( state )
-        ) ;
+        );
     }
     
     savePatientData() {
-        this.saveChanged( "PatientPhoto" ) ;
+        this.saveChanged( "PatientPhoto" );
     }
 }
 
 class OperationData extends PatientData {
     savePatientData() {
-        this.saveChanged( "OperationList" ) ;
+        this.saveChanged( "OperationList" );
     }
 }
 
@@ -805,142 +940,201 @@ class DatabaseInfoData extends PatientData {
     savePatientData() {}
 }
 
-class SettingData extends PatientData {
+class DatabaseData extends PatientData {
     savePatientData() {
-        this.loadDocData() ;
-        if ( userName != this.doc[0].userName ) {
-            if ( un.value && un.value.length > 0 ) {
-                setCookie( "userName", un ) ;
-                deleteCookie( "patientId" ) ;
-                deleteCookie( "operationId" ) ;
-                deletecookie( "noteId" ) ;
-                document.getElementById( "userstatus" ).value = userName ;
-            }
+        this.loadDocData();
+        if ( Object.keys( this.doc[0] ).some( k => this.doc[0][k] != remoteCouch[k] ) ) {
+            setCookie ( "remoteCouch", Object.assign({},this.doc[0]) );
+            showPage( "MainMenu" );
+            location.reload(); // force reload
+        } else {
+            showPage( "MainMenu" );
         }
-        setCookie ( "remoteCouch", this.doc[0].remoteCouch )
-        showPage( "MainMenu" ) ;
     }
+}
+
+function defaultCoudant() {
+    setCookie( "remoteCouch", cloudantDb );
+    showPage( "MainMenu" );
+    location.reload(); // force reload
 }
 
 class NewPatientData extends PatientData {
     constructor(...args) {
-        super(...args) ;
-        this.clickEdit() ;
+        super(...args);
+        this.clickEdit();
     }
     
     savePatientData() {
-        this.loadDocData() ;
+        this.loadDocData();
+        // make sure the fields needed for a patient ID are present
         if ( this.doc[0].FirstName == "" ) {
-            alert("Need a First Name") ;
+            alert("Need a First Name");
         } else if ( this.doc[0].LastName == "" ) {
-            alert("Need a Last Name") ;
+            alert("Need a Last Name");
         } else if ( this.doc[0].DOB == "" ) {
-            alert("Enter some Date Of Birth") ;
+            alert("Enter some Date Of Birth");
         } else {
-            this.doc[0]._id = makePatientId( this.doc[0] ) ;
+            this.doc[0]._id = makePatientId( this.doc[0] );
             db.put( this.doc[0] )
             .then( (response) => {
-                selectPatient(response.id) ;
-                showPage( "PatientPhoto" ) ;
+                selectPatient(response.id);
+                showPage( "PatientPhoto" );
                 })
-            .catch( (err) => console.log(err) ) ;
+            .catch( (err) => console.log(err) );
         }
     }
 }
 
-function UserNameInput() {
-    const un = document.getElementById("UserNameText");
-    if ( un.value && un.value.length > 0 ) {
-        setCookie( "userName", un ) ;
-        document.getElementById( "userstatus" ).value = userName ;
-        deleteCookie( "patientId" ) ;
-        deleteCookie( "operationId" ) ;
-        deletecookie( "noteId" ) ;
-        setCookie( "remoteCouch", cloudantDb )
-        showPage( "PatientList" ) ;
-    } else {
-        showPage( "UserName" ) ;
+class SuperUserData extends NewPatientData {
+    savePatientData() {
+        this.loadDocData();
+        remoteAdmin.username = this.doc[0].username;
+        remoteAdmin.password = this.doc[0].password;
+        admin_db = setRemoteDB( remoteAdmin );
+        // test connection
+        getUsers( false )
+        .then( doclist => showPage( "UserList" ) )
+        .catch( err => {
+            alert( err );
+            showPage( "SuperUser" );
+            });
     }
 }
-            
+
+class NewUserData extends NewPatientData {
+    savePatientData() {
+        this.loadDocData();
+        this.doc[0]._id = "org.couchdb.user:"+this.doc[0].name;
+        this.doc[0].type = "user";
+        this.doc[0].roles = [ this.doc[0].roles ];
+        userPass[this.doc[0]._id] = this.doc[0].password; // for informing user
+        admin_db.put( this.doc[0] )
+        .then( response => {
+            selectUser( response.id );
+            showPage( "SendUser" );
+            })
+        .catch( err => {
+            console.log(err);
+            showPage( "UserList" );
+            });
+    }
+}
+
+class EditUserData extends PatientData {
+    savePatientData() {
+        if ( this.loadDocData() ) {
+            this.doc[0].roles = [ this.doc[0].roles ];
+            userPass[this.doc[0]._id] = this.doc[0].password; // for informing user
+            admin_db.put( this.doc[0] )
+            .then( response => showPage( "SendUser" ) )
+            .catch( err => {
+                console.log(err);
+                showPage( "UserList" );
+                });
+        } else if ( userId in userPass ) {
+            showPage( "SendUser" );
+        } else {
+            // no password to send
+            console.log("No password", userPass) ;
+            showPage( "UserList" );
+        }
+    }
+}
+
+function getUsers(attachments) {
+    let doc = {
+        startkey: "org.couchdb.user:",
+        endkey: "org.couchdb.user:\\fff0",
+    } ;
+    if (attachments) {
+        doc.include_docs = true;
+        doc.binary = true;
+        doc.attachments = true;
+    } else {
+        doc.limit = 0;
+    }
+    return admin_db.allDocs(doc);
+}
+
 class Tbar {
     constructor() {
-        this.is_active = false ;
+        this.is_active = false;
     }
 
     active() {
         // in edit mode already?
-        return this.is_active ;
+        return this.is_active;
     }
 
     enter() {
-        this.is_active = true ;
-        this.buttonsdisabled(true) ;
+        this.is_active = true;
+        this.buttonsdisabled(true);
     }
     
     leave(page) {
-        this.is_active = false ;
-        this.buttonsdisabled(false) ;
-        showPage(page) ;
+        this.is_active = false;
+        this.buttonsdisabled(false);
+        showPage(page);
     }
 
     fieldset( existingdiv, toolbarclass ) {
-        this.existing = {} ;
-        this.existing.parent  = existingdiv ;
-        this.existing.textDiv = existingdiv.querySelector( ".entryfield_text" ) ;
-        this.existing.oldText = "" ;
-        this.existing.img     = existingdiv.querySelector( ".entryfield_image" ) ;
+        this.existing = {};
+        this.existing.parent  = existingdiv;
+        this.existing.textDiv = existingdiv.querySelector( ".entryfield_text" );
+        this.existing.oldText = "";
+        this.existing.img     = existingdiv.querySelector( ".entryfield_image" );
         if ( this.existing.textDiv ) {
-            this.existing.oldText = this.existing.textDiv.innerText ;
+            this.existing.oldText = this.existing.textDiv.innerText;
         } else {
-            this.existing.textDiv = document.createElement("div") ;
-            this.existing.textDiv.classList.add("entryfield_text") ;
-            this.existing.oldText = "" ;
+            this.existing.textDiv = document.createElement("div");
+            this.existing.textDiv.classList.add("entryfield_text");
+            this.existing.oldText = "";
         }
 
-        this.working = {} ;
-        this.working.parent  = existingdiv ;
-        this.working.toolbar = document.getElementById("templates").querySelector(toolbarclass).cloneNode(true) ;
-        this.working.newText = this.existing.oldText ;
-        this.working.textDiv = document.createElement("div") ;
-        this.working.textDiv.innerText = this.existing.oldText ;
-        this.working.textDiv.contentEditable = true ;
-        this.working.img     = document.createElement("img") ;
-        this.working.img.classList.add("entryfield_image") ;
-        this.working.img.onclick = ShowBigPicture(this) ;
-        this.working.upload = null
+        this.working = {};
+        this.working.parent  = existingdiv;
+        this.working.toolbar = document.getElementById("templates").querySelector(toolbarclass).cloneNode(true);
+        this.working.newText = this.existing.oldText;
+        this.working.textDiv = document.createElement("div");
+        this.working.textDiv.innerText = this.existing.oldText;
+        this.working.textDiv.contentEditable = true;
+        this.working.img     = document.createElement("img");
+        this.working.img.classList.add("entryfield_image");
+        this.working.img.onclick = ShowBigPicture(this);
+        this.working.upload = null ;
     }
 
     buttonsdisabled( bool ) {
         for ( let b of document.getElementsByClassName( "libutton" ) ) {
-            b.disabled = bool ;
+            b.disabled = bool;
         }
         for ( let b of document.getElementsByClassName( "divbutton" ) ) {
-            b.disabled = bool ;
+            b.disabled = bool;
         }
     }
 
     deleteedit() {
-        this.deletefunc() ;
-        this.leave("NoteList") ;
+        this.deletefunc();
+        this.leave("NoteList");
     }
 
     getImage() {
-        this.working.toolbar.querySelector(".imageBar").click() ;
+        this.working.toolbar.querySelector(".imageBar").click();
     }
 
     handleImage() {
-        const files = this.working.parent.querySelector('.imageBar')
+        const files = this.working.parent.querySelector('.imageBar') ;
         this.working.upload = files.files[0];
-        this.working.img.src = URL.createObjectURL(this.working.upload) ;
-        this.working.img.style.display = "block" ;
-        this.working.toolbar.querySelector(".tbarxpic").disabled = false ;
+        this.working.img.src = URL.createObjectURL(this.working.upload);
+        this.working.img.style.display = "block";
+        this.working.toolbar.querySelector(".tbarxpic").disabled = false;
     }
 
     removeImage() {
-        this.working.img.style.display = "none" ;
-        this.working.upload = "remove" ;
-        this.working.toolbar.querySelector(".tbarxpic").disabled = true ;
+        this.working.img.style.display = "none";
+        this.working.upload = "remove";
+        this.working.toolbar.querySelector(".tbarxpic").disabled = true;
     }
 }
 
@@ -948,40 +1142,40 @@ class Nbar extends Tbar {
     // for notes
     startedit( existingdiv ) {
         if ( this.active() ) {
-            return false ;
+            return false;
         }
-        this.enter()
+        this.enter() ;
         if ( noteId ) {
-            selectNote(existingdiv.getAttribute("data-id")) ;
-            this.buttonsdisabled( true ) ;
-            this.deletefunc = deleteNote ;
+            selectNote(existingdiv.getAttribute("data-id"));
+            this.buttonsdisabled( true );
+            this.deletefunc = deleteNote;
         } else {
-            unselectNote() ;
-            this.deletefunc = null ;
+            unselectNote();
+            this.deletefunc = null;
         }
-        this.fieldset( existingdiv, ".editToolbar" ) ;
+        this.fieldset( existingdiv, ".editToolbar" );
         if ( this.existing.textDiv == null ) {
-            this.existing.textDiv = document.createElement("div") ;
-            this.existing.textDiv.classList.add("entryfield_text") ;
-            this.existing.oldText = "" ;
+            this.existing.textDiv = document.createElement("div");
+            this.existing.textDiv.classList.add("entryfield_text");
+            this.existing.oldText = "";
         }
             
-        this.working.toolbar.querySelector(".tbarxpic").disabled = (this.existing.img  == null) ;
-        this.working.toolbar.querySelector(".tbardel").style.visibility = (this.deletefunc!=null) ? "visible" : "hidden" ;
+        this.working.toolbar.querySelector(".tbarxpic").disabled = (this.existing.img  == null);
+        this.working.toolbar.querySelector(".tbardel").style.visibility = (this.deletefunc!=null) ? "visible" : "hidden";
 
         if ( this.existing.img  ) {
-            this.working.img.src = this.existing.img.src ;
-            this.working.img.style.display = "block" ;
+            this.working.img.src = this.existing.img.src;
+            this.working.img.style.display = "block";
         } else {
-            this.working.img.style.display = "none" ;
+            this.working.img.style.display = "none";
         }
 
         // elements of the working fields
-        this.working.parent.innerHTML = "" ;
-        this.working.parent.appendChild(this.working.img ) ;
-        this.working.parent.appendChild(this.working.toolbar) ;
-        this.working.parent.appendChild(this.working.textDiv) ;
-        return true ;
+        this.working.parent.innerHTML = "";
+        this.working.parent.appendChild(this.working.img );
+        this.working.parent.appendChild(this.working.toolbar);
+        this.working.parent.appendChild(this.working.textDiv);
+        return true;
     }
 
     saveedit() {
@@ -990,69 +1184,69 @@ class Nbar extends Tbar {
                 // existing note
                 db.get(noteId)
                 .then( (doc) => {
-                    doc.text = this.working.textDiv.innerText ;
-                    doc.patient_id = patientId ;
-                    doc.type = "note" ;
+                    doc.text = this.working.textDiv.innerText;
+                    doc.patient_id = patientId;
+                    doc.type = "note";
                     if ( this.working.upload == null ) {
                     } else if ( this.working.upload === "remove") {
-                        deleteImageFromDoc( doc ) ;
+                        deleteImageFromDoc( doc );
                     } else {
-                        putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
+                        putImageInDoc( doc, this.working.upload.type, this.working.upload );
                     }
-                    return db.put( doc ) ;
+                    return db.put( doc );
                     })
                 .catch( (err) => console.log(err) )
-                .finally( () => this.leave("NoteList") ) ;
+                .finally( () => this.leave("NoteList") );
             } else {
                 // new note
                 let doc = {
                     _id: makeNoteId(),
-                    author: userName,
+                    author: remoteCouch.username,
                     text: this.working.textDiv.innerText,
                     patient_id: patientId,
                     type: "note",
                     date: new Date().toISOString(),
-                } ;
+                };
                 if (this.working.upload && this.working.upload !== "remove") {
-                    putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
+                    putImageInDoc( doc, this.working.upload.type, this.working.upload );
                 }                
                 db.put(doc)
                 .catch( (err) => console.log(err) )
-                .finally( () => this.leave("NoteList") ) ;
+                .finally( () => this.leave("NoteList") );
             }
         }
     }
 }
     
-var editBar = new Nbar() ;        
+var editBar = new Nbar();        
 
 class Pbar extends Tbar {
     // for PatientPhoto
     startedit() {
-        let existingdiv = document.getElementById("PatientPhotoContent") ;
+        let existingdiv = document.getElementById("PatientPhotoContent");
         if ( this.active() ) {
-            return false ;
+            return false;
         }
-        this.enter() ;
-        this.fieldset( existingdiv, ".photoToolbar" ) ;
-        this.working.textDiv.contentEditable = false ;
+        this.enter();
+        this.fieldset( existingdiv, ".photoToolbar" );
+        this.working.textDiv.contentEditable = false;
             
-        this.working.toolbar.querySelector(".tbarxpic").disabled = false ;
+        this.working.toolbar.querySelector(".tbarxpic").disabled = false;
 
-        this.working.img.src = this.existing.img.src ;
-        this.working.img.style.display = "block" ;
+        this.working.img.src = this.existing.img.src;
+        this.working.img.style.display = "block";
 
         // elements of the working fields
-        this.working.parent.innerHTML = "" ;
-        this.working.parent.appendChild(this.working.img ) ;
-        this.working.parent.appendChild(this.working.toolbar) ;
-        this.working.parent.appendChild(this.working.textDiv) ;
-        return true ;
+        this.working.parent.innerHTML = "";
+        this.working.parent.appendChild(this.working.img );
+        this.working.parent.appendChild(this.working.toolbar);
+        this.working.parent.appendChild(this.working.textDiv);
+        return true;
     }
 
     removeImage() {
-        this.working.upload = "remove" ;
-        this.working.img.src = NoPhoto ;
+        this.working.upload = "remove";
+        this.working.img.src = NoPhoto;
     }
 
     saveedit() {
@@ -1062,397 +1256,482 @@ class Pbar extends Tbar {
                 .then( (doc) => {
                     if ( this.working.upload == null ) {
                     } else if ( this.working.upload === "remove") {
-                        deleteImageFromDoc( doc ) ;
+                        deleteImageFromDoc( doc );
                     } else {
-                        putImageInDoc( doc, this.working.upload.type, this.working.upload ) ;
+                        putImageInDoc( doc, this.working.upload.type, this.working.upload );
                     }
-                    return db.put( doc ) ;
+                    return db.put( doc );
                 })
                 .catch( (err)  => console.log(err) )
-                .finally( () => this.leave("PatientPhoto") ) ;
+                .finally( () => this.leave("PatientPhoto") );
             }
         }
     }    
 }
     
-var photoBar = new Pbar() ;        
+var photoBar = new Pbar();        
 
 function selectPatient( pid ) {
     if ( patientId != pid ) {
         // change patient -- notes dont apply
-        unselectNote() ;
+        unselectNote();
     }
         
-    setCookie( "patientId", pid ) ;
+    setCookie( "patientId", pid );
     // Check patient existence
     getThePatient(false)
     .then( (doc) => {
-        if ( displayState == "PatientList" ) {
-            // highlight the list row
-            let rows = document.getElementById("PatientList").rows ;
-            for ( let i = 0 ; i < rows.length ; ++i ) {
-                if ( rows[i].getAttribute("data-id") == pid ) {
-                    rows[i].classList.add('choice') ;
-                } else {
-                    rows[i].classList.remove('choice') ;
-                }
-            }
+        // highlight the list row
+        if ( objectPatientTable ) {
+            objectPatientTable.highlight();
         }
-        document.getElementById("editreviewpatient").disabled = false ;
-        document.getElementById( "titlebox" ).innerHTML = "Name: <B>"+doc.LastName+"</B>, <B>"+doc.FirstName+"</B>  DOB: <B>"+doc.DOB+"</B>" ;
+        document.getElementById("editreviewpatient").disabled = false;
+        document.getElementById( "titlebox" ).innerHTML = "Name: <B>"+doc.LastName+"</B>, <B>"+doc.FirstName+"</B>  DOB: <B>"+doc.DOB+"</B>";
         })
     .catch( (err) => {
-        console.log(err) ;
-        unselectPatient() ;
-        }) ;
+        console.log(err);
+        unselectPatient();
+        });
 }
 
 function selectOperation( oid ) {
     if ( operationId != oid ) {
         // change patient -- notes dont apply
-        unselectOperation() ;
+        unselectOperation();
     }
         
-    setCookie ( "operationId", oid  ) ;
+    setCookie ( "operationId", oid  );
     // Check patient existence
-    db.get(operationId)
-    .then( (doc) => {
-        if ( displayState == "OperationList" ) {
-            // highlight the list row
-            let rows = document.getElementById("OperationsList").rows ;
-            for ( let i = 0 ; i < rows.length ; ++i ) {
-                if ( rows[i].getAttribute("data-id") == oid ) {
-                    rows[i].classList.add('choice') ;
-                } else {
-                    rows[i].classList.remove('choice') ;
-                }
-            }
-        }
-        document.getElementById("editreviewoperation").disabled = false ;
-        })
-    .catch( (err) => {
-        console.log(err) ;
-        unselectOperation() ;
-        }) ;
+    // highlight the list row
+    if ( objectOperationTable ) {
+        objectOperationTable.highlight();
+    }
+    document.getElementById("editreviewoperation").disabled = false;
 }
 
+function selectUser( uid ) {
+    userId = uid;
+    if ( objectUserTable ) {
+        objectUserTable.highlight();
+    }
+    document.getElementById("editreviewuser").disabled = false;
+}    
+
 function unselectPatient() {
-    patientId = null ;
-    deleteCookie ( "patientId" ) ;
-    unselectNote() ;
-    unselectOperation() ;
+    patientId = null;
+    deleteCookie ( "patientId" );
+    unselectNote();
+    unselectOperation();
     if ( displayState == "PatientList" ) {
-        let pt = document.getElementById("PatientTable") ;
+        let pt = document.getElementById("PatientTable");
         if ( pt ) {
-            let rows = pt.rows ;
-            for ( let i = 0 ; i < rows.length ; ++i ) {
-                rows[i].classList.remove('choice') ;
+            let rows = pt.rows;
+            for ( let i = 0; i < rows.length; ++i ) {
+                rows[i].classList.remove('choice');
             }
         }
     }
-    document.getElementById("editreviewpatient").disabled = true ;
-    document.getElementById( "titlebox" ).innerHTML = "" ;
+    document.getElementById("editreviewpatient").disabled = true;
+    document.getElementById( "titlebox" ).innerHTML = "";
 }
 
 function unselectOperation() {
-    operationId = null ;
-    deleteCookie( "operationId" ) ;
+    operationId = null;
+    deleteCookie( "operationId" );
     if ( displayState == "OperationList" ) {
-        let ot = document.getElementById("OperationsList") ;
+        let ot = document.getElementById("OperationsList");
         if ( ot ) {
-            let rows = ot.rows ;
-            for ( let i = 0 ; i < rows.length ; ++i ) {
-                rows[i].classList.remove('choice') ;
+            let rows = ot.rows;
+            for ( let i = 0; i < rows.length; ++i ) {
+                rows[i].classList.remove('choice');
             }
         }
     }
-    document.getElementById("editreviewoperation").disabled = true ;
+    document.getElementById("editreviewoperation").disabled = true;
+}
+
+function unselectUser() {
+    userId = null;
+    document.getElementById("editreviewuser").disabled = true;
 }
 
 function showPage( state = "PatientList" ) {
-    setCookie( "displayState", state ) ;
+    setCookie( "displayState", state );
 
     Array.from(document.getElementsByClassName("pageOverlay")).forEach( (v) => v.style.display = v.classList.contains(displayState) ? "block" : "none" );
 
-    objectPatientData = null ;
-    objectNoteList = null ;
+    objectPatientData = null;
+    objectNoteList = null;
+    objectPatientTable = null;
+    objectOperationTable = null;
+    objectUserTable = null;
 
-    switch( displayState ) {
-        case "UserName":
-            document.getElementById("UserNameText").addEventListener( "keyup", (event)=> {
-                if ( event.key === "Enter" ) {
-                    UserNameInput() ;
-                }
-            });
-            break ;
-           
+    switch( displayState ) {           
        case "MainMenu":
+       case "Administration":
        case "Download":
-            break ;
+            break;
             
-        case "SettingMenu":
-            objectPatientData = new SettingData( { userName: userName, remoteCouch: remoteCouch, } , structSetting ) ;
-            break ;
+        case "RemoteDatabaseInput":
+            objectPatientData = new DatabaseData( Object.assign({},remoteCouch), structDatabase );
+            break;
+            
+        case "SuperUser":
+            remoteAdmin.address = remoteCouch.address;
+            objectPatientData = new SuperUserData( Object.assign({},remoteAdmin), structSuperUser );
+            break;
+            
+        case "UserList":
+            objectUserTable = new UserTable( ["name", "role", "email", "type", ] );
+            getUsers(true)
+            .then( docs => objectUserTable.fill(docs.rows ) )
+            .catch( (err) => console.log(err) );
+            break;
+
+        case "UserNew":
+            unselectUser();
+            objectPatientData = new NewUserData( {}, structNewUser );
+            break;
+            
+        case "UserEdit":
+            if ( admin_db == null ) {
+                showPage( "SuperUser" );
+            } else if ( userId == null ) {
+                showPage( "UserList" );
+            } else {
+                admin_db.get( userId )
+                .then( doc => {
+                    doc.roles = doc.roles[0]; // unarray
+                    objectPatientData = new EditUserData( doc, structEditUser );
+                    })
+                .catch( err => {
+                    console.log( err );
+                    unselectUser();
+                    showPage( "UserList" );
+                    });
+            }
+            break;
+            
+        case "SendUser":
+            if ( admin_db == null ) {
+                showPage( "SuperUser" );
+            } else if ( userId == null || !(userId in userPass) ) {
+                showPage( "UserList" );
+            } else {
+                admin_db.get( userId )
+                .then( doc => sendUser( doc ) )
+                .catch( err => {
+                    console.log( err );
+                    showPage( "UserList" );
+                    });
+            }
+            break;
             
         case "PatientList":
-            let objectPatientTable = new PatientTable( ["LastName", "FirstName", "DOB","Dx" ] ) ;
+            objectPatientTable = new PatientTable( ["LastName", "FirstName", "DOB","Dx" ] );
             getPatients(true)
             .then( (docs) => {
-                objectPatientTable.fill(docs.rows) ;
+                objectPatientTable.fill(docs.rows );
                 if ( patientId ) {
-                    selectPatient( patientId ) ;
+                    selectPatient( patientId );
                 } else {
-                    unselectPatient() ;
+                    unselectPatient();
                 }
                 })
-            .catch( (err) => console.log(err) ) ;
-            break ;
+            .catch( (err) => console.log(err) );
+            break;
             
         case "OperationList":
-            let objectOperationTable = new OperationTable( [ "Procedure", "Surgeon", "Status", "Schedule", "Duration", "Equipment" ]  ) ;
+            objectOperationTable = new OperationTable( [ "Procedure", "Surgeon", "Status", "Schedule", "Duration", "Equipment" ]  );
             getOperations(true)
-            .then( (docs) => objectOperationTable.fill(docs.rows) )
+            .then( (docs) => objectOperationTable.fill(docs.rows ) )
             .catch( (err) => console.log(err) );
-            break ;
+            break;
             
         case "OperationNew":
-            unselectOperation() ;
-            showPage( "OperationEdit" ) ;
-            break ;
+            unselectOperation();
+            showPage( "OperationEdit" );
+            break;
         
         case "OperationEdit":
             if ( patientId ) {
                 if ( operationId ) {
                     db.query("bySurgeon",{group:true,reduce:true})
                     .then( s => {
-                        UniqueSurgeons = s.rows.map( ss => ss.key ) ;
-                        return db.get( operationId ) ;
+                        UniqueSurgeons = s.rows.map( ss => ss.key );
+                        return db.get( operationId );
                         })
                     .then( (doc) => objectPatientData = new OperationData( doc, structOperation ) )
                     .catch( (err) => {
-                        console.log(err) ;
-                        showPage( "InvalidPatient" ) ;
-                        }) ;
+                        console.log(err);
+                        showPage( "InvalidPatient" );
+                        });
                 } else {
                     objectPatientData = new OperationData(
                     {
                         _id: makeOperationId(),
                         patient_id: patientId,
-                        author: userName,
-                    } , structOperation ) ;
+                        author: remoteCouch.username,
+                    } , structOperation );
                 }
             } else {
-                showPage( "PatientList" ) ;
+                showPage( "PatientList" );
             }
-            break ;
+            break;
             
         case "PatientNew":
-            unselectPatient() ;
-            objectPatientData = new NewPatientData( { author: userName, type:"patient" }, structNewPatient ) ;
-            break ;
+            unselectPatient();
+            objectPatientData = new NewPatientData( { author: remoteCouch.username, type:"patient" }, structNewPatient );
+            break;
             
         case "PatientPhoto":
             if ( patientId ) {
-                selectPatient( patientId ) ;
+                selectPatient( patientId );
                 getThePatient( true )
                 .then( (doc) => PatientPhoto( doc ) )
                 .catch( (err) => {
-                    console.log(err) ;
-                    showPage( "InvalidPatient" ) ;
-                    }) ;
+                    console.log(err);
+                    showPage( "InvalidPatient" );
+                    });
             } else {
-                showPage( "PatientList" ) ;
+                showPage( "PatientList" );
             }
-            break ;
+            break;
             
         case "PatientDemographics":
             if ( patientId ) {
                 getThePatient( false )
                 .then( (doc) => objectPatientData = new PatientData( doc, structDemographics ) )
                 .catch( (err) => {
-                    console.log(err) ;
-                    showPage( "InvalidPatient" ) ;
-                    }) ;
+                    console.log(err);
+                    showPage( "InvalidPatient" );
+                    });
             } else {
-                showPage( "PatientList" ) ;
+                showPage( "PatientList" );
             }
-            break ;
+            break;
             
         case "PatientMedical":
             if ( patientId ) {
-                var args ;
+                let args;
                 db.query("bySurgeon",{group:true,reduce:true})
                 .then( s => {
-                    UniqueSurgeons = s.rows.map( ss => ss.key ) ;
-                    return getThePatient( false )
+                    UniqueSurgeons = s.rows.map( ss => ss.key );
+                    return getThePatient( false ) ;
                     })
                 .then( (doc) => {
-                    args = [doc,structMedical] ;
-                    return getOperations(true) ;
+                    args = [doc,structMedical];
+                    return getOperations(true);
                     })
                 .then( ( olist ) => {
-                    olist.rows.forEach( (r) => args.push( r.doc, structOperation ) ) ;
-                    //objectPatientData = new PatientData( doc, structMedical ) ;
-                    objectPatientData = new PatientData( ...args ) ;
+                    olist.rows.forEach( (r) => args.push( r.doc, structOperation ) );
+                    //objectPatientData = new PatientData( doc, structMedical );
+                    objectPatientData = new PatientData( ...args );
                     })
                 .catch( (err) => {
-                    console.log(err) ;
-                    showPage( "InvalidPatient" ) ;
-                    }) ;
+                    console.log(err);
+                    showPage( "InvalidPatient" );
+                    });
             } else {
-                showPage( "PatientList" ) ;
+                showPage( "PatientList" );
             }
-            break ;
+            break;
             
         case "DatabaseInfo":
             db.info()
             .then( doc => {
-                console.log(doc) ;
-                objectPatientData = new DatabaseInfoData( doc, structDatabaseInfo ) ;
+                console.log(doc);
+                objectPatientData = new DatabaseInfoData( doc, structDatabaseInfo );
                 })
-            .catch( err => console.log(err) ) ;
-            break ;
+            .catch( err => console.log(err) );
+            break;
 
         case "InvalidPatient":
-            unselectPatient() ;
-            break ;
+            unselectPatient();
+            break;
 
         case "NoteList":            
             if ( patientId ) {
                 getThePatient( false )
-                .then( (doc) => objectNoteList = new NoteList( NoteListContent ) )
+                .then( (doc) => objectNoteList = new NoteList( "NoteListContent" ) )
                 .catch( (err) => {
-                    console.log(err) ;
-                    showPage( "InvalidPatient" ) ;
-                    }) ;
+                    console.log(err);
+                    showPage( "InvalidPatient" );
+                    });
             } else {
-                showPage( "PatientList" ) ;
+                showPage( "PatientList" );
             }
-            break ;
+            break;
             
          case "NoteNew":
             if ( patientId ) {
                 // New note only
-                unselectNote() ;
-                NoteNew() ;
+                unselectNote();
+                NoteNew();
             } else {
-                showPage( "PatientList" ) ;
+                showPage( "PatientList" );
             }
-            break ;
+            break;
             
        case "NoteImage":
             if ( patientId ) {
-                NoteImage() ;
+                NoteImage();
             } else {
-                showPage( "PatientList" ) ;
+                showPage( "PatientList" );
             }
-            break ;
+            break;
             
         default:
-            showPage( "PatientList" ) ;
-            break ;
+            showPage( "PatientList" );
+            break;
     }
 }
 
 function setCookie( cname, value ) {
   // From https://www.tabnine.com/academy/javascript/how-to-set-cookies-javascript/
-    window[cname] = value ;
+    window[cname] = value;
+    //console.log(cname,"value",value);
     let date = new Date();
     date.setTime(date.getTime() + (400 * 24 * 60 * 60 * 1000)); // > 1year
     const expires = " expires=" + date.toUTCString();
-    document.cookie = cname + "=" + encodeURIComponent(value) + "; " + expires + "; path=/";
+    document.cookie = cname + "=" + encodeURIComponent(JSON.stringify(value)) + "; " + expires + "; path=/";
 }
 
 function deleteCookie( cname ) {
-    window[cname] = null ;
+    window[cname] = null;
     document.cookie = cname +  "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
 }
 
 function getCookie( cname ) {
     const name = cname + "=";
-    var ret = null ;
-    decodeURIComponent(document.cookie).split('; ').forEach( (val) => {
-      if (val.indexOf(name) === 0) {
-          ret =  val.substring(name.length) ;
-      }
-    }) ;
-    window[cname] = ret ;
+    let ret = null;
+    decodeURIComponent(document.cookie).split('; ').filter( val => val.indexOf(name) === 0 ).forEach( val => {
+        try {
+            ret = JSON.parse( val.substring(name.length) );
+            }
+        catch(err) {
+            ret =  val.substring(name.length);
+            }
+    });
+    window[cname] = ret;
+    //console.log("getcookie",cname,ret);
     return ret;
 }
 
 function isAndroid() {
-    return navigator.userAgent.toLowerCase().indexOf("android") > -1 ;
+    return navigator.userAgent.toLowerCase().indexOf("android") > -1;
 }
 
 class SortTable {
-    constructor(tname) {
-        this.dir = 1 ;
-        this.lastth = -1 ;
-        this.tname = tname ;
-        tname.onclick = this.allClick.bind(this) ;
+    constructor( collist, tableId ) {
+        this.tbl = document.getElementById(tableId);
+        this.tbl.innerHTML = "";
+
+        // Table Head
+        let header = this.tbl.createTHead();
+        let row = header.insertRow(0);
+        row.classList.add('head');
+        collist.forEach( (v,i) => row.insertCell(i).outerHTML='<th>'+v+'</th>' );
+
+        // Table Body
+        let tbody = document.createElement('tbody');
+        this.tbl.appendChild(tbody);
+        this.collist = collist;
+
+        this.dir = 1;
+        this.lastth = -1;
+        this.tbl.onclick = this.allClick.bind(this);
     }
 
+    fill( doclist ) {
+        // typically called with doc.rows from allDocs
+        let tbody = this.tbl.querySelector('tbody');
+        tbody.innerHTML = "";
+        let collist = this.collist;
+        doclist.forEach( (doc) => {
+            let row = tbody.insertRow(-1);
+            let record = doc.doc;
+            row.setAttribute("data-id",record._id);
+            row.addEventListener( 'click', (e) => {
+                this.selectFunc( record._id );
+            });
+            row.addEventListener( 'dblclick', (e) => {
+                this.selectFunc( record._id );
+                showPage( this.editpage );
+            });
+            collist.forEach( (colname,i) => {
+                let c = row.insertCell(i);
+                if ( colname in record ) {
+                    c.innerText = record[colname];
+                } else {
+                    c.innerText = "";
+                }
+            });
+        });
+        this.highlight();
+    }
+  
     allClick(e) {
         if (e.target.tagName == 'TH') {
-            return this.sortClick(e) ;
+            return this.sortClick(e);
         }
-    };
+    }
 
     resort() {
         if ( this.lastth < 0 ) {
-            this.lastth = 0 ;
-            this.dir = 1 ;
+            this.lastth = 0;
+            this.dir = 1;
         }
-        this.sortGrid(this.lastth) ;
+        this.sortGrid(this.lastth);
     }
 
     sortClick(e) {
         let th = e.target;
         if ( th.cellIndex == this.lastth ) {
-            this.dir = -this.dir ;
+            this.dir = -this.dir;
         } else {
             this.dir = 1;
-            this.lastth = th.cellIndex
+            this.lastth = th.cellIndex;
         }
         // if TH, then sort
         // cellIndex is the number of th:
         //   0 for the first column
         //   1 for the second column, etc
         this.sortGrid(th.cellIndex);
-    };
+    }
 
     sortGrid(colNum) {
-        unselectPatient() ;
-        let tbody = this.tname.querySelector('tbody');
+        unselectPatient();
+        let tbody = this.tbl.querySelector('tbody');
         if ( tbody == null ) {
             // empty table
-            return ;
+            return;
         }
 
         let rowsArray = Array.from(tbody.rows);
 
-        let type = "number" ;
+        let type = "number";
         rowsArray.some( (r) => {
-            let c = r.cells[colNum].innerText ;
+            let c = r.cells[colNum].innerText;
             if ( c == "" ) {
             } else if ( isNaN( Number(r.cells[colNum].innerText) ) ) {
-                type = "string" ;
-                return true ;
+                type = "string";
+                return true;
             } else {
-                return true ;
+                return true;
             }
         });
 
         // compare(a, b) compares two rows, need for sorting
-        let dir = this.dir ;
+        let dir = this.dir;
         let compare;
 
         switch (type) {
             case 'number':
-                compare = (rowA, rowB) => (rowA.cells[colNum].innerText - rowB.cells[colNum].innerText) * dir ;
+                compare = (rowA, rowB) => (rowA.cells[colNum].innerText - rowB.cells[colNum].innerText) * dir;
                 break;
             case 'string':
-                compare = (rowA, rowB) => rowA.cells[colNum].innerText > rowB.cells[colNum].innerText ? dir : -dir ;
+                compare = (rowA, rowB) => rowA.cells[colNum].innerText > rowB.cells[colNum].innerText ? dir : -dir;
                 break;
         }
 
@@ -1461,62 +1740,32 @@ class SortTable {
 
         tbody.append(...rowsArray);
     }
+
+    highlight() {
+        let rows = this.tbl.rows;
+        for ( let i = 0; i < rows.length; ++i ) {
+            if ( rows[i].getAttribute("data-id") == this.selectId() ) {
+                rows[i].classList.add('choice');
+            } else {
+                rows[i].classList.remove('choice');
+            }
+        }
+    }
 }
 
 class PatientTable extends SortTable {
+    editpage = "PatientPhoto";
+    selectFunc = selectPatient;
+    selectId = () => patientId;
     constructor( collist ) {
-        let tbl = document.getElementById("PatientList") ;
-        tbl.innerHTML = "" ;
-
-        // Table Head
-        let header = tbl.createTHead() ;
-        let row = header.insertRow(0);
-        row.classList.add('head') ;
-        collist.forEach( (v,i) => row.insertCell(i).outerHTML='<th>'+v+'</th>' );
-
-        // Table Body
-        let tbody = document.createElement('tbody');
-        tbl.appendChild(tbody) ;
-        super(tbl) ;
-        this.collist = collist ;
+        super( collist, "PatientList" );
     }
-
-    fill( doclist ) {
-        // typically called with doc.rows from allDocs
-        let tbody = this.tname.querySelector('tbody') ;
-        tbody.innerHTML = "" ;
-        let collist = this.collist ;
-        doclist.forEach( (doc) => {
-            let row = tbody.insertRow(-1) ;
-            let record = doc.doc ;
-            row.setAttribute("data-id",record._id) ;
-            if (record._id == patientId) {
-                row.classList.add("choice") ;
-            }
-            row.addEventListener( 'click', (e) => {
-                selectPatient( record._id ) ;
-            }) ;
-            row.addEventListener( 'dblclick', (e) => {
-                selectPatient( record._id ) ;
-                showPage( "PatientPhoto" ) ;
-            }) ;
-            collist.forEach( (colname,i) => {
-                let c = row.insertCell(i) ;
-                if ( colname in record ) {
-                    c.innerText = record[colname] ;
-                } else {
-                    c.innerText = "" ;
-                }
-            }) ;
-        });
-    }
-  
 }
 
 function makeNewOperation() {
     let doc = {
         _id: makeOperationId(),
-        author: userName,
+        author: remoteCouch.username,
         type: "operation",
         Procedure: "Enter new procedure",
         Surgeon: "",
@@ -1526,58 +1775,26 @@ function makeNewOperation() {
         Status: "none",
         Equipment: "",
         patient_id: patientId,
-    } ;
-    return db.put( doc ) ;
+    };
+    return db.put( doc );
 }
 
 class OperationTable extends SortTable {
+    editpage = "OperationEdit";
+    selectFunc = selectOperation;
+    selectId = () => operationId;
     constructor( collist ) {
-        let tbl = document.getElementById("OperationsList") ;
-        tbl.innerHTML = "" ;
-          
-        // Table Head
-        let header = tbl.createTHead() ;
-        let row = header.insertRow(0);
-        row.classList.add('head') ;
-        collist.forEach( (v,i) => row.insertCell(i).outerHTML='<th>'+v+'</th>' );
-
-        // Table Body
-        let tbody = document.createElement('tbody');
-        tbl.appendChild(tbody) ;
-        super(tbl) ;
-        this.collist = collist ;
+        super( collist, "OperationsList");
     }
+}
 
-    fill( doclist ) {
-        // typically called with doc.rows from allDocs
-        let tbody = this.tname.querySelector('tbody') ;
-        tbody.innerHTML = "" ;
-        let collist = this.collist ;
-        doclist.forEach( (doc) => {
-            let row = tbody.insertRow(-1) ;
-            let record = doc.doc ;
-            row.setAttribute("data-id",record._id) ;
-            if (record._id == operationId ) {
-                row.classList.add("choice") ;
-            }
-            row.addEventListener( 'click', (e) => {
-                selectOperation( record._id ) ;
-            }) ;
-            row.addEventListener( 'dblclick', (e) => {
-                selectOperation( record._id ) ;
-                showPage( "OperationEdit" ) ;
-            }) ;
-            collist.forEach( (colname,i) => {
-                let c = row.insertCell(i) ;
-                if ( colname in record ) {
-                    c.innerText = record[colname] ;
-                } else {
-                    c.innerText = "" ;
-                }
-            }) ;
-        });
+class UserTable extends SortTable {
+    editpage = "UserEdit";
+    selectFunc = selectUser;
+    selectId = () => userId;
+    constructor( collist ) {
+        super( collist, "UserList");
     }
-  
 }
 
 function makePatientId( doc_or_pos ) {
@@ -1591,7 +1808,7 @@ function makePatientId( doc_or_pos ) {
                         "!",
                         "",
                         "", 
-                        ].join(";") ;
+                        ].join(";");
                 case "last":
                     return [ 
                         RecordFormat.type.patient,
@@ -1599,9 +1816,9 @@ function makePatientId( doc_or_pos ) {
                         "\\fff0",
                         "",
                         "", 
-                        ].join(";") ;
+                        ].join(";");
                 }
-            break ;
+            break;
         case "object":
             return [ 
                 RecordFormat.type.patient,
@@ -1609,17 +1826,17 @@ function makePatientId( doc_or_pos ) {
                 doc_or_pos.LastName,
                 doc_or_pos.FirstName,
                 doc_or_pos.DOB, 
-                ].join(";") ;
+                ].join(";");
         }
-    console.log("Call for unrecognized Patient Id type") ;
-    return null ;
+    console.log("Call for unrecognized Patient Id type");
+    return null;
 }
 
 function splitPatientId( pid = patientId ) {
     if ( pid ) {
-        var spl = pid.split(";") ;
+        let spl = pid.split(";");
         if ( spl.length !== 5 ) {
-            return null ;
+            return null;
         }
         return {
             type: spl[0],
@@ -1627,16 +1844,16 @@ function splitPatientId( pid = patientId ) {
             last : spl[2],
             first: spl[3],
             dob: spl[4],
-        } ;
+        };
     }
-    return null ;
+    return null;
 }
 
 function makeNoteId(position=null) {
-    let d ;
+    let d 
     switch (position) {
         case "veryfirst":
-            d = "" ;
+            d = "";
             return [ 
                 RecordFormat.type.note,
                 RecordFormat.version,
@@ -1644,15 +1861,15 @@ function makeNoteId(position=null) {
                 d ,
                 d ,
                 d , 
-                ].join(";") ;
+                ].join(";");
         case "first":
-            d = "" ;
-            break ;
+            d = "";
+            break;
         case "last":
-            d = "\\fff0" ;
-            break ;
+            d = "\\fff0";
+            break;
         case "verylast":
-            d = "\\fff0" ;
+            d = "\\fff0";
             return [ 
                 RecordFormat.type.note,
                 RecordFormat.version,
@@ -1660,12 +1877,12 @@ function makeNoteId(position=null) {
                 d ,
                 d ,
                 d , 
-                ].join(";") ;
+                ].join(";");
         default:
-            d = new Date().toISOString() ;
+            d = new Date().toISOString();
             break;
     }
-    let spl = splitPatientId() ;
+    let spl = splitPatientId();
     
     return [ 
         RecordFormat.type.note,
@@ -1674,11 +1891,11 @@ function makeNoteId(position=null) {
         spl.first,
         spl.dob,
         d , 
-        ].join(";") ;
+        ].join(";");
 }
 
 function makeOperationId() {
-    let spl = splitPatientId() ;    
+    let spl = splitPatientId();    
     return [ 
         RecordFormat.type.operation,
         RecordFormat.version,
@@ -1686,14 +1903,14 @@ function makeOperationId() {
         spl.first,
         spl.dob,
         new Date().toISOString() , 
-        ].join(";") ;
+        ].join(";");
 }
 
 function splitNoteId( nid=noteId ) {
     if ( nid ) {
-        var spl = nid.split(";") ;
+        let spl = nid.split(";");
         if ( spl.length !== 6 ) {
-            return null ;
+            return null;
         }
         return {
             type: spl[0],
@@ -1702,16 +1919,16 @@ function splitNoteId( nid=noteId ) {
             first: spl[3],
             dob: spl[4],
             key: spl[5],
-        } ;
+        };
     }
-    return null ;
+    return null;
 }
 
 function splitOperationId( oid = operationId ) {
     if ( oid ) {
-        var spl = oid.split(";") ;
+        let spl = oid.split(";");
         if ( spl.length !== 6 ) {
-            return null ;
+            return null;
         }
         return {
             type: spl[0],
@@ -1720,47 +1937,47 @@ function splitOperationId( oid = operationId ) {
             first: spl[3],
             dob: spl[4],
             key: spl[5],
-        } ;
+        };
     }
-    return null ;
+    return null;
 }
 
 function deletePatient() {
     if ( patientId ) {        
-        let pdoc ;
-        let ndocs ;
-        let odocs ;
+        let pdoc;
+        let ndocs;
+        let odocs;
         getThePatient( true )
             // get patient
         .then( (doc) => {
-            pdoc = doc ;
-            return getNotes(false) ;
+            pdoc = doc;
+            return getNotes(false);
             })
         .then( (docs) => {
             // get notes
-            ndocs = docs.rows ;
-            return getOperations (false) ;
+            ndocs = docs.rows;
+            return getOperations (false);
             })
         .then( (docs) => {
             // get operations
-            odocs = docs.rows ;
+            odocs = docs.rows;
             // Confirm question
-            let c = "Delete patient \n   " + pdoc.FirstName + " " + pdoc.LastName + " DOB: " + pdoc.DOB + "\n    " ;
+            let c = "Delete patient \n   " + pdoc.FirstName + " " + pdoc.LastName + " DOB: " + pdoc.DOB + "\n    ";
             if (ndocs.length == 0 ) {
-                c += "(no associated notes on this patient) \n   " ;
+                c += "(no associated notes on this patient) \n   ";
             } else {
-                c += "also delete "+ndocs.length+" associated notes\n   " ;
+                c += "also delete "+ndocs.length+" associated notes\n   ";
             }
             if (odocs.length == 0 ) {
-                c += "(no associated operations on this patient) \n   " ;
+                c += "(no associated operations on this patient) \n   ";
             } else {
-                c += "also delete "+odocs.length+" associated operations\n   " ;
+                c += "also delete "+odocs.length+" associated operations\n   ";
             }
-            c += "Are you sure?" ;
+            c += "Are you sure?";
             if ( confirm(c) ) {
-                return true ;
+                return true;
             } else {
-                throw "No delete" ;
+                throw "No delete";
             }           
             })
         .then( () => Promise.all(ndocs.map( (doc) => db.remove(doc.id,doc.value.rev) ) ) )
@@ -1768,89 +1985,89 @@ function deletePatient() {
         .then( () => db.remove(pdoc) )
         .then( () => unselectPatient() )
         .catch( (err) => console.log(err) ) 
-        .finally( () => showPage( "PatientList" ) ) ;
+        .finally( () => showPage( "PatientList" ) );
     }
 }
 
 function PatientPhoto( doc ) {
-    let d = document.getElementById("PatientPhotoContent") ;
-    let c = document.getElementById("phototemplate") ;
-    d.innerHTML = "" ;
+    let d = document.getElementById("PatientPhotoContent");
+    let c = document.getElementById("phototemplate");
+    d.innerHTML = "";
     c.childNodes.forEach( cc => {
-        d.appendChild(cc.cloneNode(true) ) ;
+        d.appendChild(cc.cloneNode(true) );
     });
     
-    let p = document.getElementById("PatientPhotoContent").getElementsByTagName("img")[0] ;
+    let p = document.getElementById("PatientPhotoContent").getElementsByTagName("img")[0];
     try {
-        p.src = getImageFromDoc( doc ) ;
+        p.src = getImageFromDoc( doc );
         }
     catch( err ) {
-        p.src = NoPhoto ;
+        p.src = NoPhoto;
         }
 }
 
 function newImage() {
-    unselectNote() ;
-    showPage( "NoteImage" ) ;  
+    unselectNote();
+    showPage( "NoteImage" );  
 }
 
 function deleteNote() {
     if ( noteId ) {
-        let pdoc ;
+        let pdoc;
         getThePatient( false )
         .then( (doc) => {
-            pdoc = doc ;
-            return db.get( noteId ) ;
+            pdoc = doc;
+            return db.get( noteId );
             })
         .then( (doc) => {
             if ( confirm("Delete note on patient " + pdoc.FirstName + " " + pdoc.LastName + " DOB: " + pdoc.DOB + ".\n -- Are you sure?") ) {
-                return doc ;
+                return doc;
             } else {
-                throw "No delete" ;
+                throw "No delete";
             }           
             })
         .then( (doc) => db.remove(doc) )
         .then( () => unselectNote() )
         .catch( (err) => console.log(err) )
-        .finally( () => showPage( "NoteList" ) ) ;
+        .finally( () => showPage( "NoteList" ) );
     }
-    return true ;
+    return true;
 }    
     
 function deleteOperation() {
     if ( operationId ) {
-        let pdoc ;
+        let pdoc;
         getThePatient( false )
         .then( (doc) => { 
-            pdoc = doc ;
-            return db.get( operationId ) ;
+            pdoc = doc;
+            return db.get( operationId );
             })
         .then( (doc) => {
             if ( confirm("Delete operation\<"+doc.Procedure+">\n on patient " + pdoc.FirstName + " " + pdoc.LastName + " DOB: " + pdoc.DOB + ".\n -- Are you sure?") ) {
-                return doc ;
+                return doc;
             } else {
-                throw "No delete" ;
+                throw "No delete";
             }           
             })
         .then( (doc) =>db.remove(doc) )
         .then( () => unselectOperation() )
         .catch( (err) => console.log(err) )
-        .finally( () => showPage( "OperationList" ) ) ;
+        .finally( () => showPage( "OperationList" ) );
     }
-    return true ;
+    return true;
 }    
     
 function selectNote( cid ) {
-    setCookie( "noteId", cid ) ;
+    setCookie( "noteId", cid );
     if ( displayState == "NoteList" ) {
         // highlight the list row
         let li = document.getElementById("NoteList").getElementsByTagName("LI");
         if ( li && (li.length > 0) ) {
             for ( let l of li ) {
                 if ( l.getAttribute("data-id") == noteId ) {
-                    l.classList.add('choice') ;
+                    l.classList.add('choice');
                 } else {
-                    l.classList.remove('choice') ;
+                    l.classList.remove('choice');
                 }
             }
         }
@@ -1858,71 +2075,71 @@ function selectNote( cid ) {
 }
 
 function unselectNote() {
-    deleteCookie ( "noteId" ) ;
+    deleteCookie ( "noteId" );
     if ( displayState == "NoteList" ) {
-        let li = document.getElementById("NoteList").li ;
+        let li = document.getElementById("NoteList").li;
         if ( li && (li.length > 0) ) {
             for ( let l of li ) {
-                l.classList.remove('choice') ;
+                l.classList.remove('choice');
             }
         }
     }
 }
 
 function noteTitle( doc ) {
-    let date = new Date().toISOString() ;
-    author = userName ;
+    let date = new Date().toISOString();
+    let author = remoteCouch.username;
     if ( doc  && doc.id ) {
-        date = splitNoteId(doc.id).key ;
-        //console.log( "from key", date ) ;
+        date = splitNoteId(doc.id).key;
+        //console.log( "from key", date );
         if ( doc.doc && doc.doc.author ) {
-            author = doc.doc.author ;
+            author = doc.doc.author;
         }
         if ( doc.doc && doc.doc.date ) {
-            date = doc.doc.date ;
-            //console.log( "from doc", date ) ;
+            date = doc.doc.date;
+            //console.log( "from doc", date );
         }
     }
-    return [author, new Date(date)] ;
+    return [author, new Date(date)];
 }
 
 function getThePatient(attachments) {
-    return db.get( patientId, { attachments: attachments, binary: attachments } ) ;
+    return db.get( patientId, { attachments: attachments, binary: attachments } );
 }
 
 function getPatients(attachments) {
-    doc = {
+    let doc = {
         startkey: makePatientId("first"),
         endkey: makePatientId("last"),
-    } ;
+    };
     if (attachments) {
-        doc.include_docs = true ;
-        doc.binary = true ;
-        doc.attachments = true ;
+        doc.include_docs = true;
+        doc.binary = true;
+        doc.attachments = true;
     }
 
-    return db.allDocs(doc) ;
+    return db.allDocs(doc);
 }
 
 function getOperationsAll() {
-    doc = {
+    let doc = {
         startkey: RecordFormat.type.operation+";" ,
         endkey: RecordFormat.type.operation+";\\fff0",
         include_docs: true,
         binary: true,
         attachments: true,
-    } ;
-    return db.allDocs(doc) ;
+    };
+    return db.allDocs(doc);
 }
 
 function getOperations(attachments) {
-    doc = {
+    let doc = {
         key: patientId,
-    } ;
+    };
     if (attachments) {
-        doc.include_docs = true ;
-        doc.binary = true ;
-        doc.attachments = true ;
+        doc.include_docs = true;
+        doc.binary = true;
+        doc.attachments = true;
 
         // Adds a single "blank"
         // also purges excess "blanks"
@@ -1930,174 +2147,205 @@ function getOperations(attachments) {
         .then( (doclist) => {
             let newlist = doclist.rows
                 .filter( (row) => ( row.doc.Status === "none" ) && ( row.doc.Procedure === "Enter new procedure" ) )
-                .map( row => row.doc ) ;
+                .map( row => row.doc );
             switch ( newlist.length ) {
                 case 0 :
-                    throw null ;
+                    throw null;
                 case 1 :
-                    return Promise.resolve( doclist ) ;
-                    break ;
+                    return Promise.resolve( doclist );
                 default:
-                    throw newlist.slice(1) ;
-                    break ;
+                    throw newlist.slice(1);
                 }
             })
         .catch( (dlist) => {
             if ( dlist == null ) {
                 // needs an empty
-                throw null ;
+                throw null;
             }
             // too many empties
             //console.log("Remove", dlist.length,"entries");
             return Promise.all(dlist.map( (doc) => db.remove(doc) ))
                 .then( ()=> getOperations( attachments )
-                ) ;
+                );
             })
         .catch( () => {
-            //console.log("Add a record") ;
-            return makeNewOperation().then( () => getOperations( attachments ) ) ;
+            //console.log("Add a record");
+            return makeNewOperation().then( () => getOperations( attachments ) );
             });
     } else {
-        return db.allDocs(doc) ;
+        return db.allDocs(doc);
     }
 }
 
+function sendUser( doc ) {
+    document.getElementById("SendUserMail").href = "";
+    let url = new URL( window.location.href );
+    url.searchParams.append( "address", remoteCouch.address );
+    url.searchParams.append( "database", remoteCouch.database );
+    url.searchParams.append( "password", userPass[userId] );
+    url.searchParams.append( "username", doc.name );
+    new QR(
+        document.getElementById("SendUserQR"),
+        url.href,
+        200,200,
+        4);
+    document.getElementById("SendUserEmail").value = doc.email;
+    document.getElementById("SendUserLink").value = url.href;
+
+    let mail_url = new URL( "mailto:" + doc.email );
+    mail_url.searchParams.append( "subject", "Welcome to eMission" );
+    mail_url.searchParams.append( "body",
+        'Welcome, '+doc.name+' to eMission: \n'
+        +'  software for managing medical missions in resource poor environments\n'
+        +'\n'
+        +'You have an account:\n'
+        +'  web address: '+remoteCouch.address+'\n'
+        +'  username: '+doc.name+'\n'
+        +'  password: '+userPass[userId]+'\n'
+        +'  database name: '+remoteCouch.database+'\n'
+        +'\n'
+        +'Full link (paste into your browser address bar):\n'
+        +'  '+url.href+'\n'
+        +'\n'
+        +'We\'re looking forward to your participation.'
+        ) ;
+    document.getElementById("SendUserMail").href = mail_url.href;
+}
+
 function getNotesAll() {
-    doc = {
+    let doc = {
         startkey: makeNoteId("veryfirst"),
         endkey: makeNoteId("verylast"),
         include_docs: true,
         binary: false,
         attachments: false,
-    } ;
-    return db.allDocs(doc) ;
+    };
+    return db.allDocs(doc);
 }
 
 function getNotes(attachments) {
-    doc = {
+    let doc = {
         startkey: makeNoteId("first"),
         endkey: makeNoteId("last"),
-    }
+    };
     if (attachments) {
-        doc.include_docs = true ;
-        doc.binary = true ;
-        doc.attachments = true ;
+        doc.include_docs = true;
+        doc.binary = true;
+        doc.attachments = true;
     }
-    return db.allDocs(doc) ;
+    return db.allDocs(doc);
 }
 
 class NoteList extends PatientData {
     constructor( parent ) {
-        super() ;
+        super();
         if ( parent == null ) {
-            parent = document.body ;
+            parent = document.body;
         }
-        [...parent.getElementsByTagName('ul')].forEach( (u) => parent.removeChild(u) ) ;
+        [...parent.getElementsByTagName('ul')].forEach( (u) => parent.removeChild(u) );
 
-        this.ul = document.createElement('ul') ;
-        this.ul.setAttribute( "id", "NoteList" ) ;
-        parent.appendChild(this.ul) ;
+        this.ul = document.createElement('ul');
+        this.ul.setAttribute( "id", "NoteList" );
+        parent.appendChild(this.ul);
 
         // get notes
         getNotes(true)
         .then( (docs) => {
             docs.rows.forEach( (note, i) => {
-                let li1 = this.liLabel(note) ;
-                this.ul.appendChild( li1 ) ;
-                let li2 = this.liNote(note,li1) ;
-                this.ul.appendChild( li2 ) ;
+                let li1 = this.liLabel(note);
+                this.ul.appendChild( li1 );
+                let li2 = this.liNote(note,li1);
+                this.ul.appendChild( li2 );
 
-            }) ;
-            this.li = this.ul.getElementsByTagName('li')
+            });
+            this.li = this.ul.getElementsByTagName('li');
                 
             })
-        .catch( (err) => console.log(err) ) ; 
+        .catch( (err) => console.log(err) ); 
     }
 
     liLabel( note ) {
-        let li = document.createElement("li") ;
-        li.setAttribute("data-id", note.id ) ;
+        let li = document.createElement("li");
+        li.setAttribute("data-id", note.id );
 
         li.appendChild( document.getElementById("templates").getElementsByClassName("edit_note")[0].cloneNode(true) );
 
         let cdiv = document.createElement("div");
-        cdiv.classList.add("inly") ;
-        let nt = noteTitle( note ) ;
-        this.DateTimetoInput(nt[1]).forEach( (i) => cdiv.appendChild(i) ) ;
-        cdiv.appendChild( document.createTextNode( " by "+nt[0]) ) ;
-        let dbut = document.createElement("input") ;
-        li.appendChild(cdiv) ;
-        li.addEventListener( 'click', (e) => selectNote( note.id ) ) ;
+        cdiv.classList.add("inly");
+        let nt = noteTitle( note );
+        this.DateTimetoInput(nt[1]).forEach( (i) => cdiv.appendChild(i) );
+        cdiv.appendChild( document.createTextNode( " by "+nt[0]) );
+        li.appendChild(cdiv);
+        li.addEventListener( 'click', (e) => selectNote( note.id ) );
 
-        return li ;
+        return li;
     }
 
     liNote( note, label ) {
-        let li = document.createElement("li") ;
-        li.setAttribute("data-id", note.id ) ;
+        let li = document.createElement("li");
+        li.setAttribute("data-id", note.id );
         if ( noteId == note.id ) {
-            li.classList.add("choice") ;
+            li.classList.add("choice");
         }
         if ( "doc" in note ) {
             try {
-                let imagedata = getImageFromDoc( note.doc ) ;
-                let img = document.createElement("img") ;
-                img.classList.add("entryfield_image") ;
-                img.addEventListener('click', (e) => ShowBigPicture(img) ) ;
-                img.src = imagedata ;
+                let imagedata = getImageFromDoc( note.doc );
+                let img = document.createElement("img");
+                img.classList.add("entryfield_image");
+                img.addEventListener('click', (e) => ShowBigPicture(img) );
+                img.src = imagedata;
                 li.appendChild(img);
                 }
             catch(err) {
-                console.log(err) ;
+                console.log(err);
                 }
 
-            let textdiv = document.createElement("div") ;
-            textdiv.innerText = ("text" in note.doc) ? note.doc.text : "" ;
-            li.addEventListener( 'dblclick', (e) => editBar.startedit( li ) ) ;
-            textdiv.classList.add("entryfield_text") ;
+            let textdiv = document.createElement("div");
+            textdiv.innerText = ("text" in note.doc) ? note.doc.text : "";
+            li.addEventListener( 'dblclick', (e) => editBar.startedit( li ) );
+            textdiv.classList.add("entryfield_text");
             li.appendChild(textdiv);
         }    
         
         li.addEventListener( 'click', (e) => {
-            selectNote( note.id ) ;
-        }) ;
+            selectNote( note.id );
+        });
         label.getElementsByClassName("edit_note")[0].onclick =
             (e) => {
-            var i = label.querySelectorAll("input") ;
-            picker.attach({ element: i[0] }) ;
-            tp.attach({ element: i[1] }) ;
-            selectNote( note.id ) ;
-            editBar.startedit( li ) ;
-            } ;
+            var i = label.querySelectorAll("input");
+            picker.attach({ element: i[0] });
+            tp.attach({ element: i[1] });
+            selectNote( note.id );
+            editBar.startedit( li );
+            };
         label.addEventListener( 'dblclick', (e) => {
-            var i = label.querySelectorAll("input") ;
-            picker.attach({ element: i[0] }) ;
-            tp.attach({ element: i[1] }) ;
-            selectNote( note.id ) ;
-            editBar.startedit( li ) ;
-            }) ;
+            var i = label.querySelectorAll("input");
+            picker.attach({ element: i[0] });
+            tp.attach({ element: i[1] });
+            selectNote( note.id );
+            editBar.startedit( li );
+            });
 
-        return li ;
+        return li;
     }
-
 }
 
 function getImageFromDoc( doc ) {
     if ( !("_attachments" in doc) ) {
-        throw "No attachments" ;
+        throw "No attachments";
     }
     if ( !("image" in doc._attachments) ) {
-        throw "No image" ;
+        throw "No image";
     }
     if ( !("data" in doc._attachments.image) ) {
-        throw "No image data" ;
+        throw "No image data";
     }
-    return URL.createObjectURL(doc._attachments.image.data) ;
+    return URL.createObjectURL(doc._attachments.image.data);
 }
 
 function deleteImageFromDoc( doc ) {
     if ( "_attachments" in doc ) {
-        delete doc["_attachments"] ;
+        delete doc._attachments;
     }
 }
 
@@ -2107,170 +2355,171 @@ function putImageInDoc( doc, itype, idata ) {
             content_type: itype,
             data: idata,
         }
-    }
+    };
 }
 
 function NoteNew() {
-    document.getElementById("NoteNewLabel").innerHTML = noteTitle()  ;
-    let d = document.getElementById("NoteNewText") ;
-    d.innerHTML = "" ;
-    editBar.startedit( d ) ;
+    document.getElementById("NoteNewLabel").innerHTML = noteTitle();
+    let d = document.getElementById("NoteNewText");
+    d.innerHTML = "";
+    editBar.startedit( d );
 }
 
 function NoteImage() {
-    let inp = document.getElementById("imageInput") ;
+    let inp = document.getElementById("imageInput");
     if ( isAndroid() ) {
-        inp.removeAttribute("capture") ;
+        inp.removeAttribute("capture");
     } else {
         inp.setAttribute("capture","environment");
     }
 }
 
 function quickImage() {
-    document.getElementById("imageQ").click() ;
+    document.getElementById("imageQ").click();
 }
 
 function quickImage2() {
-    const files = document.getElementById('imageQ') ;
-    const image = files.files[0] ;
+    const files = document.getElementById('imageQ');
+    const image = files.files[0];
 
     let doc = {
         _id: makeNoteId(),
         text: "",
-        author: userName,
-    } ;
-    putImageInDoc( doc, image.type, image ) ;
+        author: remoteCouch.username,
+    };
+    putImageInDoc( doc, image.type, image );
 
     db.put( doc )
     .then( (response) => showPage( "NoteList" ) )
     .catch( (err) => {
-        console.log(err) ;
-        showPage( "NoteList" ) ;
-        }) ;
+        console.log(err);
+        showPage( "NoteList" );
+        });
 }
 
 function getImage() {
-    let inp = document.getElementById("imageInput") ;
-    inp.click() ;
+    let inp = document.getElementById("imageInput");
+    inp.click();
 }
     
    
 //let urlObject;
 function handleImage() {
-    const files = document.getElementById('imageInput')
+    const files = document.getElementById('imageInput');
     const image = files.files[0];
 
     // change display
-    document.getElementsByClassName("NoteImage")[0].style.display = "none" ;
-    document.getElementsByClassName("NoteImage2")[0].style.display = "block" ;
+    document.getElementsByClassName("NoteImage")[0].style.display = "none";
+    document.getElementsByClassName("NoteImage2")[0].style.display = "block";
 
      // see https://www.geeksforgeeks.org/html-dom-createobjecturl-method/
-    document.getElementById('imageCheck').src = URL.createObjectURL(image) ;
+    document.getElementById('imageCheck').src = URL.createObjectURL(image);
 }    
 
 function saveImage() {
-    const files = document.getElementById('imageInput')
+    const files = document.getElementById('imageInput');
     const image = files.files[0];
-    const text = document.getElementById("annotation").innerText ;
+    const text = document.getElementById("annotation").innerText;
 
     let doc = {
         _id: makeNoteId(),
         text: text.value,
-        author: userName,
-    } ;
-    putImageInDoc( doc, image.type, image ) ;
+        author: remoteCouch.username,
+    };
+    putImageInDoc( doc, image.type, image );
 
     db.put( doc )
     .then( (response) => showPage( "NoteList" ) )
     .catch( (err) => {
-        console.log(err) ;
-        showPage( "NoteList" ) ;
-        }) ;
-    document.getElementById('imageCheck').src = "" ;
+        console.log(err);
+        showPage( "NoteList" );
+        });
+    document.getElementById('imageCheck').src = "";
 }
 
 function show_screen( bool ) {
-    document.getElementById("splash_screen").style.display = "none" ;
+    document.getElementById("splash_screen").style.display = "none";
     Array.from(document.getElementsByClassName("work_screen")).forEach( (v)=> {
-        v.style.display = bool ? "block" : "none" ;
+        v.style.display = bool ? "block" : "none";
     });
     Array.from(document.getElementsByClassName("print_screen")).forEach( (v)=> {
-        v.style.display = bool ? "none" : "block" ;
+        v.style.display = bool ? "none" : "block";
     });
 }    
 
 function printCard() {
     if ( patientId == null ) {
-        return showPage( "InvalidPatient" ) ;
+        return showPage( "InvalidPatient" );
     }
-    var card = document.getElementById("printCard") ;
-    var t = card.getElementsByTagName("table") ;
+    let card = document.getElementById("printCard");
+    let t = card.getElementsByTagName("table");
     getThePatient( true )
     .then( (doc) => {
-        show_screen( false ) ;
-        console.log( "print",doc) ;
-        var photo = document.getElementById("photoCard") ;
-        var link = window.location.href + "?patientId=" + encodeURIComponent(patientId) ;
-        var qr = new QR(
+        show_screen( false );
+        console.log( "print",doc);
+        let photo = document.getElementById("photoCard");
+        let link = new URL(window.location.href);
+        link.searchParams.append( "patientId", patientId );
+        let qr = new QR(
             card.querySelector(".qrCard"),
-            link,
+            link.href,
             200,200,
-            4) ;
+            4);
         try {
-            photo.src = getImageFromDoc( doc ) ;
+            photo.src = getImageFromDoc( doc );
             //console.log("Image gotten".doc)
             } 
         catch (err) {
-            photo.src = "style/NoPhoto.png" ;
-            //console.log("No image",doc) ;
+            photo.src = "style/NoPhoto.png";
+            //console.log("No image",doc);
             }
-        t[0].rows[0].cells[1].innerText = doc.LastName+"' "+doc.FirstName ;
-        t[0].rows[1].cells[1].innerText = doc.Complaint ;
-        t[0].rows[2].cells[1].innerText = "" ;
-        t[0].rows[3].cells[1].innerText = "" ;
-        t[0].rows[4].cells[1].innerText = "" ;
-        t[0].rows[5].cells[1].innerText = doc.ASA ;
+        t[0].rows[0].cells[1].innerText = doc.LastName+"' "+doc.FirstName;
+        t[0].rows[1].cells[1].innerText = doc.Complaint;
+        t[0].rows[2].cells[1].innerText = "";
+        t[0].rows[3].cells[1].innerText = "";
+        t[0].rows[4].cells[1].innerText = "";
+        t[0].rows[5].cells[1].innerText = doc.ASA;
 
-        t[1].rows[0].cells[1].innerText = doc.Age+"" ;
-        t[1].rows[1].cells[1].innerText = doc.Sex ;
-        t[1].rows[2].cells[1].innerText = doc.Weight+" kg" ;
-        t[1].rows[3].cells[1].innerText = doc.Allergies ;
-        t[1].rows[4].cells[1].innerText = doc.Meds ;
-        t[1].rows[5].cells[1].innerText = "" ;
-        return getOperations(true) ;
+        t[1].rows[0].cells[1].innerText = doc.Age+"";
+        t[1].rows[1].cells[1].innerText = doc.Sex;
+        t[1].rows[2].cells[1].innerText = doc.Weight+" kg";
+        t[1].rows[3].cells[1].innerText = doc.Allergies;
+        t[1].rows[4].cells[1].innerText = doc.Meds;
+        t[1].rows[5].cells[1].innerText = "";
+        return getOperations(true);
         })
     .then( (docs) => {
-        var oleng = docs.rows.length ;
+        let oleng = docs.rows.length;
         if ( oleng > 0 ) {
-            t[0].rows[2].cells[1].innerText = docs.rows[oleng-1].doc.Procedure ;
-            t[0].rows[3].cells[1].innerText = docs.rows[oleng-1].doc.Duration + " hr" ;
-            t[0].rows[4].cells[1].innerText = docs.rows[oleng-1].doc.Surgeon ;
-            t[1].rows[5].cells[1].innerText = docs.rows[oleng-1].doc.Equipment ;
+            t[0].rows[2].cells[1].innerText = docs.rows[oleng-1].doc.Procedure;
+            t[0].rows[3].cells[1].innerText = docs.rows[oleng-1].doc.Duration + " hr";
+            t[0].rows[4].cells[1].innerText = docs.rows[oleng-1].doc.Surgeon;
+            t[1].rows[5].cells[1].innerText = docs.rows[oleng-1].doc.Equipment;
         }
-        window.print() ;
-        show_screen( true ) ;
-        showPage( "PatientPhoto" ) ;
+        window.print();
+        show_screen( true );
+        showPage( "PatientPhoto" );
         })
     .catch( (err) => {
-        console.log(err) ;
-        showPage( "InvalidPatient" ) ;
-        }) ;
+        console.log(err);
+        showPage( "InvalidPatient" );
+        });
 }
 
 function HideBigPicture( target ) {
-    target.src = "" ;
-    target.style.display = "none" ;
+    target.src = "";
+    target.style.display = "none";
 }
 
 function ShowBigPicture( target ) {
-    var big = document.getElementsByClassName( "FloatPicture" )[0] ;
-    big.src = target.src ;
-    big.style.display = "block" ;
+    let big = document.getElementsByClassName( "FloatPicture" )[0];
+    big.src = target.src;
+    big.style.display = "block";
 }
 
 function downloadCSV(csv, filename) {
-    var csvFile;
-    var downloadLink;
+    let csvFile;
+    let downloadLink;
    
     //define the file type to text/csv
     csvFile = new Blob([csv], {type: 'text/csv'});
@@ -2284,8 +2533,8 @@ function downloadCSV(csv, filename) {
 }
 
 function downloadPatients() {
-    const fields = [ "LastName", "FirstName", "DOB", "Dx", "Weight", "Height", "Sex", "Allergies", "Meds", "ASA" ] ; 
-    var csv = fields.map( f => '"'+f+'"' ).join(',')+'\n' ;
+    const fields = [ "LastName", "FirstName", "DOB", "Dx", "Weight", "Height", "Sex", "Allergies", "Meds", "ASA" ]; 
+    let csv = fields.map( f => '"'+f+'"' ).join(',')+'\n';
     getPatients(true)
     .then( doclist => {
         csv += doclist.rows
@@ -2294,37 +2543,37 @@ function downloadPatients() {
                 .map( v => typeof(v) == "number" ? v : '"'+v+'"' )
                 .join(',')
                 )
-            .join( '\n' ) ;
-        downloadCSV( csv, 'mdbPatient.csv' ) ;
-        }) ;
+            .join( '\n' );
+        downloadCSV( csv, 'mdbPatient.csv' );
+        });
 }
 
 function downloadAll() {
-    const pfields = [ "LastName", "FirstName", "DOB", "Dx", "Weight", "Height", "Sex", "Allergies", "Meds", "ASA" ] ; 
-    const ofields = [ "Complaint", "Procedure", "Surgeon", "Equipment", "Status", "Date-Time", "Duration", "Lateratility" ] ; 
-    var csv = pfields
+    const pfields = [ "LastName", "FirstName", "DOB", "Dx", "Weight", "Height", "Sex", "Allergies", "Meds", "ASA" ]; 
+    const ofields = [ "Complaint", "Procedure", "Surgeon", "Equipment", "Status", "Date-Time", "Duration", "Lateratility" ]; 
+    let csv = pfields
                 .concat(ofields,["Notes"])
                 .map( f => '"'+f+'"' )
-                .join(',')+'\n' ;
-    var plist ;
-    var olist = {} ;
-    var nlist = {} ;
+                .join(',')+'\n';
+    let plist;
+    let olist = {};
+    let nlist = {};
     getPatients(true)
     .then( doclist => {
-        plist = doclist.rows ;
-        plist.forEach( p => nlist[p.id] = 0 ) ;
-        return getOperationsAll() ;
+        plist = doclist.rows;
+        plist.forEach( p => nlist[p.id] = 0 );
+        return getOperationsAll();
         })
     .then ( doclist => {
         doclist.rows.forEach( row => {
-            if ( ! ( new Date(row.doc["Date-Time"]) == "Invalid Date" ) ) {
-                olist[row.doc.patient_id] = row.doc ;
+            if ( new Date(row.doc["Date-Time"]) != "Invalid Date" ) {
+                olist[row.doc.patient_id] = row.doc;
             }
-            }) ;
-        return getNotesAll() ;
+            });
+        return getNotesAll();
         })
     .then( doclist => {
-        doclist.rows.forEach( row => ++nlist[row.doc.patient_id] ) ;
+        doclist.rows.forEach( row => ++nlist[row.doc.patient_id] );
         csv += plist
             .map( row =>
                 pfields
@@ -2340,32 +2589,113 @@ function downloadAll() {
                     )
                 .join(',')
                 )
-            .join( '\n' ) ;
-        downloadCSV( csv, 'mdbAllData.csv' ) ;
-        }) ;
+            .join( '\n' );
+        downloadCSV( csv, 'mdbAllData.csv' );
+        });
 }
 
 function parseQuery() {
-    s = window.location.search ;
-    if ( s.length < 1 ) {
-        return null ;
+    // returns a dict of keys/values or null
+    let url = new URL(location.href);
+    console.log(url.href);
+    let r = {};
+    for ( let [n,v] of url.searchParams) {
+        r[n] = v;
     }
-    r = {} ;
-    s.substring(1).split("&").forEach( (q) => {
-        let qq = q.split("=") ;
-        if ( qq.length== 2 ) {
-            r[decodeURIComponent(qq[0])] = decodeURIComponent(qq[1]) ;
-        }
-    }) ;
-    window.location.search = "" ;
-    return r ;
-};
+    //location.search = "";
+    return r;
+}
+
+function setRemoteDB( DBstruct ) {
+    if ( DBstruct && remoteFields.every( k => k in DBstruct )  ) {
+        return new PouchDB( [DBstruct.address, DBstruct.database].join("/") , {
+            "skip_setup": "true",
+            "auth": {
+                "username": DBstruct.username,
+                "password": DBstruct.password,
+                },
+            });
+    } else {
+        console.log("Bad DB");
+        return null;
+    }
+}
+        
+
+var SyncHandler = null;
+    
+// Initialise a sync process with the remote server
+var remoteDB;
+
+function foreverSync() {
+    remoteDB = setRemoteDB( remoteCouch ); // null initially
+    document.getElementById( "userstatus" ).value = remoteCouch.username;
+    if ( remoteDB ) {
+        let synctext = document.getElementById("syncstatus");
+        synctext.value = "syncing...";
+            
+        SyncHandler = db.sync( remoteDB ,
+            {
+                live: true,
+                retry: true,
+                filter: (doc) => doc._id.indexOf('_design') !== 0,
+            } )
+            .on('change', ()       => synctext.value = "changed" )
+            .on('paused', ()       => synctext.value = "resting" )
+            .on('active', ()       => synctext.value = "active" )
+            .on('denied', (err)    => { synctext.value = "denied"; console.log("Sync denied",err); } )
+            .on('complete', ()     => synctext.value = "stopped" )
+            .on('error', (err)     => { synctext.value = "error"; console.log("Sync error",err); } );
+    }
+}
+
+function forceReplicate(id=null) {
+    if (SyncHandler) {
+        SyncHandler.cancel();
+        SyncHandler = null;
+    }
+    if (remoteDB) {
+        db.replicate.to( remoteDB,
+            {
+                filter: (doc) => id ?
+                    doc._id == id :
+                    doc._id.indexOf('_design') !== 0,
+            } )
+        .catch( err => id ? console.log( id,err ) : console.log(err) )
+        .finally( () => foreverSync() );
+    }
+}
+
+function Setup() {
+    getCookie ( "patientId" );
+    getCookie ( "commentId" );
+    getCookie ( "displayState" );
+    getCookie ( "operationId" );
+
+    // need to establish remote db and credentials
+    // first try the search field
+    let qline = parseQuery();
+    
+    // need remote database for sync
+    if ( remoteFields.every( k => k in qline ) ) {
+        remoteCouch = {};
+        remoteFields.forEach( f => remoteCouch[f] = qline[f] );
+        setCookie( "remoteCouch", remoteCouch );
+    } else if ( getCookie( "remoteCouch" ) == null ) {
+        return "RemoteDatabaseInput";
+    }    
+    foreverSync();
+
+    // first try the search field
+    if ( qline && ( "patientId" in qline ) ) {
+        selectPatient( qline.patientId );
+        return "PatientPhoto";
+    }
+    return displayState;
+}
 
 // Pouchdb routines
-(function() {
-
-    'use strict';
-
+window.onload = function() {
     db.changes({
         since: 'now',
         live: true
@@ -2375,92 +2705,57 @@ function parseQuery() {
             case "OperationList":
             case "PatientPhoto":
                 showPage( displayState );
-                break ;
+                break;
             default:
-                break ;
+                break;
         }
     });
 
-    // Initialise a sync with the remote server
-    function sync() {
-        let synctext = document.getElementById("syncstatus") ;
-        synctext.value = "syncing..." ;
-        db.sync( remoteCouch+"/"+cannonicalDBname ,
-        {
-            live: true,
-            retry: true,
-            filter: (doc) => doc._id.indexOf('_design') !== 0,
-        } )
-        .on('change', (info)   => synctext.value = "changed -- " + info )
-        .on('paused', ()       => synctext.value = "pending" )
-        .on('active', ()       => synctext.value = "active" )
-        .on('denied', (err)    => synctext.value = "denied " + err )
-        .on('complete', (info) => synctext.value = "complete -- " + info )
-        .on('error', (err)     => synctext.value = "Sync status: error "+err );
-    }
-
-    if (remoteCouch) {
-        sync();
-    }
-    
     // Initial start
-    show_screen(true) ;
+    show_screen(true);
 
     // design document creation (assync)
-    createIndexes() ;
+    createIndexes();
 
     db.viewCleanup()
-    .catch( err => console.log(err) ) ;
+    .catch( err => console.log(err) );
     
-    // search field
-    // No search, use cookies
-    userName = getCookie( "userName" ) ;
-
-    if ( userName == null ) {
-        showPage( "UserName" ) ;
-    } else {
-        document.getElementById( "userstatus" ).value = userName ;
-        getCookie ( "patientId" ) ;
-        getCookie ( "commentId" ) ;
-        getCookie ( "remoteCouch" ) ;
-        getCookie ( "displayState" ) ;
-        getCookie ( "operationId" ) ;
-
-        // first try the search field
-        let q = parseQuery() ;
-        if ( q && ( patientId in q ) ) {
-            selectPatient( q.patientId ) ;
-            showPage( "PatientPhoto" ) ;
-        } else {
-            switch ( displayState ) {
-                case "PatientList":
-                case "MainMenu":
-                case "PatientPhoto":
-                case "NoteList":
-                case "OperationList":
-                case "SettingMenu":
-                case "PatientDemographics":
-                case "PatientMedical":
-                case "UserName":
-                    showPage( displayState ) ;
-                    break;
-                case "OperationEdit":
-                    showPage( "OperationList" ) ;
-                    break ;
-                case "NoteNew":
-                case "NoteImage":
-                    showPage( "NoteList" ) ;
-                    break ;
-                case "InvalidPatient":
-                    showPage( "PatientList" ) ;
-                    break ;
-                case "PatientNew":
-                default:
-                    showPage( "PatientPhoto" ) ;
-                    break ;
-            }
-        }
+    // need to establish remote db and credentials
+    let ds = Setup();
+    switch ( ds ) {
+        case "UserList":
+        case "UserNew":
+        case "UserEdit":
+        case "SendUser":
+        case "SuperUser":
+            showPage ( "MainMenu" );
+            break;
+            
+        case "PatientList":
+        case "MainMenu":
+        case "Administration":
+        case "PatientPhoto":
+        case "NoteList":
+        case "OperationList":
+        case "RemoteDatabaseInput":
+        case "PatientDemographics":
+        case "PatientMedical":
+            showPage( ds );
+            break;
+        case "OperationEdit":
+            showPage( "OperationList" );
+            break;
+        case "NoteNew":
+        case "NoteImage":
+            showPage( "NoteList" );
+            break;
+        case "PatientNew":
+        case "InvalidPatient":
+            showPage( "PatientList" );
+            break;
+        default:
+            showPage( "PatientPhoto" );
+            break;
     }
-        
-    
-})();
+    console.trace();
+};

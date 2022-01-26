@@ -338,14 +338,14 @@ footer {
   background: #3366CC;
 }
   
-#PatientPhotoContent {
+#PatientPhotoContent{
   display: flex ;
   background: #b3b3ff ;
   justify-content: center;
   align-items: center;
   flex-direction: row ; 
 }
-#MainMenuContent {
+#MainMenuContent, #DownloadContent, #AdministrationContent,  #SendUserContent {
   display: flex ;
   background: #b3b3ff ;
   justify-content: center;

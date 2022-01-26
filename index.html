@@ -14,8 +14,12 @@
             <div id="headerbox">
                 <div id="headerboxlink"><a href="https://www.github.com/alfille/missiondb" target="_blank" title="Go to MissionDb program website"><h1>Mission<br>Database</h1></a></div>
                 <div id="buttonheader">
-                    <!-- top: UserName MainMenu -->
-                    <div class="UserName MainMenu pageOverlay">
+                    <!-- top: MainMenu -->
+                    <div class="MainMenu pageOverlay">
+                    </div>
+                    <!-- top: Administration -->
+                    <div class="Administration SuperUser pageOverlay">
+                        <button type="button" class="divbutton return" onclick="showPage( 'MainMenu' )">Return</button>
                     </div>
                     <!-- top: DatabaseInfo -->
                     <div class="PatientData DatabaseInfo pageOverlay">
@@ -25,8 +29,9 @@
                     <div class="Download pageOverlay">
                         <button type="button" class="divbutton" onclick="showPage( 'MainMenu' )">Main Menu</button>
                     </div>
-                    <!-- top: SettingMenu -->
-                    <div class="SettingMenu pageOverlay">
+                    <!-- top: RemoteDatabaseInput -->
+                    <div class="RemoteDatabaseInput pageOverlay">
+                        <button type="button" class="divbutton" onclick="defaultCoudant()">Set to IBM Cloudant</button>
                         <button type="button" class="divbutton edit_note" onclick="objectPatientData.clickEdit()">Edit</button>
                         <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
                         <button type="button" class="divbutton return" onclick="showPage( 'PatientList' )">Cancel</button>
@@ -36,6 +41,12 @@
                         <button type="button" class="divbutton" onclick="showPage( 'MainMenu' )">Main Menu</button>
                         <button type="button" class="divbutton" onclick="showPage( 'PatientNew' )">Add Patient</button>
                         <button type="button" class="divbutton" onclick="showPage( 'PatientPhoto' )" id="editreviewpatient">Review/Edit Patient</button>
+                    </div>
+                    <!-- top: UserList -->
+                    <div class="UserList pageOverlay">
+                        <button type="button" class="divbutton" onclick="showPage( 'MainMenu' )">Main Menu</button>
+                        <button type="button" class="divbutton" onclick="showPage( 'UserNew' )">Add User</button>
+                        <button type="button" class="divbutton" onclick="showPage( 'UserEdit' )" id="editreviewuser">Review/Edit User</button>
                     </div>
                     <!-- top: OperationList -->
                     <div class="OperationList pageOverlay">
@@ -52,6 +63,22 @@
                         <button type="button" class="divbutton edit_note" onclick="objectPatientData.clickEdit()">Edit</button>
                         <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Add Patient</button>
                         <button type="button" class="divbutton discarddata return" onclick="showPage( 'PatientList' )">Cancel</button>
+                    </div>
+                    <!-- top: SuperUser -->
+                    <div class="PatientData SuperUser pageOverlay">
+                        <button type="button" class="divbutton edit_note" onclick="objectPatientData.clickEdit()">Edit</button>
+                        <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Proceed</button>
+                        <button type="button" class="divbutton discarddata return" onclick="showPage( 'Administration' )">Cancel</button>
+                    </div>
+                    <!-- top: UserNew UserEdit -->
+                    <div class="PatientData UserNew UserEdit pageOverlay">
+                        <button type="button" class="divbutton edit_note" onclick="objectPatientData.clickEdit()">Edit</button>
+                        <button type="button" class="divbutton savedata" onclick="objectPatientData.savePatientData()">Save Changes</button>
+                        <button type="button" class="divbutton return" onclick="showPage( 'UserList' )">Cancel</button>
+                    </div>
+                    <!-- top: SendUser -->
+                    <div class="SendUser pageOverlay">
+                        <button type="button" class="divbutton return" onclick="showPage( 'UserList' )">Return</button>
                     </div>
                     <!-- top: PatientDemographics PatientMedical -->
                     <div class="PatientData PatientDemographics PatientMedical pageOverlay">
@@ -82,31 +109,27 @@
             </div>
         </header>
         <div id="missiondbody" class="work_screen">
-            <!-- body: UserName -->
-            <div class="UserName pageOverlay">
-                <div id="UserNameContent" >
-                    <div>
-                        <hr>
-                        <label for="UserNameText">User name:</label><input type="text" required="true" id="UserNameText" title="Enter your User Name">
-                        <button type="button" class="divbutton" onclick="UserNameInput()">Enter</button>
-                        <hr>
-                    </div>
-                </div>
-            </div>
             <!-- body: MainMenu -->
             <div class="MainMenu pageOverlay">
                 <div id="MainMenuContent" >
                     <button type="button" class="divbutton" onclick="showPage( 'PatientList' )">Patient List</button>
-                    <button type="button" class="divbutton" onclick="showPage( 'SettingMenu' )">Settings</button>
+                    <button type="button" class="divbutton" onclick="showPage( 'RemoteDatabaseInput' )">Remote Database Setup</button>
+                    <button type="button" class="divbutton" onclick="showPage( 'Administration' )">Administration</button>
+                </div>
+            </div>
+            <!-- body: Administration -->
+            <div class="Administration pageOverlay">
+                <div id="AdministrationContent" >
                     <button type="button" class="divbutton" onclick="showPage( 'Download' )">Download</button>
                     <button type="button" class="divbutton" onclick="showPage( 'DatabaseInfo' )">Database Information</button>
-                    <button type="button" class="divbutton" onclick="createIndexes()">DesignIndex</button>
-                    <button type="button" class="divbutton" onclick="testScheduleIndex()">CreateIndex</button>
+                    <button type="button" class="divbutton" onclick="showPage( 'SuperUser' )">User Management</button>
+                    <button type="button" class="divbutton" onclick="forceReplicate()">Force Replicate</button>
+                    <button type="button" class="divbutton" onclick="testScheduleIndex()">Test routines</button>
                 </div>
             </div>
             <!-- body: Download -->
             <div class="Download pageOverlay">
-                <div id="MainMenuContent" >
+                <div id="DownloadContent" >
                     <h3>Download Spreadsheet file</h3>
                     <button type="button" class="divbutton" onclick="downloadPatients()">Patient List</button>
                     <button type="button" class="divbutton" onclick="downloadAll()">All data</button>
@@ -118,14 +141,20 @@
                     <table id="PatientList"></table>
                 </div>
             </div>
+            <!-- body: UserList -->
+            <div class="UserList pageOverlay">
+                <div id="UserListContent" >
+                    <table id="UserList"></table>
+                </div>
+            </div>
             <!-- body: OperationList -->
             <div class="OperationList pageOverlay">
                 <div id="OperationListContent" >
                     <table id="OperationsList"></table>
                 </div>
             </div>
-            <!-- body: PatientNew PatientDemographics PatientMedical OperationEdit SettingMenu DatabaseInfo -->
-            <div class="PatientData PatientNew PatientDemographics PatientMedical OperationEdit SettingMenu DatabaseInfo pageOverlay">
+            <!-- body: PatientNew PatientDemographics PatientMedical OperationEdit RemoteDatabaseInput DatabaseInfo SuperUser UserNew UserEdit -->
+            <div class="PatientData PatientNew PatientDemographics PatientMedical OperationEdit RemoteDatabaseInput DatabaseInfo SuperUser UserNew UserEdit pageOverlay">
                 <div id="PatientDataContent" ></div>
             </div>
             <!-- body: PatientPhoto -->
@@ -150,6 +179,15 @@
                         <button type="button" class="divbutton" onclick="printCard()">Print Card</button>
                         <button type="button" class="divbutton delete" onclick="deletePatient()">Delete Patient</button>
                     </div>
+                </div>
+            </div>
+            <!-- body: SendUser -->
+            <div class="SendUser pageOverlay">
+                <div id="SendUserContent" >
+                    <div><canvas id="SendUserQR" height=180 width=180>QR code</canvas></div>
+                    <div><label>User email:<input type=text readonly=true id="SendUserEmail"></label></div>
+                    <div><label>User eMission link:<input type=text readonly=true id="SendUserLink"></label></div>
+                    <div><a target="_blank" rel=noopener noreferrer href="" id="SendUserMail">Mail link</a></div>
                 </div>
             </div>
             <!-- body: InvalidPatient -->

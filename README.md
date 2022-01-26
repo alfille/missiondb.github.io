@@ -163,7 +163,7 @@ So there is a light relational database on top of the data
 |key|name|type|note|
 |:-|:-|:-|:-|
 |_id|_local/username|automatic|in MainMenu -> Settings |
-|userName|user name|text|your user name|
+|username|user name|text|your user name|
 |remoteCouch|Remote database|list +|link to remote replication databases|
 |displayState|internal state|automatic|resume place in program|
 |patientId|Patient Id|automatic|Last patient selected|
