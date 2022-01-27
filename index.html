@@ -170,10 +170,12 @@
                     <div class="PatientProcButtons">
                         <button type="button" class="divbutton" onclick="showPage( 'PatientDemographics' )">Demographics</button>
                         <button type="button" class="divbutton" onclick="showPage( 'PatientMedical' )">Medical</button>
+                        <button type="button" class="divbutton" onclick="showPage( 'OperationList' )">Operations</button>
                     </div>
                     <div class="PatientProcButtons" id="ProcList">
                         <button type="button" class="divbutton" onclick="showPage( 'NoteList' )">Notes</button>
-                        <button type="button" class="divbutton" onclick="showPage( 'OperationList' )">Operations</button>
+                        <button class="create_note libutton divbutton" type="button" onclick="showPage( 'NoteNew' )">New Note</button>
+                        <button class="createtheimage libutton divbutton" type="button" onclick="quickImage()" title="Quick picture">&#128247; New Picture</button>
                     </div>
                     <div class="PatientProcButtons">
                         <button type="button" class="divbutton" onclick="printCard()">Print Card</button>
