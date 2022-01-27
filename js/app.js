@@ -1859,7 +1859,7 @@ function splitNoteId( nid=noteId ) {
             dob: spl[4],
             key: spl[5],
         };
-    }
+    }1
     return null;
 }
 
@@ -2116,8 +2116,8 @@ function sendUser( doc ) {
     let mail_url = new URL( "mailto:" + doc.email );
     mail_url.searchParams.append( "subject", "Welcome to eMission" );
     mail_url.searchParams.append( "body",
-        'Welcome, '+doc.name+' to eMission: \n'
-        +'  software for managing medical missions in resource poor environments\n'
+        'Welcome, '+doc.name+', to eMission: \n'
+        +'  software for managing medical missions in resource-poor environments.\n'
         +'\n'
         +'You have an account:\n'
         +'  web address: '+remoteCouch.address+'\n'
@@ -2133,6 +2133,22 @@ function sendUser( doc ) {
     document.getElementById("SendUserMail").href = mail_url.href;
 }
 
+function deleteUser() {
+    if ( userId ) {
+        admin_db.get( userId )
+        .then( (doc) => {
+            if ( confirm("Delete user" + doc.name + ".\n -- Are you sure?") ) {
+                return admin_db.remove(doc) ;
+            } else {
+                throw "No delete";
+            }           
+        .then( () => unselectUser() )
+        .catch( (err) => console.log(err) )
+        .finally( () => showPage( "UserList" ) );
+    }
+    return true;
+}    
+    
 function getNotesAll() {
     let doc = {
         startkey: [ RecordFormat.type.note, ""].join(";"),
