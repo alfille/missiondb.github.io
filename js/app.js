@@ -2141,7 +2141,8 @@ function deleteUser() {
                 return admin_db.remove(doc) ;
             } else {
                 throw "No delete";
-            }           
+            }
+            })              
         .then( () => unselectUser() )
         .catch( (err) => console.log(err) )
         .finally( () => showPage( "UserList" ) );
