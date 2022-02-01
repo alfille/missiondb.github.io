@@ -8,3 +8,8 @@ Installation: https://linuxhint.com/installing-apache-couchdb-on-fedora/
 
 systemd:
 https://www.jamescoyle.net/how-to/2527-add-systemd-startup-script-for-couchdb
+
+Drag and drop
+https://stackoverflow.com/questions/10261989/html5-javascript-drag-and-drop-file-from-external-window-windows-explorer
+
+

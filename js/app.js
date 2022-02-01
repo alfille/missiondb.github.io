@@ -21,10 +21,8 @@ var UniqueSurgeons;
 var UniqueEquipment;
 var UniqueProcedure;
 
-const cannonicalDBname = 'mdb';
-
 // Create/Open the database (locally) 
-var db = new PouchDB( cannonicalDBname );
+var db ; // will be Pouchdb local copy 
 var admin_db = null;
 const remoteAdmin = {
     database: "_users" ,
@@ -35,13 +33,6 @@ const remoteAdmin = {
 
 // For remote replication
 const remoteFields = [ "address", "username", "password", "database" ];
-const cloudantDb = {
-    address: "https://bc3debc5-694c-4094-84b9-440fc5bf6964-bluemix.cloudantnosqldb.appdomain.cloud",
-    username: "apikey-v2-qx7a577tpow3c98mnl8lsy8ldwpzevtteatwbrl2611",
-    password: "d87aed426ff20ba3969ffa0a2b44c3d3",
-    database: "mdb2"
-    };
-
 // used for record keys ( see makePatientId, etc )
 const RecordFormat = {
     type: {
@@ -403,6 +394,7 @@ function createIndexes() {
             }
             })
         .catch( (err) => {
+            // assume because this is first time and cannot "get"
             console.log(err);
             return db.put( ddoc );
             });
@@ -944,17 +936,11 @@ class DatabaseData extends PatientData {
         if ( this.loadDocData()[0] ) {
             setCookie ( "remoteCouch", Object.assign({},this.doc[0]) );
             showPage( "MainMenu" );
-            location.reload(); // force reload
         } else {
             showPage( "MainMenu" );
         }
+        location.reload(); // force reload
     }
-}
-
-function defaultCoudant() {
-    setCookie( "remoteCouch", cloudantDb );
-    showPage( "MainMenu" );
-    location.reload(); // force reload
 }
 
 class NewPatientData extends PatientData {
@@ -1197,18 +1183,9 @@ class Nbar extends Tbar {
                 .finally( () => this.leave("NoteList") );
             } else {
                 // new note
-                let doc = {
-                    _id: makeNoteId(),
-                    author: remoteCouch.username,
-                    text: this.working.textDiv.innerText,
-                    patient_id: patientId,
-                    type: "note",
-                    date: new Date().toISOString(),
-                };
-                if (this.working.upload && this.working.upload !== "remove") {
-                    putImageInDoc( doc, this.working.upload.type, this.working.upload );
-                }                
-                db.put(doc)
+                createNote(
+                    this.working.upload && this.working.upload !== "remove" ? image : null,
+                    this.working.textDiv.innerText )
                 .catch( (err) => console.log(err) )
                 .finally( () => this.leave("NoteList") );
             }
@@ -1550,7 +1527,8 @@ function showPage( state = "PatientList" ) {
         case "NoteList":            
             if ( patientId ) {
                 getPatient( false )
-                .then( (doc) => objectNoteList = new NoteList( document.getElementById("NoteListContent") ) )
+                .then( () => getNotes(true) )
+                .then( notelist => objectNoteList = new NoteList(notelist) )
                 .catch( (err) => {
                     console.log(err);
                     showPage( "InvalidPatient" );
@@ -1925,6 +1903,7 @@ function PatientPhoto( doc ) {
     catch( err ) {
         p.src = NoPhoto;
         }
+    dropPictureinNote( d );
 }
 
 function newImage() {
@@ -2174,32 +2153,29 @@ function getNotes(attachments) {
 }
 
 class NoteList extends PatientData {
-    constructor( parent ) {
+    constructor( notelist ) {
         super();
-        if ( parent == null ) {
-            parent = document.body;
-        }
-        [...parent.getElementsByTagName('ul')].forEach( (u) => parent.removeChild(u) );
+        parent = document.getElementById("NoteListContent") ;
+        parent.innerHTML = "" ;
 
-        this.ul = document.createElement('ul');
-        this.ul.setAttribute( "id", "NoteList" );
-        parent.appendChild(this.ul);
-
-        // get notes
-        getNotes(true)
-        .then( (docs) => {
-            console.log(docs);
-            docs.rows.forEach( (note, i) => {
+        // show notes
+        if ( notelist.rows.length == 0 ) {
+            parent.appendChild( document.createTextNode("Add a note, picture, or drag an image here") ) ;
+        } else {
+            this.ul = document.createElement('ul');
+            this.ul.setAttribute( "id", "NoteList" );
+            parent.appendChild(this.ul);
+            notelist.rows.forEach( note => {
                 let li1 = this.liLabel(note);
                 this.ul.appendChild( li1 );
                 let li2 = this.liNote(note,li1);
                 this.ul.appendChild( li2 );
 
-            });
+                });
             this.li = this.ul.getElementsByTagName('li');
-                
-            })
-        .catch( (err) => console.log(err) ); 
+        }
+
+        dropPictureinNote( parent );
     }
 
     liLabel( note ) {
@@ -2268,6 +2244,34 @@ class NoteList extends PatientData {
     }
 }
 
+function dropPictureinNote( target ) {
+        // Optional.   Show the copy icon when dragging over.  Seems to only work for chrome.
+    target.addEventListener('dragover', e => {
+        e.stopPropagation();
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        });
+
+    // Get file data on drop
+    target.addEventListener('drop', e => {
+        e.stopPropagation();
+        e.preventDefault();
+        // Array of files
+        Array.from(e.dataTransfer.files)
+        .filter( file => file.type.match(/image.*/) )
+        .forEach( file => {
+            let reader = new FileReader();
+            reader.onload = e2 =>
+                fetch(e2.target.result)
+                .then( b64 => b64.blob() )
+                .then( blb => createNote( blb, "" ) )
+                .catch( (err) => console.log(err) ) ;
+            reader.readAsDataURL(file); // start reading the file data.
+            });
+        showPage( "NoteList" );
+        });
+}
+
 function getImageFromDoc( doc ) {
     if ( !("_attachments" in doc) ) {
         throw "No attachments";
@@ -2316,19 +2320,32 @@ function quickImage() {
     document.getElementById("imageQ").click();
 }
 
-function quickImage2() {
-    const files = document.getElementById('imageQ');
-    const image = files.files[0];
-
+function createNote( image, text ) {
+    // returns a promise
     let doc = {
         _id: makeNoteId(),
         text: "",
         author: remoteCouch.username,
+        type: "note",
+        patient_id: patientId,
+        date: new Date().toISOString(),
     };
-    putImageInDoc( doc, image.type, image );
+    console.log(image) ;
+    if ( image ) {
+        putImageInDoc( doc, image.type, image );
+    }
 
-    db.put( doc )
-    .then( (response) => showPage( "NoteList" ) )
+    return db.put( doc ) ;
+}
+
+function quickImage2() {
+    const files = document.getElementById('imageQ');
+    const image = files.files[0];
+    console.log(files);
+    console.log(files.files);
+
+    createNote( image, "" )
+    .then( () => showPage( "NoteList" ) )
     .catch( (err) => {
         console.log(err);
         showPage( "NoteList" );
@@ -2359,20 +2376,12 @@ function saveImage() {
     const image = files.files[0];
     const text = document.getElementById("annotation").innerText;
 
-    let doc = {
-        _id: makeNoteId(),
-        text: text.value,
-        author: remoteCouch.username,
-    };
-    putImageInDoc( doc, image.type, image );
-
-    db.put( doc )
-    .then( (response) => showPage( "NoteList" ) )
-    .catch( (err) => {
-        console.log(err);
+    createNote( image, text )
+    .catch( (err) => console.log(err) )
+    .finally( () => { 
+        document.getElementById('imageCheck').src = "";
         showPage( "NoteList" );
-        });
-    document.getElementById('imageCheck').src = "";
+        })
 }
 
 function show_screen( bool ) {
@@ -2582,7 +2591,7 @@ function foreverSync() {
             .on('active', ()       => synctext.value = "active" )
             .on('denied', (err)    => { synctext.value = "denied"; console.log("Sync denied",err); } )
             .on('complete', ()     => synctext.value = "stopped" )
-            .on('error', (err)     => { synctext.value = "error"; console.log("Sync error",err); } );
+            .on('error', (err)     => { synctext.value = err.reason ; console.log("Sync error",err); } );
     }
 }
 
@@ -2619,9 +2628,8 @@ function Setup() {
         remoteFields.forEach( f => remoteCouch[f] = qline[f] );
         setCookie( "remoteCouch", remoteCouch );
     } else if ( getCookie( "remoteCouch" ) == null ) {
-        return "RemoteDatabaseInput";
+        showPage( "RemoteDatabaseInput" ); // forces reload
     }    
-    foreverSync();
 
     // first try the search field
     if ( qline && ( "patientId" in qline ) ) {
@@ -2631,8 +2639,16 @@ function Setup() {
     return displayState;
 }
 
-// Pouchdb routines
-window.onload = function() {
+// Application starting point
+window.onload = () => {
+    // Initial start
+    show_screen(true);
+
+    const ds = Setup() ; // look for remoteCouch and other cookies
+
+    // local copy
+    db = new PouchDB( remoteCouch.database );
+
     db.changes({
         since: 'now',
         live: true
@@ -2648,8 +2664,8 @@ window.onload = function() {
         }
     });
 
-    // Initial start
-    show_screen(true);
+    // start sync
+    foreverSync();
 
     // design document creation (assync)
     createIndexes();
@@ -2657,8 +2673,7 @@ window.onload = function() {
     db.viewCleanup()
     .catch( err => console.log(err) );
     
-    // need to establish remote db and credentials
-    const ds = Setup();
+    // now jump to proper page
     switch ( ds ) {
         case "UserList":
         case "UserNew":
